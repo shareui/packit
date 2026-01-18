@@ -1,0 +1,30 @@
+{
+    "interface_settings": "Interface",
+    "command_settings": "Command settings",
+    "repositories": "Repositories",
+    "other_settings": "Other settings",
+    "not_ready": "Not ready!",
+    
+    "cmd_info": "Info cmd",
+    "cmd_search": "Search cmd",
+    "cmd_install": "Install cmd",
+    "cmd_uninstall": "Uninstall cmd",
+    "cmd_pluginlist": "Plugin list cmd",
+    "cmd_repolist": "Repository list cmd",
+    "cmd_share": "Share cmd",
+    
+    "cmd_info_desc": "Command to show plugin info",
+    "cmd_search_desc": "Command to search plugins",
+    "cmd_install_desc": "Command to install plugins",
+    "cmd_uninstall_desc": "Command to uninstall plugins",
+    "cmd_pluginlist_desc": "Command to list installed plugins",
+    "cmd_repolist_desc": "Command to list repositories",
+    "cmd_share_desc": "Command to share plugins",
+    
+    "add_repository": "Add Repository",
+    "repo_name": "Repository Name",
+    "repo_url": "Repository URL",
+    "repo_enabled": "Enable Repository",
+    "remove_repository": "Remove Repository",
+    "repository_form": "Repository #{0}"
+}
