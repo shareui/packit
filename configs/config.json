@@ -1,3 +1,16 @@
 {
-  "1": "2"
+  "plugins": {
+    "loggerplus": {
+      "displayName": "LoggerPlus",
+      "description": "Расширенный логгер для приложений",
+      "version": "1.2.3",
+      "raw": "https://raw.githubusercontent.com/example/loggerplus.py"
+    },
+    "theme-switcher": {
+      "displayName": "ThemeSwitcher",
+      "description": "Смена темы интерфейса",
+      "version": "0.8.0",
+      "raw": "https://raw.githubusercontent.com/example/theme-switcher.py"
+    }
+  }
 }
