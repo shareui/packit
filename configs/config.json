@@ -1,12 +1,13 @@
 {
   "plugins": {
-    "loggerplus": {
-      "displayName": "LoggerPlus",
-      "description": "Расширенный логгер для приложений",
-      "version": "1.2.3",
-      "raw": "https://raw.githubusercontent.com/example/loggerplus.py",
+    "lolcat": {
+      "displayName": "LoLcat lang",
+      "description": "Lolcat language translator",
+      "version": "1.0.0",
+      "raw": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/lolcat.py",
       "link": "t.me/exteraGram",
-      "author": "t.me/shareui"
+      "author": "@shareui",
+      "id": "shareui_lolcat"
     },
     "theme-switcher": {
       "displayName": "ThemeSwitcher",
@@ -14,7 +15,8 @@
       "version": "0.8.0",
       "raw": "https://raw.githubusercontent.com/example/theme-switcher.py",
       "link": "t.me/exteraGram",
-      "author": "t.me/shareui"
+      "author": "t.me/shareui",
+      "id": "theme"
     }
   }
 }
