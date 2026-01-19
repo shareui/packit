@@ -81,8 +81,8 @@ class CommandProcessor:
         return HookResult(strategy=HookStrategy.MODIFY, params=params)
     
     def _handleUpdate(self, messageText: str, params: Any) -> HookResult:
-        params.message = strings.not_ready
-        return HookResult(strategy=HookStrategy.MODIFY, params=params)
+        self.plugin.core.updateAllRepositories(silent=False)
+        return HookResult(strategy=HookStrategy.CANCEL)
     
     def _handleUpgrade(self, messageText: str, params: Any) -> HookResult:
         params.message = strings.not_ready
