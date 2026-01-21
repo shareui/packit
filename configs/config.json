@@ -10,13 +10,13 @@
       "id": "shareui_lolcat"
     },
     "theme-switcher": {
-      "displayName": "ThemeSwitcher",
-      "description": "Смена темы интерфейсаСмена темы интерфейсаСмена темы интерфейсаСмена темы интерфейсаСмена темы интерфейсаСмена темы интерфейсаСмена темы интерфейсаСмена темы интерфейсаСмена темы интерфейсаСмена темы интерфейсаСмена темы интерфейсаСмена темы интерфейсаСмена темы интерфейсаСмена темы интерфейсаСмена темы интерфейса",
-      "version": "0.8.0",
-      "raw": "https://raw.githubusercontent.com/example/theme-switcher.py",
+      "displayName": "Fullscreen player",
+      "description": "Full-screen music player",
+      "version": "1.1",
+      "raw": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/fmp.py",
       "link": "t.me/exteraGram",
-      "author": "t.me/shareui",
-      "id": "theme"
+      "author": "@hoprik",
+      "id": "fullscreen_music_player"
     }
   }
 }
