@@ -1,4 +1,9 @@
 {
+  "repometa": {
+    "repo_name": "Official",
+    "repo_maintainer": "@shareui",
+    "repo": "https://github.com/shareui/packit"
+  },
   "plugins": {
     "lolcat": {
       "displayName": "LoLcat lang",
