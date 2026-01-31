@@ -14,6 +14,7 @@
       "description": "Lolcat language translator",
       "version": "1.3.0",
       "icon": "",
+      "suspicious": "false",
       "min_ver": "1.0.0",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/lolcat.py"
@@ -25,6 +26,7 @@
       "description": "DO NOT INSTALL",
       "version": "1.3.0",
       "icon": "",
+      "suspicious": "false",
       "min_ver": "12.0.0",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/lolcat.py"
@@ -36,6 +38,7 @@
       "description": "Full-screen music player",
       "version": "1.1",
       "icon": "",
+      "suspicious": "false",
       "min_ver": "12.0.0",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/fmp.py"
@@ -47,6 +50,7 @@
       "description": "Multifunctional plugin manager for exteraGram",
       "version": "1.0.0",
       "icon": "plugin232/17",
+      "suspicious": "false",
       "min_ver": "12.0.0",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/packit.py"
