@@ -2,35 +2,54 @@
   "repometa": {
     "rm_name": "Official",
     "rm_maintainer": "@shareui",
-    "rm_url": "https://github.com/shareui/packit"
+    "rm_url": "https://github.com/shareui/packit",
+    "rm_mid": "400216230",
+    "rm_rid": "shareui_official"
   },
-  "plugins": {
-    "lolcat": {
-      "displayName": "LoLcat lang",
+  "plugins": [
+    {
+      "id": "shareui_lolcat",
+      "name": "LoLcat lang",
+      "author": "@shareui",
       "description": "Lolcat language translator",
       "version": "1.3.0",
-      "raw": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/lolcat.py",
-      "link": "t.me/exteraGram",
-      "author": "@shareui",
-      "id": "shareui_lolcat"
+      "icon": "",
+      "min_ver": "1.0.0",
+      "dependencies": [],
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/lolcat.py"
     },
-    "updatetest": {
-      "displayName": "upd",
+    {
+      "id": "shareui_lolcat",
+      "name": "upd",
+      "author": "@shareui",
       "description": "DO NOT INSTALL",
       "version": "1.3.0",
-      "raw": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/lolcat.py",
-      "link": "t.me/exteraGram",
-      "author": "@shareui",
-      "id": "shareui_lolcat"
+      "icon": "",
+      "min_ver": "12.0.0",
+      "dependencies": [],
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/lolcat.py"
     },
-    "Fullscreen player": {
-      "displayName": "Fullscreen player",
+    {
+      "id": "fullscreen_music_player",
+      "name": "Fullscreen player",
+      "author": "@hoprik",
       "description": "Full-screen music player",
       "version": "1.1",
-      "raw": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/fmp.py",
-      "link": "t.me/exteraGram",
-      "author": "@hoprik",
-      "id": "fullscreen_music_player"
+      "icon": "",
+      "min_ver": "12.0.0",
+      "dependencies": [],
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/fmp.py"
+    },
+    {
+      "id": "packit",
+      "name": "Packit",
+      "author": "@packitGround",
+      "description": "Multifunctional plugin manager for exteraGram",
+      "version": "1.0.0",
+      "icon": "plugin232/17",
+      "min_ver": "12.0.0",
+      "dependencies": [],
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/packit.py"
     }
-  }
+  ]
 }
