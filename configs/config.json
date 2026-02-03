@@ -15,21 +15,19 @@
       "version": "1.3.0",
       "icon": "traxodrom52_by_fStikBot/13",
       "suspicious": "false",
-      "min_ver": "1.0.0",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/lolcat.py"
     },
     {
-      "id": "shareui_lolcat",
-      "name": "upd",
+      "id": "shareui_advcalc",
+      "name": "Advanced calculator",
       "author": "@shareui",
-      "description": "DO NOT INSTALL",
+      "description": "Just a little math",
       "version": "1.3.0",
-      "icon": "КKastomy3/0",
+      "icon": "plugin232/1",
       "suspicious": "false",
-      "min_ver": "12.0.0",
       "dependencies": [],
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/lolcat.py"
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/advcalc.plugin"
     },
     {
       "id": "fullscreen_music_player",
@@ -39,21 +37,19 @@
       "version": "1.1",
       "icon": "plugin232/1",
       "suspicious": "false",
-      "min_ver": "12.0.0",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/fmp.py"
     },
     {
-      "id": "packit",
-      "name": "Packit",
-      "author": "@packitGround",
-      "description": "Multifunctional plugin manager for exteraGram",
-      "version": "1.0.0",
-      "icon": "plugin232/17",
+      "id": "shareui_efch",
+      "name": "exteraFetch",
+      "author": "@shareui",
+      "description": "Displays system information",
+      "version": "1.1.0",
+      "icon": "miyabiZZZ/1",
       "suspicious": "false",
-      "min_ver": "12.0.0",
       "dependencies": [],
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/packit.py"
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/efch.plugin"
     }
   ]
 }
