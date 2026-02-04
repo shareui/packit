@@ -3,7 +3,7 @@ __name__ = "LOLCAT dialect"
 __description__ = "Automatically translates all messages to LOLCAT dialect [ENGLISH ONLY]"
 __author__ = "@shareui the cat :з"
 __version__ = "1.1.0"
-__icon__ = "traxodrom52_by_fStikBot/13"
+__icon__ = "mr_vestr/0"
 __min_version__ = "12.1.1"
 
 from base_plugin import BasePlugin, HookResult, HookStrategy
