@@ -13,7 +13,7 @@
       "author": "@shareui",
       "description": "Lolcat language translator",
       "version": "1.3.0",
-      "icon": "traxodrom52_by_fStikBot/13",
+      "icon": "mr_vestr/1",
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/lolcat.py"
