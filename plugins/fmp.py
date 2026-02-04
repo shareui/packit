@@ -29,8 +29,8 @@ __id__ = "fullscreen_music_player"
 __name__ = "Music Player"
 __description__ = "Full screen music player. Если вы обновляете плагин, перезапустите Telegram."
 __author__ = "@hoprik"
-__version__ = "1.2"
-__icon__ = "mr_vestr/4"
+__version__ = "1.1"
+__icon__ = "rottenprince_by_FStikBot/0"
 __min_version__ = "11.12.0"
 
 # ============ Global Vars ============
