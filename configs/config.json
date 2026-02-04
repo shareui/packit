@@ -12,7 +12,7 @@
       "name": "LoLcat lang",
       "author": "@shareui",
       "description": "Lolcat language translator",
-      "version": "1.3.0",
+      "version": "1.3.1",
       "icon": "mr_vestr/1",
       "suspicious": "false",
       "dependencies": [],
