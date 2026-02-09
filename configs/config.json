@@ -12,6 +12,10 @@
       "name": "LoLcat lang",
       "author": "@shareui",
       "description": "Lolcat language translator",
+      "about": [
+        "Translates text into the lolcat meme language.",
+        "Переводит текст на мемный язык lolcat."
+      ],
       "version": "1.3.1",
       "state": "release",
       "icon": "traxodrom52_by_fStikBot/13",
@@ -25,6 +29,10 @@
       "name": "Advanced calculator",
       "author": "@shareui",
       "description": "Just a little math",
+      "about": [
+        "A small but capable calculator for everyday calculations.",
+        "Небольшой, но функциональный калькулятор для повседневных вычислений."
+      ],
       "version": "1.3.0",
       "state": "release",
       "icon": "plugin232/1",
@@ -38,6 +46,10 @@
       "name": "Fullscreen player",
       "author": "@hoprik",
       "description": "Full-screen music player",
+      "about": [
+        "A music player interface that works entirely in full-screen mode.",
+        "Музыкальный плеер с интерфейсом, работающим полностью в полноэкранном режиме."
+      ],
       "version": "1.1",
       "state": "release",
       "icon": "rottenprince_by_FStikBot/0",
@@ -51,6 +63,10 @@
       "name": "exteraFetch",
       "author": "@shareui",
       "description": "Displays system information",
+      "about": [
+        "Shows detailed system information in a concise format.",
+        "Отображает подробную информацию о системе в компактном виде."
+      ],
       "version": "1.1.0",
       "state": "release",
       "icon": "miyabiZZZ/1",
