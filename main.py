@@ -1149,7 +1149,7 @@ def createGitignore():
 
 def showMenu():
     print()
-    print(f"{Colors.BOLD}{Colors.CYAN}=== plugin manager ==={Colors.RESET}")
+    print(f"{Colors.BOLD}{Colors.CYAN}    menu    {Colors.RESET}")
     print(f"{Colors.GREEN}1{Colors.RESET}. add files")
     print(f"{Colors.GREEN}2{Colors.RESET}. change file")
     print(f"{Colors.GREEN}3{Colors.RESET}. delete files")
