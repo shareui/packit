@@ -1,0 +1,445 @@
+import time
+import traceback
+from base_plugin import BasePlugin, MethodHook, hook_filters, HookFilter
+from hook_utils import find_class, get_private_field
+from java import jclass
+
+__id__ = "code_formatting"
+__name__ = "Code & Mention Formatting"
+__type__ = "plugin"
+__description__ = "Add Code and Mention formatting options to text selection menu"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+CUSTOM_CODE_ID = 90001
+CUSTOM_MENTION_ID = 90002
+DEBOUNCE_TIME = 0.5
+
+
+class FillActionModeMenuHook(MethodHook):
+    def __init__(self, plugin):
+        MethodHook.__init__(self)
+        self.plugin = plugin
+    
+    @hook_filters(HookFilter.ArgumentNotNull(0))
+    def after_hooked_method(self, param):
+        try:
+            from android.text import SpannableStringBuilder, Spanned
+            from android.graphics import Typeface
+            from android.text.style import TypefaceSpan
+            
+            R_tg = find_class("org.telegram.messenger.R")
+            menu = param.args[0]
+            
+            if menu.findItem(CUSTOM_CODE_ID) is not None:
+                return
+            
+            string_builder = SpannableStringBuilder("Code")
+            string_builder.setSpan(TypefaceSpan(Typeface.MONOSPACE), 0, string_builder.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            menu.add(R_tg.id.menu_groupbolditalic, CUSTOM_CODE_ID, 7, string_builder)
+            
+            mention_string_builder = SpannableStringBuilder("Mention")
+            menu.add(R_tg.id.menu_groupbolditalic, CUSTOM_MENTION_ID, 8, mention_string_builder)
+            
+        except Exception:
+            traceback.print_exc()
+
+
+class PerformMenuActionHook(MethodHook):
+    def __init__(self, plugin):
+        MethodHook.__init__(self)
+        self.plugin = plugin
+    
+    @hook_filters(HookFilter.Condition("param.thisObject != null"), HookFilter.ArgumentNotNull(0))
+    def before_hooked_method(self, param):
+        try:
+            item_id = param.args[0]
+            edit_text = param.thisObject
+            
+
+            if item_id == CUSTOM_CODE_ID:
+                current_time = time.time()
+                
+                if not hasattr(self.plugin, '_last_code_click'):
+                    self.plugin._last_code_click = 0
+                
+                if current_time - self.plugin._last_code_click > DEBOUNCE_TIME:
+                    self.plugin._last_code_click = current_time
+                    self.plugin._make_selected_code(edit_text)
+                return
+                
+            elif item_id == CUSTOM_MENTION_ID:
+                current_time = time.time()
+                
+                if not hasattr(self.plugin, '_last_mention_click'):
+                    self.plugin._last_mention_click = 0
+                
+                if current_time - self.plugin._last_mention_click > DEBOUNCE_TIME:
+                    self.plugin._last_mention_click = current_time
+                    self.plugin._make_selected_mention(edit_text)
+                return
+                
+        except Exception:
+            pass
+
+
+class EnableCodeFormattingPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self._class_cache = {}
+        self.hook_fill_action_mode_menu_ref = None
+        self.hook_perform_menu_action_ref = None
+        self._last_code_click = 0
+        self._last_mention_click = 0
+    
+    def _get_class(self, class_name):
+        if class_name not in self._class_cache:
+            self._class_cache[class_name] = find_class(class_name)
+        return self._class_cache[class_name]
+    
+    def on_plugin_load(self):
+        self._hook_code_formatting()
+    
+    def on_plugin_unload(self):
+        if self.hook_fill_action_mode_menu_ref:
+            try:
+                self.unhook_method(self.hook_fill_action_mode_menu_ref)
+            except:
+                pass
+            self.hook_fill_action_mode_menu_ref = None
+        if self.hook_perform_menu_action_ref:
+            try:
+                self.unhook_method(self.hook_perform_menu_action_ref)
+            except:
+                pass
+            self.hook_perform_menu_action_ref = None
+    
+    def _hook_code_formatting(self):
+        try:
+            ChatActivity = self._get_class("org.telegram.ui.ChatActivity")
+            EditTextCaption = self._get_class("org.telegram.ui.Components.EditTextCaption")
+            
+            if ChatActivity is None or EditTextCaption is None:
+                return
+            
+            boolean_type = self._get_class("java.lang.Boolean").TYPE
+            fillActionModeMenu_method = None
+            
+            try:
+                fillActionModeMenu_method = ChatActivity.getClass().getDeclaredMethod("fillActionModeMenu", 
+                    self._get_class("android.view.Menu"), 
+                    jclass("org.telegram.tgnet.TLRPC$EncryptedChat"), 
+                    boolean_type,
+                    boolean_type)
+            except Exception:
+                try:
+                    fillActionModeMenu_method = ChatActivity.getClass().getDeclaredMethod("fillActionModeMenu", 
+                        self._get_class("android.view.Menu"), 
+                        jclass("org.telegram.tgnet.TLRPC$EncryptedChat"), 
+                        boolean_type)
+                except Exception:
+                    pass
+
+            if fillActionModeMenu_method:
+                fillActionModeMenu_method.setAccessible(True)
+                self.hook_fill_action_mode_menu_ref = self.hook_method(fillActionModeMenu_method, FillActionModeMenuHook(self))
+            
+            performMenuAction_method = EditTextCaption.getClass().getDeclaredMethod("performMenuAction", 
+                self._get_class("java.lang.Integer").TYPE)
+            performMenuAction_method.setAccessible(True)
+            
+            self.hook_perform_menu_action_ref = self.hook_method(performMenuAction_method, PerformMenuActionHook(self))
+            
+        except Exception:
+            traceback.print_exc()
+    
+    def _make_selected_code(self, edit_text):
+        try:
+            from android.text import InputType, Spanned
+            from android.util import TypedValue
+            from android.widget import FrameLayout
+            from android.view import Gravity
+            from org.telegram.messenger import AndroidUtilities, CodeHighlighting
+            from org.telegram.ui.ActionBar import Theme
+            from org.telegram.ui.Components import EditTextBoldCursor
+            from ui.alert import AlertDialogBuilder
+            from client_utils import run_on_ui_thread
+            
+
+            start = edit_text.getSelectionStart()
+            end = edit_text.getSelectionEnd()
+            
+
+            if start < 0 or end < 0 or start == end:
+                return
+            
+            context = edit_text.getContext()
+            
+            language_edit_text = EditTextBoldCursor(context)
+            language_edit_text.setHint("Language")
+            language_edit_text.setInputType(InputType.TYPE_CLASS_TEXT)
+            language_edit_text.setMaxLines(1)
+            language_edit_text.setSingleLine(True)
+            language_edit_text.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18)
+            language_edit_text.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText))
+            language_edit_text.setHintTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteHintText))
+            language_edit_text.setBackground(Theme.createEditTextDrawable(context, True))
+            language_edit_text.setCursorColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueHeader))
+            language_edit_text.setCursorSize(AndroidUtilities.dp(20))
+            language_edit_text.setCursorWidth(1.5)
+            language_edit_text.setPadding(0, 0, 0, 0)
+            language_edit_text.setFocusable(True)
+            
+
+            
+            try:
+                text = edit_text.getText()
+                if text:
+                    code_spans = text.getSpans(start, end, CodeHighlighting.Span)
+                    if code_spans:
+                        for span in code_spans:
+                            if span.lng:
+                                language_edit_text.setText(span.lng)
+                                break
+            except:
+                pass
+            
+            plugin = self
+            
+            def on_ok_click(dialog, which):
+                try:
+                    AndroidUtilities.hideKeyboard(language_edit_text)
+                    language = language_edit_text.getText().toString()
+                    # plugin already set to self
+                    if plugin:
+                        plugin._apply_code_formatting(edit_text, start, end, language)
+                except Exception:
+                    pass
+                dialog.dismiss()
+            
+            def on_cancel_click(dialog, which):
+                try:
+                    AndroidUtilities.hideKeyboard(language_edit_text)
+                except Exception:
+                    pass
+                dialog.dismiss()
+            
+
+            builder = AlertDialogBuilder(context)
+            builder.set_title("Create Code")
+            builder.set_view(language_edit_text)
+            builder.set_negative_button("Cancel", on_cancel_click)
+            builder.set_positive_button("OK", on_ok_click)
+            
+            self.log("Calling builder.show()")
+            dialog = builder.show()
+
+            
+            def apply_layout_params():
+                try:
+                    layout_params = language_edit_text.getLayoutParams()
+                    if layout_params is not None:
+                        if isinstance(layout_params, FrameLayout.LayoutParams):
+                            layout_params.gravity = Gravity.CENTER_HORIZONTAL
+                        
+                        if hasattr(layout_params, 'rightMargin'):
+                            layout_params.rightMargin = AndroidUtilities.dp(24)
+                            layout_params.leftMargin = AndroidUtilities.dp(24)
+                            layout_params.height = AndroidUtilities.dp(36)
+                            layout_params.bottomMargin = AndroidUtilities.dp(15)
+                        language_edit_text.setLayoutParams(layout_params)
+                    
+                    language_edit_text.requestFocus()
+                    text_length = language_edit_text.getText().length() if language_edit_text.getText() else 0
+                    language_edit_text.setSelection(0, text_length)
+                    AndroidUtilities.showKeyboard(language_edit_text)
+                except Exception:
+                    pass
+            
+            run_on_ui_thread(apply_layout_params, delay=100)
+            
+        except Exception:
+            pass
+    
+    def _apply_code_formatting(self, edit_text, start, end, language):
+        try:
+            from android.text import Spanned
+            from org.telegram.messenger import CodeHighlighting
+            
+            editable = edit_text.getText()
+            if editable is None:
+                return
+            
+            try:
+                code_spans = editable.getSpans(start, end, CodeHighlighting.Span)
+                if code_spans:
+                    for span in code_spans:
+                        editable.removeSpan(span)
+            except:
+                pass
+            
+            code_span = CodeHighlighting.Span(True, 0, None, language, editable.subSequence(start, end).toString())
+            editable.setSpan(code_span, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            
+            try:
+                delegate = get_private_field(edit_text, "delegate")
+                if delegate and hasattr(delegate, 'onSpansChanged'):
+                    delegate.onSpansChanged()
+            except:
+                pass
+            
+        except Exception as e:
+
+            traceback.print_exc()
+    
+    def _make_selected_mention(self, edit_text):
+
+        try:
+            from android.text import InputType, Spanned
+            from android.util import TypedValue
+            from android.widget import FrameLayout
+            from android.view import Gravity
+            from org.telegram.messenger import AndroidUtilities
+            from org.telegram.ui.ActionBar import Theme
+            from org.telegram.ui.Components import EditTextBoldCursor, URLSpanUserMention
+            from client_utils import run_on_ui_thread
+            from ui.alert import AlertDialogBuilder
+            
+
+            
+            start = edit_text.getSelectionStart()
+            end = edit_text.getSelectionEnd()
+            
+
+            
+            if start < 0 or end < 0 or start == end:
+
+                return
+            
+            context = edit_text.getContext()
+
+            
+            mention_edit_text = EditTextBoldCursor(context)
+            mention_edit_text.setHint("ID")
+            mention_edit_text.setInputType(InputType.TYPE_CLASS_TEXT)
+            mention_edit_text.setMaxLines(1)
+            mention_edit_text.setSingleLine(True)
+            mention_edit_text.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18)
+            mention_edit_text.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText))
+            mention_edit_text.setHintTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteHintText))
+            mention_edit_text.setBackground(Theme.createEditTextDrawable(context, True))
+            mention_edit_text.setCursorColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueHeader))
+            mention_edit_text.setCursorSize(AndroidUtilities.dp(20))
+            mention_edit_text.setCursorWidth(1.5)
+            mention_edit_text.setPadding(0, 0, 0, 0)
+            mention_edit_text.setFocusable(True)
+            
+            try:
+                text = edit_text.getText()
+                if text:
+                    mention_spans = text.getSpans(start, end, URLSpanUserMention)
+                    if mention_spans:
+                        for span in mention_spans:
+                            if span.getURL():
+                                mention_edit_text.setText(span.getURL())
+                                break
+            except:
+                pass
+            
+            plugin = self
+            
+            def on_ok_click(dialog, which):
+                try:
+                    AndroidUtilities.hideKeyboard(mention_edit_text)
+                    mention_id = mention_edit_text.getText().toString()
+                    # plugin already set to self
+                    if plugin:
+                        plugin._apply_mention_formatting(edit_text, start, end, mention_id)
+                except Exception:
+                    pass
+                dialog.dismiss()
+            
+            def on_cancel_click(dialog, which):
+                try:
+                    AndroidUtilities.hideKeyboard(mention_edit_text)
+                except Exception:
+                    pass
+                dialog.dismiss()
+            
+
+            builder = AlertDialogBuilder(context)
+            builder.set_title("Create Mention")
+            builder.set_view(mention_edit_text)
+            builder.set_negative_button("Cancel", on_cancel_click)
+            builder.set_positive_button("OK", on_ok_click)
+            
+            self.log("Calling builder.show()")
+            dialog = builder.show()
+
+            
+            def apply_layout_params():
+                try:
+                    layout_params = mention_edit_text.getLayoutParams()
+                    if layout_params is not None:
+                        if isinstance(layout_params, FrameLayout.LayoutParams):
+                            layout_params.gravity = Gravity.CENTER_HORIZONTAL
+                        
+                        if hasattr(layout_params, 'rightMargin'):
+                            layout_params.rightMargin = AndroidUtilities.dp(24)
+                            layout_params.leftMargin = AndroidUtilities.dp(24)
+                            layout_params.height = AndroidUtilities.dp(36)
+                            layout_params.bottomMargin = AndroidUtilities.dp(15)
+                        mention_edit_text.setLayoutParams(layout_params)
+                    
+                    mention_edit_text.requestFocus()
+                    text_length = mention_edit_text.getText().length() if mention_edit_text.getText() else 0
+                    mention_edit_text.setSelection(0, text_length)
+                    AndroidUtilities.showKeyboard(mention_edit_text)
+                except Exception:
+                    pass
+            
+            run_on_ui_thread(apply_layout_params, delay=100)
+            
+        except Exception:
+            pass
+    
+    def _apply_mention_formatting(self, edit_text, start, end, mention_id):
+        try:
+            from android.text import Spanned
+            from android.text.style import CharacterStyle
+            from org.telegram.ui.Components import URLSpanUserMention
+            
+            editable = edit_text.getText()
+            if editable is None:
+                return
+            
+            try:
+                character_spans = editable.getSpans(start, end, CharacterStyle)
+                if character_spans:
+                    for span in character_spans:
+                        span_start = editable.getSpanStart(span)
+                        span_end = editable.getSpanEnd(span)
+                        editable.removeSpan(span)
+                        if span_start < start:
+                            editable.setSpan(span, span_start, start, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        if span_end > end:
+                            editable.setSpan(span, end, span_end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            except:
+                pass
+            
+            try:
+                mention_span = URLSpanUserMention(mention_id, 3)
+                editable.setSpan(mention_span, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            except:
+                pass
+            
+            try:
+                delegate = get_private_field(edit_text, "delegate")
+                if delegate and hasattr(delegate, 'onSpansChanged'):
+                    delegate.onSpansChanged()
+            except:
+                pass
+            
+        except Exception:
+            traceback.print_exc()

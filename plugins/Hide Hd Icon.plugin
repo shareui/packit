@@ -1,0 +1,100 @@
+from base_plugin import BasePlugin, MethodHook
+from hook_utils import find_class
+
+__id__ = "hide_hd_icon"
+__name__ = "Hide HD Icon"
+__type__ = "plugin"
+__description__ = "Hide the annoying ahh-HD icon from the media picker"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+
+class PhotoCellSetHighQualityHook(MethodHook):
+    def __init__(self):
+        MethodHook.__init__(self)
+        self._field_cache = {}
+
+    def _get_cached_field(self, obj, field_name):
+        cache_key = f"{id(obj)}_{field_name}"
+        if cache_key not in self._field_cache:
+            try:
+                field = obj.getClass().getDeclaredField(field_name)
+                field.setAccessible(True)
+                self._field_cache[cache_key] = field
+            except:
+                self._field_cache[cache_key] = None
+        return self._field_cache.get(cache_key)
+
+    def _get_field_value(self, obj, field_name):
+        field = self._get_cached_field(obj, field_name)
+        if field:
+            try:
+                return field.get(obj)
+            except:
+                return None
+        return None
+
+    def after_hooked_method(self, param):
+        try:
+            from android.view import View
+            
+            highQuality = param.args[0] if param.args and len(param.args) > 0 else False
+            
+            if not highQuality:
+                return
+            
+            try:
+                photoEntry = self._get_field_value(param.thisObject, "photoEntry")
+                if photoEntry:
+                    isVideo = self._get_field_value(photoEntry, "isVideo") or False
+                    if isVideo:
+                        return
+                    else:
+                        videoInfoContainer = self._get_field_value(param.thisObject, "videoInfoContainer")
+                        if videoInfoContainer:
+                            videoInfoContainer.setVisibility(View.INVISIBLE)
+            except:
+                pass
+        except:
+            pass
+
+
+class HideHdIconPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self.hook_refs = []
+    
+    def on_plugin_load(self):
+        self._hook_photo_cell()
+    
+    def on_plugin_unload(self):
+        for ref in self.hook_refs:
+            try:
+                self.unhook_method(ref)
+            except:
+                pass
+        self.hook_refs = []
+    
+    def _hook_photo_cell(self):
+        try:
+            cellClass = find_class("org.telegram.ui.Cells.PhotoAttachPhotoCell")
+            
+            try:
+                setHighQuality_method = cellClass.getClass().getDeclaredMethod("setHighQuality", find_class("java.lang.Boolean").TYPE)
+                setHighQuality_method.setAccessible(True)
+                ref = self.hook_method(setHighQuality_method, PhotoCellSetHighQualityHook())
+                self.hook_refs.append(ref)
+            except:
+                method_names = ["setQuality", "setHD"]
+                for method_name in method_names:
+                    try:
+                        setHighQuality_method = cellClass.getClass().getDeclaredMethod(method_name, find_class("java.lang.Boolean").TYPE)
+                        setHighQuality_method.setAccessible(True)
+                        ref = self.hook_method(setHighQuality_method, PhotoCellSetHighQualityHook())
+                        self.hook_refs.append(ref)
+                        break
+                    except:
+                        continue
+        except:
+            pass

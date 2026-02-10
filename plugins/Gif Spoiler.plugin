@@ -1,0 +1,377 @@
+from base_plugin import BasePlugin, MethodHook, hook_filters, HookFilter
+from hook_utils import find_class, get_private_field
+from java import jclass
+from android.view import Gravity
+from android.widget import FrameLayout
+from android_utils import OnClickListener
+from client_utils import get_last_fragment, run_on_ui_thread
+from ui.alert import AlertDialogBuilder
+
+from org.telegram.messenger import R as R_tg, MessageObject, AndroidUtilities, SendMessagesHelper
+from org.telegram.ui.ActionBar import ActionBarMenuItem, Theme
+
+__id__ = "gif_spoiler"
+__name__ = "Gifs With Caption/Spoiler"
+__type__ = "plugin"
+__description__ = "Add 'Hide with spoiler' and 'Send with Caption' options to GIF preview menu"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+
+class GifSpoilerHook(MethodHook):
+    def __init__(self, plugin):
+        MethodHook.__init__(self)
+        self.plugin = plugin
+        self.added_items = []
+        self.current_viewer = None
+
+    @hook_filters(HookFilter.Condition("param.thisObject != null"))
+    def after_hooked_method(self, param):
+        try:
+            viewer = get_private_field(param.thisObject, "this$0")
+            if not viewer:
+                return
+
+            if self.current_viewer and self.current_viewer != viewer:
+                self.cleanup_menu_items()
+
+            self.current_viewer = viewer
+
+            popup_window = get_private_field(viewer, "popupWindow")
+            preview_menu = None
+            if popup_window:
+                preview_menu = popup_window.getContentView()
+            else:
+                preview_menu = get_private_field(viewer, "popupLayout")
+            document = get_private_field(viewer, "currentDocument")
+
+            if preview_menu and document:
+                self.add_spoiler_menu(preview_menu, viewer, document)
+
+        except:
+            pass
+
+    def add_spoiler_menu(self, preview_menu, viewer, document):
+        try:
+            if not MessageObject.isGifDocument(document):
+                return
+
+            resources_provider = get_private_field(viewer, "resourcesProvider")
+            delegate = get_private_field(viewer, "delegate")
+
+            if not delegate or not delegate.needSend(1):
+                return
+
+            self.cleanup_menu_items()
+
+            spoiler_item = ActionBarMenuItem.addItem(
+                preview_menu,
+                R_tg.drawable.msg_spoiler,
+                "Hide with spoiler",
+                False,
+                resources_provider)
+            spoiler_item.setOnClickListener(OnClickListener(lambda *_: self.send_gif_with_spoiler(viewer, document, delegate)))
+            self.added_items.append(spoiler_item)
+
+            caption_item = ActionBarMenuItem.addItem(
+                preview_menu,
+                R_tg.drawable.menu_tag_edit_solar,
+                "Send with Caption",
+                False,
+                resources_provider)
+            caption_item.setOnClickListener(OnClickListener(lambda *_: self.show_caption_dialog(viewer, document, delegate)))
+            self.added_items.append(caption_item)
+
+        except:
+            pass
+
+    def cleanup_menu_items(self):
+        try:
+            if not self.added_items:
+                return
+            for item in self.added_items:
+                try:
+                    if item and hasattr(item, 'getParent'):
+                        parent = item.getParent()
+                        if parent:
+                            parent.removeView(item)
+                except:
+                    pass
+            self.added_items.clear()
+        except:
+            pass
+
+    def send_gif_with_spoiler(self, viewer, document, delegate):
+        try:
+            parent = get_private_field(viewer, "parentObject")
+            current_account = get_private_field(viewer, "currentAccount")
+
+            topic_id = 0
+            user_reply_to_msg = None
+            topic_reply_to_msg = None
+            
+            try:
+                current_fragment = get_last_fragment()
+                if current_fragment:
+                    if hasattr(current_fragment, 'getTopicId'):
+                        topic_id = current_fragment.getTopicId()
+                    
+                    if hasattr(current_fragment, 'getChatActivityEnterView'):
+                        enter_view = current_fragment.getChatActivityEnterView()
+                        if enter_view and hasattr(enter_view, 'getReplyingMessageObject'):
+                            user_reply_to_msg = enter_view.getReplyingMessageObject()
+            except:
+                pass
+
+            if topic_id != 0:
+                try:
+                    from org.telegram.messenger import AccountInstance
+                    account_instance = AccountInstance.getInstance(current_account)
+                    topic = account_instance.getMessagesController().getTopicsController().findTopic(-delegate.getDialogId(), topic_id)
+                    if topic and topic.topicStartMessage:
+                        topic_reply_to_msg = MessageObject(current_account, topic.topicStartMessage, False, False)
+                        topic_reply_to_msg.isTopicMainMessage = True
+                except:
+                    pass
+
+            reply_msg = topic_reply_to_msg if topic_reply_to_msg else user_reply_to_msg
+            params = self.plugin._create_send_message_params_document(document, delegate.getDialogId(), user_reply_to_msg, reply_msg, None, parent, True)
+            SendMessagesHelper.getInstance(current_account).sendMessage(params)
+
+            from org.telegram.messenger import MediaDataController
+            from java.lang import System
+            MediaDataController.getInstance(current_account).addRecentGif(document, int(System.currentTimeMillis() / 1000), True)
+            
+            try:
+                current_fragment = get_last_fragment()
+                if current_fragment and hasattr(current_fragment, 'hideFieldPanel'):
+                    current_fragment.hideFieldPanel(False)
+            except:
+                pass
+
+        except:
+            pass
+        finally:
+            self.dismiss_popup(viewer)
+
+    def show_caption_dialog(self, viewer, document, delegate):
+        try:
+            from org.telegram.ui.Components import EditTextBoldCursor
+            from android.text import InputType
+            from android.util import TypedValue
+            
+            activity = get_last_fragment().getParentActivity()
+            if not activity:
+                return
+
+            input_field = EditTextBoldCursor(activity)
+            input_field.setHint("Message")
+            input_field.setInputType(InputType.TYPE_CLASS_TEXT)
+            input_field.setMaxLines(1)
+            input_field.setSingleLine(True)
+            input_field.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18)
+            input_field.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText))
+            input_field.setHintTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteHintText))
+            input_field.setBackground(Theme.createEditTextDrawable(activity, True))
+            input_field.setCursorColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueHeader))
+            input_field.setCursorSize(AndroidUtilities.dp(20))
+            input_field.setCursorWidth(1.5)
+            input_field.setPadding(0, 0, 0, 0)
+            input_field.setFocusable(True)
+            
+            def on_send_click(dialog, which):
+                try:
+                    AndroidUtilities.hideKeyboard(input_field)
+                    caption = input_field.getText().toString()
+                    self.send_gif_with_caption(viewer, document, delegate, caption)
+                except:
+                    pass
+                dialog.dismiss()
+            
+            def on_cancel_click(dialog, which):
+                try:
+                    AndroidUtilities.hideKeyboard(input_field)
+                except:
+                    pass
+                dialog.dismiss()
+            
+            builder = AlertDialogBuilder(activity)
+            builder.set_title("Caption")
+            builder.set_view(input_field)
+            builder.set_negative_button("Cancel", on_cancel_click)
+            builder.set_positive_button("Send", on_send_click)
+            
+            dialog = builder.show()
+            
+            def apply_layout_params():
+                try:
+                    layout_params = input_field.getLayoutParams()
+                    if layout_params is not None:
+                        if isinstance(layout_params, FrameLayout.LayoutParams):
+                            layout_params.gravity = Gravity.CENTER_HORIZONTAL
+                        
+                        if hasattr(layout_params, 'rightMargin'):
+                            layout_params.rightMargin = AndroidUtilities.dp(24)
+                            layout_params.leftMargin = AndroidUtilities.dp(24)
+                            layout_params.height = AndroidUtilities.dp(36)
+                            layout_params.bottomMargin = AndroidUtilities.dp(15)
+                        input_field.setLayoutParams(layout_params)
+                    
+                    input_field.requestFocus()
+                    text_length = input_field.getText().length() if input_field.getText() else 0
+                    input_field.setSelection(0, text_length)
+                    AndroidUtilities.showKeyboard(input_field)
+                except:
+                    pass
+            
+            run_on_ui_thread(apply_layout_params, delay=100)
+        except:
+            pass
+
+    def send_gif_with_caption(self, viewer, document, delegate, caption):
+        try:
+            current_account = get_private_field(viewer, "currentAccount")
+            
+            topic_id = 0
+            user_reply_to_msg = None
+            topic_reply_to_msg = None
+            
+            try:
+                current_fragment = get_last_fragment()
+                if current_fragment:
+                    if hasattr(current_fragment, 'getTopicId'):
+                        topic_id = current_fragment.getTopicId()
+                    
+                    if hasattr(current_fragment, 'getChatActivityEnterView'):
+                        enter_view = current_fragment.getChatActivityEnterView()
+                        if enter_view and hasattr(enter_view, 'getReplyingMessageObject'):
+                            user_reply_to_msg = enter_view.getReplyingMessageObject()
+            except:
+                pass
+
+            if topic_id != 0:
+                try:
+                    from org.telegram.messenger import AccountInstance
+                    account_instance = AccountInstance.getInstance(current_account)
+                    topic = account_instance.getMessagesController().getTopicsController().findTopic(-delegate.getDialogId(), topic_id)
+                    if topic and topic.topicStartMessage:
+                        topic_reply_to_msg = MessageObject(current_account, topic.topicStartMessage, False, False)
+                        topic_reply_to_msg.isTopicMainMessage = True
+                except:
+                    pass
+            
+            SendMessagesHelper.getInstance(current_account).sendMessage(
+                self.plugin._create_send_message_params_document(
+                    document, delegate.getDialogId(), user_reply_to_msg, topic_reply_to_msg if topic_reply_to_msg else user_reply_to_msg, caption, get_private_field(viewer, "parentObject"), False
+                )
+            )
+            from org.telegram.messenger import MediaDataController
+            from java.lang import System
+            MediaDataController.getInstance(current_account).addRecentGif(document, int(System.currentTimeMillis() / 1000), True)
+            
+            try:
+                current_fragment = get_last_fragment()
+                if current_fragment and hasattr(current_fragment, 'hideFieldPanel'):
+                    current_fragment.hideFieldPanel(False)
+            except:
+                pass
+            
+            self.dismiss_popup(viewer)
+        except:
+            pass
+
+    def dismiss_popup(self, viewer):
+        try:
+            self.cleanup_menu_items()
+            method = viewer.getClass().getDeclaredMethod("dismissPopupWindow")
+            method.setAccessible(True)
+            method.invoke(viewer)
+        except:
+            pass
+
+
+class GifDismissHook(MethodHook):
+    def __init__(self, plugin):
+        MethodHook.__init__(self)
+        self.plugin = plugin
+
+    def before_hooked_method(self, param):
+        try:
+            if hasattr(self.plugin, 'gif_spoiler_hook') and self.plugin.gif_spoiler_hook:
+                self.plugin.gif_spoiler_hook.cleanup_menu_items()
+        except:
+            pass
+
+
+class GifSpoilerPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self._class_cache = {}
+        self.hook_gif_spoiler_ref = None
+        self.hook_gif_dismiss_ref = None
+        self.gif_spoiler_hook = None
+    
+    def _get_class(self, class_name):
+        if class_name not in self._class_cache:
+            self._class_cache[class_name] = find_class(class_name)
+        return self._class_cache[class_name]
+    
+    def on_plugin_load(self):
+        self._hook_gif_spoiler()
+    
+    def on_plugin_unload(self):
+        if self.hook_gif_spoiler_ref:
+            try:
+                self.unhook_method(self.hook_gif_spoiler_ref)
+            except:
+                pass
+            self.hook_gif_spoiler_ref = None
+        if self.hook_gif_dismiss_ref:
+            try:
+                self.unhook_method(self.hook_gif_dismiss_ref)
+            except:
+                pass
+            self.hook_gif_dismiss_ref = None
+    
+    def _hook_gif_spoiler(self):
+        try:
+            SHOW_SHEET_RUNNABLE = self._get_class("org.telegram.ui.ContentPreviewViewer$1")
+            method = SHOW_SHEET_RUNNABLE.getClass().getDeclaredMethod("run")
+            method.setAccessible(True)
+            self.gif_spoiler_hook = GifSpoilerHook(self)
+            self.hook_gif_spoiler_ref = self.hook_method(method, self.gif_spoiler_hook)
+            
+            ContentPreviewViewer = find_class("org.telegram.ui.ContentPreviewViewer")
+            dismiss_method = ContentPreviewViewer.getClass().getDeclaredMethod("dismissPopupWindow")
+            dismiss_method.setAccessible(True)
+            self.hook_gif_dismiss_ref = self.hook_method(dismiss_method, GifDismissHook(self))
+        except:
+            pass
+
+    def _create_send_message_params_document(self, document, dialog_id, user_reply_to_msg, topic_reply_to_msg, caption, parent, has_spoiler):
+        try:
+            return SendMessagesHelper.SendMessageParams.of(
+                document, None, None, dialog_id, 
+                user_reply_to_msg, 
+                topic_reply_to_msg, 
+                caption,
+                None, None, None, True, 0, 0, 
+                0,
+                parent, 
+                None, 
+                False, 
+                has_spoiler
+            )
+        except:
+            return SendMessagesHelper.SendMessageParams.of(
+                document, None, None, dialog_id, 
+                user_reply_to_msg, 
+                topic_reply_to_msg, 
+                caption,
+                None, None, None, True, 0, 0, 
+                parent, 
+                None, 
+                False, 
+                has_spoiler
+            )

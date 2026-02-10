@@ -1,0 +1,116 @@
+from base_plugin import BasePlugin, MethodHook, hook_filters, HookFilter
+from hook_utils import find_class
+from java import jclass
+from android.view import View
+
+__id__ = "add_to_folder_all_tabs"
+__name__ = "Add To Folder in All Tabs"
+__type__ = "plugin"
+__description__ = "Always show 'Add to Folder' option when selecting chats, even when in other folders"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+
+class AddToFolderAllTabsHook(MethodHook):
+    def __init__(self, plugin):
+        MethodHook.__init__(self)
+        self.plugin = plugin
+
+    def after_hooked_method(self, param):
+        try:
+            dialogs_activity = param.thisObject
+            if dialogs_activity is None:
+                return
+            
+            add_to_folder_item_field = dialogs_activity.getClass().getDeclaredField("addToFolderItem")
+            add_to_folder_item_field.setAccessible(True)
+            add_to_folder_item = add_to_folder_item_field.get(dialogs_activity)
+            
+            if add_to_folder_item is None:
+                return
+            
+            filter_tabs_view_field = dialogs_activity.getClass().getDeclaredField("filterTabsView")
+            filter_tabs_view_field.setAccessible(True)
+            filter_tabs_view = filter_tabs_view_field.get(dialogs_activity)
+            
+            folder_id_field = dialogs_activity.getClass().getDeclaredField("folderId")
+            folder_id_field.setAccessible(True)
+            folder_id = folder_id_field.getInt(dialogs_activity)
+            
+            selected_dialogs_field = dialogs_activity.getClass().getDeclaredField("selectedDialogs")
+            selected_dialogs_field.setAccessible(True)
+            selected_dialogs = selected_dialogs_field.get(dialogs_activity)
+            
+            FiltersListBottomSheetClass = find_class("org.telegram.ui.Components.FiltersListBottomSheet")
+            if FiltersListBottomSheetClass:
+                can_add_filters = FiltersListBottomSheetClass.getCanAddDialogFilters(dialogs_activity, selected_dialogs)
+                has_available_folders = can_add_filters is not None and not can_add_filters.isEmpty()
+            else:
+                has_available_folders = False
+            
+            should_show = False
+            
+            if folder_id == 1:
+                should_show = True
+            elif (filter_tabs_view is not None and 
+                  filter_tabs_view.getVisibility() == View.VISIBLE and 
+                  has_available_folders):
+                should_show = True
+            
+            if should_show:
+                add_to_folder_item.setVisibility(View.VISIBLE)
+            else:
+                add_to_folder_item.setVisibility(View.GONE)
+                
+        except Exception:
+            pass
+
+
+class EnableAddToFolderAllTabsPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self.hook_ref = None
+        self._class_cache = {}
+    
+    def _get_class(self, class_name):
+        if class_name not in self._class_cache:
+            self._class_cache[class_name] = find_class(class_name)
+        return self._class_cache[class_name]
+    
+    def on_plugin_load(self):
+        self._hook_add_to_folder_all_tabs()
+    
+    def on_plugin_unload(self):
+        if self.hook_ref:
+            try:
+                self.unhook_method(self.hook_ref)
+            except:
+                pass
+    
+    def _hook_add_to_folder_all_tabs(self):
+        try:
+            DialogsActivityClass = self._get_class("org.telegram.ui.DialogsActivity")
+            if not DialogsActivityClass:
+                return
+            
+            try:
+                BooleanTYPE = self._get_class("java.lang.Boolean").TYPE
+                updateCountersMethod = DialogsActivityClass.getClass().getDeclaredMethod("updateCounters", BooleanTYPE)
+            except:
+                try:
+                    updateCountersMethod = DialogsActivityClass.getClass().getDeclaredMethod("updateCounters")
+                except:
+                    IntegerTYPE = self._get_class("java.lang.Integer").TYPE
+                    updateCountersMethod = DialogsActivityClass.getClass().getDeclaredMethod("updateCounters", IntegerTYPE)
+            
+            updateCountersMethod.setAccessible(True)
+            
+            self.hook_ref = self.hook_method(
+                updateCountersMethod,
+                AddToFolderAllTabsHook(self),
+                priority=0
+            )
+            
+        except Exception:
+            pass

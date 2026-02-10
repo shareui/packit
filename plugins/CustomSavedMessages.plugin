@@ -1,0 +1,152 @@
+__name__ = "Saved Messages"
+__version__ = "1.0.0"
+__id__ = "custom_saved_messages"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+from base_plugin import BasePlugin
+from hook_utils import find_class
+from client_utils import get_last_fragment
+from org.telegram.messenger import MessagesController, UserConfig
+from org.telegram.ui import DialogsActivity
+from android.os import Bundle
+from ui.settings import Switch, Text, Divider, Header
+from android.view import View
+from typing import List, Any
+
+
+class CustomSavedMessagesPlugin(BasePlugin):
+    
+    def __init__(self):
+        super().__init__()
+        self.custom_chat_id = None
+    
+    def on_plugin_load(self):
+        self.custom_chat_id = self.get_setting("custom_chat_id", None)
+        self._hook_save_message()
+    
+    def on_plugin_unload(self):
+        if hasattr(self, 'hook_ref') and self.hook_ref:
+            self.unhook_method(self.hook_ref)
+            self.hook_ref = None
+    
+    def get_custom_chat_id(self):
+        if self.get_setting("enabled", False) and self.custom_chat_id:
+            return self.custom_chat_id
+        return UserConfig.getInstance(UserConfig.selectedAccount).clientUserId
+    
+    def _select_custom_chat(self):
+        fragment = get_last_fragment()
+        if not fragment:
+            return
+        
+        args = Bundle()
+        args.putBoolean("onlySelect", True)
+        args.putBoolean("allowGlobalSearch", False)
+        args.putInt("dialogsType", 3)
+        args.putString("selectAlertString", "")
+        args.putBoolean("allowBots", True)
+        args.putBoolean("allowChannels", True)
+        args.putBoolean("allowGroups", True)
+        args.putBoolean("allowUsers", True)
+        args.putBoolean("canSelectTopics", True)
+        args.putBoolean("checkCanWrite", True)
+        args.putBoolean("resetDelegate", False)
+        args.putBoolean("closeFragment", True)
+        
+        dialogs_activity = DialogsActivity(args)
+        
+        from java import dynamic_proxy
+        plugin = self
+        
+        class CustomChatDelegate(dynamic_proxy(DialogsActivity.DialogsActivityDelegate)):
+            def __init__(self, plugin_instance):
+                super().__init__()
+                self.plugin_ref = plugin_instance
+            
+            def didSelectDialogs(self, fragment, dids, message, param, notify, scheduleDate, topicsFragment):
+                plugin = self.plugin_ref
+                if plugin and dids and dids.size() > 0:
+                    plugin.custom_chat_id = dids.get(0).dialogId
+                    plugin.set_setting("custom_chat_id", plugin.custom_chat_id, reload_settings=True)
+                    fragment.finishFragment(True)
+                return True
+            
+            def canSelectStories(self):
+                return False
+        
+        dialogs_activity.setDelegate(CustomChatDelegate(self))
+        fragment.presentFragment(dialogs_activity)
+    
+    def _get_chat_name(self):
+        if not self.custom_chat_id:
+            return "Not selected"
+        
+        mc = MessagesController.getInstance(UserConfig.selectedAccount)
+        if self.custom_chat_id < 0:
+            chat = mc.getChat(-self.custom_chat_id)
+            return getattr(chat, 'title', "Unknown") if chat else "Unknown"
+        
+        user = mc.getUser(self.custom_chat_id)
+        if user:
+            name = f"{getattr(user, 'first_name', '')} {getattr(user, 'last_name', '')}".strip()
+            return name or "Unknown"
+        return "Unknown"
+    
+    def create_settings(self) -> List[Any]:
+        settings = [
+            Switch(
+                key="enabled",
+                text="Enable Custom Chat",
+                default=False,
+                on_change=lambda v: self.set_setting("enabled", v, reload_settings=True),
+                link_alias="custom_saved_enabled"
+            )
+        ]
+        
+        if self.get_setting("enabled", False):
+            settings.extend([
+                Text(
+                    text=f"Selected Chat: {self._get_chat_name()}",
+                    on_click=lambda v: self._select_custom_chat(),
+                    link_alias="select_chat"
+                )
+            ])
+        
+        return settings
+    
+    def _hook_save_message(self):
+        ChatActivityClass = find_class("org.telegram.ui.ChatActivity")
+        if not ChatActivityClass:
+            return
+        
+        from java import jclass
+        method = ChatActivityClass.getClass().getDeclaredMethod(
+            "forwardMessages",
+            jclass("java.util.ArrayList"),
+            jclass("java.lang.Boolean").TYPE,
+            jclass("java.lang.Boolean").TYPE,
+            jclass("java.lang.Boolean").TYPE,
+            jclass("java.lang.Integer").TYPE,
+            jclass("java.lang.Long").TYPE,
+            jclass("java.lang.Long").TYPE
+        )
+        method.setAccessible(True)
+        
+        plugin = self
+        
+        class SaveMessageHook:
+            def before_hooked_method(self, param):
+                # plugin already set to self
+                if plugin and len(param.args) >= 6:
+                    client_id = param.thisObject.getUserConfig().getClientUserId()
+                    if param.args[5] == client_id:
+                        custom_id = plugin.get_custom_chat_id()
+                        if custom_id != client_id:
+                            param.args[5] = custom_id
+        
+        self.hook_ref = self.hook_method(method, SaveMessageHook())
+
+
+def create_plugin():
+    return CustomSavedMessagesPlugin()

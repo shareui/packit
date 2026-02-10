@@ -1,0 +1,76 @@
+from base_plugin import BasePlugin, MethodHook, hook_filters, HookFilter
+from hook_utils import find_class
+
+__id__ = "common_groups_tab"
+__name__ = "Prefer Common Groups Tab"
+__type__ = "plugin"
+__description__ = "Automatically select Common Groups tab instead of Gifts in user profiles"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+
+class PreferCommonGroupsTabHook(MethodHook):
+    def __init__(self, plugin):
+        MethodHook.__init__(self)
+        self.plugin = plugin
+
+    @hook_filters(HookFilter.Condition("param.thisObject != null"), HookFilter.ArgumentNotNull(0))
+    def after_hooked_method(self, param):
+        try:
+            userInfo = param.args[0]
+            sharedMediaLayout = param.thisObject
+            
+            if userInfo and hasattr(userInfo, 'common_chats_count') and userInfo.common_chats_count > 0:
+                try:
+                    scrollSlidingTextTabStrip = getattr(sharedMediaLayout, 'scrollSlidingTextTabStrip', None)
+                    if scrollSlidingTextTabStrip:
+                        currentTabId = scrollSlidingTextTabStrip.getCurrentTabId()
+                        if currentTabId == 14:
+                            sharedMediaLayout.scrollToPage(6)
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+
+class PreferCommonGroupsTabPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self._class_cache = {}
+        self.hook_prefer_common_groups_tab_ref = None
+    
+    def _get_class(self, class_name):
+        if class_name not in self._class_cache:
+            self._class_cache[class_name] = find_class(class_name)
+        return self._class_cache[class_name]
+    
+    def on_plugin_load(self):
+        self._hook_prefer_common_groups_tab()
+    
+    def on_plugin_unload(self):
+        if self.hook_prefer_common_groups_tab_ref:
+            try:
+                self.unhook_method(self.hook_prefer_common_groups_tab_ref)
+            except:
+                pass
+            self.hook_prefer_common_groups_tab_ref = None
+    
+    def _hook_prefer_common_groups_tab(self):
+        try:
+            SharedMediaLayoutClass = self._get_class("org.telegram.ui.Components.SharedMediaLayout")
+            if not SharedMediaLayoutClass:
+                return
+
+            java_class = SharedMediaLayoutClass.getClass()
+            
+            try:
+                method = java_class.getDeclaredMethod("setUserInfo", 
+                    self._get_class("org.telegram.tgnet.TLRPC$UserFull").getClass())
+                method.setAccessible(True)
+                self.hook_prefer_common_groups_tab_ref = self.hook_method(method, PreferCommonGroupsTabHook(self))
+            except Exception:
+                pass
+                
+        except Exception:
+            pass

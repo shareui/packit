@@ -1,0 +1,144 @@
+from base_plugin import BasePlugin, MethodHook, hook_filters, HookFilter
+from hook_utils import find_class
+from java import jclass
+from org.telegram.messenger import UserConfig, MessagesController
+
+__id__ = "search_by_user_id"
+__name__ = "Search By User ID"
+__type__ = "plugin"
+__description__ = "Search for users or chats by their ID in the search field"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+
+class SearchByUserIdHook(MethodHook):
+    def __init__(self, plugin):
+        MethodHook.__init__(self)
+        self.plugin = plugin
+        self.pending_user = None
+        self.pending_chat = None
+    
+    @hook_filters(HookFilter.ArgumentNotNull(0))
+    def before_hooked_method(self, param):
+        try:
+            self.pending_user = None
+            self.pending_chat = None
+            
+            char_sequence = param.args[0]
+            for_search = param.args[4] if len(param.args) > 4 else False
+            
+            if not for_search or char_sequence is None:
+                return
+            
+            if isinstance(char_sequence, str):
+                text = char_sequence.strip()
+            else:
+                text = str(char_sequence).strip()
+            
+            if text.startswith("@"):
+                text = text[1:]
+            
+            if text and text.isdigit() and len(text) <= 20:
+                try:
+                    user_id = int(text)
+                    current_account = UserConfig.selectedAccount
+                    user = MessagesController.getInstance(current_account).getUser(user_id)
+                    chat = MessagesController.getInstance(current_account).getChat(user_id)
+                    
+                    if chat is None and text.startswith("100") and len(text) > 10:
+                        chat_id = int(text[3:])
+                        chat = MessagesController.getInstance(current_account).getChat(chat_id)
+                    
+                    if user is not None:
+                        self.pending_user = user
+                    elif chat is not None:
+                        self.pending_chat = chat
+                    
+                except:
+                    pass
+                    
+        except:
+            pass
+    
+    def after_hooked_method(self, param):
+        try:
+            if self.pending_user is None and self.pending_chat is None:
+                return
+            
+            adapter = param.thisObject
+            
+            try:
+                parent_fragment_field = adapter.getClass().getDeclaredField("parentFragment")
+                parent_fragment_field.setAccessible(True)
+                chat_activity = parent_fragment_field.get(adapter)
+                
+                if chat_activity:
+                    search_user_method = chat_activity.getClass().getDeclaredMethod(
+                        "searchUserMessages",
+                        self.plugin._get_class("org.telegram.tgnet.TLRPC$User"),
+                        self.plugin._get_class("org.telegram.tgnet.TLRPC$Chat")
+                    )
+                    search_user_method.setAccessible(True)
+                    
+                    if self.pending_user:
+                        search_user_method.invoke(chat_activity, self.pending_user, None)
+                    elif self.pending_chat:
+                        search_user_method.invoke(chat_activity, None, self.pending_chat)
+                    
+            except:
+                pass
+            
+            self.pending_user = None
+            self.pending_chat = None
+                    
+        except:
+            pass
+
+
+class SearchByUserIdPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self._class_cache = {}
+        self.hook_search_by_user_id_ref = None
+    
+    def _get_class(self, class_name):
+        if class_name not in self._class_cache:
+            self._class_cache[class_name] = find_class(class_name)
+        return self._class_cache[class_name]
+    
+    def on_plugin_load(self):
+        self._hook_search_by_user_id()
+    
+    def on_plugin_unload(self):
+        if self.hook_search_by_user_id_ref:
+            try:
+                self.unhook_method(self.hook_search_by_user_id_ref)
+            except:
+                pass
+            self.hook_search_by_user_id_ref = None
+    
+    def _hook_search_by_user_id(self):
+        try:
+            MentionsAdapterClass = self._get_class("org.telegram.ui.Adapters.MentionsAdapter")
+            if not MentionsAdapterClass:
+                return
+            
+            IntegerClass = self._get_class("java.lang.Integer")
+            BooleanClass = self._get_class("java.lang.Boolean")
+            
+            java_class = MentionsAdapterClass.getClass()
+            search_method = java_class.getDeclaredMethod(
+                "searchUsernameOrHashtag",
+                self._get_class("java.lang.CharSequence"),
+                IntegerClass.TYPE,
+                self._get_class("java.util.ArrayList"),
+                BooleanClass.TYPE,
+                BooleanClass.TYPE
+            )
+            search_method.setAccessible(True)
+            
+            self.hook_search_by_user_id_ref = self.hook_method(search_method, SearchByUserIdHook(self))
+            
+        except:
+            pass

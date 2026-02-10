@@ -1,0 +1,64 @@
+from base_plugin import BasePlugin, MethodHook, hook_filters, HookFilter
+from java import jclass
+
+__id__ = "always_show_proxy_button"
+__name__ = "Always Show Proxy Button"
+__type__ = "plugin"
+__description__ = "Always show the proxy button in the action bar"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+
+class ProxyButtonHook(MethodHook):
+    def __init__(self, plugin):
+        WeakPluginHook.__init__(self, plugin)
+
+    @hook_filters(HookFilter.Condition("param.thisObject != null"))
+    def after_hooked_method(self, param):
+        try:
+            dialogs_activity = param.thisObject
+            
+            try:
+                proxy_item_field = dialogs_activity.getClass().getDeclaredField("proxyItem")
+                proxy_item_field.setAccessible(True)
+                proxy_item = proxy_item_field.get(dialogs_activity)
+                
+                if proxy_item is not None:
+                    proxy_item.setVisibility(0)
+                    
+                    proxy_visible_field = dialogs_activity.getClass().getDeclaredField("proxyItemVisible")
+                    proxy_visible_field.setAccessible(True)
+                    proxy_visible_field.set(dialogs_activity, True)
+                    
+            except Exception:
+                pass
+                
+        except Exception:
+            pass
+
+
+class AlwaysShowProxyButtonPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self.hook_proxy_button_ref = None
+    
+    def on_plugin_load(self):
+        self._hook_proxy_button()
+    
+    def on_plugin_unload(self):
+        if self.hook_proxy_button_ref:
+            try:
+                self.unhook_method(self.hook_proxy_button_ref)
+            except:
+                pass
+            self.hook_proxy_button_ref = None
+    
+    def _hook_proxy_button(self):
+        try:
+            cls = jclass("org.telegram.ui.DialogsActivity")
+            method = cls.getClass().getDeclaredMethod("updateProxyButton", jclass("java.lang.Boolean").TYPE, jclass("java.lang.Boolean").TYPE)
+            ref = self.hook_method(method, ProxyButtonHook(self))
+            self.hook_proxy_button_ref = ref
+        except Exception:
+            pass

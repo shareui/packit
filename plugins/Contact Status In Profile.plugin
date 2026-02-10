@@ -1,0 +1,329 @@
+from base_plugin import BasePlugin, MethodHook, hook_filters, HookFilter
+from hook_utils import find_class
+from java import jclass
+
+__id__ = "contact_status"
+__name__ = "Mutual Contact Status"
+__type__ = "plugin"
+__description__ = "Show mutual contact status in user profiles"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+VIEW_TYPE_TEXT_DETAIL = 2
+
+
+class ContactStatusUpdateRowsIdsHook(MethodHook):
+    def __init__(self, plugin):
+        self.plugin = plugin
+
+    @hook_filters(HookFilter.Condition("param.thisObject != null"))
+    def before_hooked_method(self, param):
+        activity = param.thisObject
+        state = self.plugin.contact_status_activity_state.setdefault(activity, {"mutualRow": -1})
+
+        state["shouldInsertMutual"] = False
+
+        user = self._get_profile_user(activity)
+        if not user or not getattr(user, "mutual_contact", False):
+            state["mutualRow"] = -1
+            return
+
+        state["shouldInsertMutual"] = True
+
+    @hook_filters(HookFilter.Condition("param.thisObject != null"))
+    def after_hooked_method(self, param):
+        activity = param.thisObject
+        state = self.plugin.contact_status_activity_state.get(activity)
+        if not state:
+            return
+
+        if not state.get("shouldInsertMutual"):
+            state["mutualRow"] = -1
+            state.pop("shouldInsertMutual", None)
+            return
+
+        insert_position = self._calculate_insert_position(activity)
+        if insert_position == -1:
+            state["mutualRow"] = -1
+            state.pop("shouldInsertMutual", None)
+            return
+
+        state["mutualRow"] = insert_position
+        state.pop("shouldInsertMutual", None)
+
+        row_count = self._get_int_field(activity, "rowCount")
+        if row_count != -1:
+            self._set_int_field(activity, "rowCount", row_count + 1)
+
+        try:
+            activity_class = activity.getClass()
+            fields = activity_class.getDeclaredFields()
+            for i in range(len(fields)):
+                field = fields[i]
+                name = field.getName()
+                if "Row" not in name and "row" not in name:
+                    continue
+                if name in ("rowCount", "phoneRow", "mutualRow"):
+                    continue
+                field_type = field.getType()
+                INTEGER_CLASS = jclass("java.lang.Integer")
+                if field_type != INTEGER_CLASS.TYPE and field_type != INTEGER_CLASS:
+                    continue
+                field.setAccessible(True)
+                value_obj = field.get(activity)
+                if value_obj is None:
+                    continue
+                try:
+                    value = int(value_obj)
+                except Exception:
+                    continue
+                if value >= state["mutualRow"] and value != -1:
+                    try:
+                        if field_type == INTEGER_CLASS.TYPE:
+                            field.setInt(activity, value + 1)
+                        else:
+                            field.set(activity, INTEGER_CLASS(value + 1))
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+
+    def _get_profile_user(self, activity):
+        try:
+            user_id = self._get_long_field(activity, "userId")
+            if user_id == 0:
+                return None
+            from org.telegram.messenger import MessagesController, UserConfig
+            account = UserConfig.selectedAccount
+            controller = MessagesController.getInstance(account)
+            if not controller:
+                return None
+            try:
+                user_id_int = int(user_id)
+            except Exception:
+                user_id_int = user_id
+            user = controller.getUser(user_id_int)
+            if user:
+                return user
+            user_full = self._get_object_field(activity, "userInfo")
+            if user_full and getattr(user_full, "user", None):
+                return user_full.user
+        except Exception:
+            return None
+
+    def _get_int_field(self, obj, name):
+        try:
+            field = obj.getClass().getDeclaredField(name)
+            field.setAccessible(True)
+            return field.getInt(obj)
+        except Exception:
+            return -1
+
+    def _set_int_field(self, obj, name, value):
+        try:
+            field = obj.getClass().getDeclaredField(name)
+            field.setAccessible(True)
+            field.setInt(obj, value)
+        except Exception:
+            pass
+
+    def _get_long_field(self, obj, name):
+        try:
+            field = obj.getClass().getDeclaredField(name)
+            field.setAccessible(True)
+            return field.getLong(obj)
+        except Exception:
+            return 0
+
+    def _get_object_field(self, obj, name):
+        try:
+            field = obj.getClass().getDeclaredField(name)
+            field.setAccessible(True)
+            return field.get(obj)
+        except Exception:
+            return None
+
+    def _calculate_insert_position(self, activity):
+        anchors = [
+            "phoneRow",
+        ]
+        for name in anchors:
+            value = self._get_int_field(activity, name)
+            if value != -1:
+                return value + 1
+
+        fallback_anchors = [
+            "bizHoursRow",
+            "bizLocationRow",
+            "usernameRow",
+            "userInfoRow",
+            "birthdayRow",
+            "infoHeaderRow",
+            "infoHeaderRowEmpty",
+        ]
+        for name in fallback_anchors:
+            value = self._get_int_field(activity, name)
+            if value != -1:
+                return value + 1
+
+        info_end_row = self._get_int_field(activity, "infoEndRow")
+        if info_end_row != -1:
+            return info_end_row + 1
+
+        return -1
+
+
+class ContactStatusListAdapterGetItemViewTypeHook(MethodHook):
+    def __init__(self, plugin):
+        self.plugin = plugin
+
+    @hook_filters(HookFilter.Condition("param.thisObject != null"), HookFilter.ArgumentNotNull(0))
+    def before_hooked_method(self, param):
+        adapter = param.thisObject
+        activity = self._get_activity_from_adapter(adapter)
+        state = self.plugin.contact_status_activity_state.get(activity) if self.plugin else None
+        if not state:
+            return
+        position_arg = param.args[0]
+        try:
+            position = int(position_arg)
+        except Exception:
+            position = position_arg
+        if position == state.get("mutualRow", -1):
+            try:
+                INTEGER_CLASS = jclass("java.lang.Integer")
+                param.setResult(INTEGER_CLASS(2))
+            except Exception:
+                param.setResult(2)
+
+    def _get_activity_from_adapter(self, adapter):
+        try:
+            field = adapter.getClass().getDeclaredField("this$0")
+            field.setAccessible(True)
+            return field.get(adapter)
+        except Exception:
+            return None
+
+
+class ContactStatusListAdapterBindViewHolderHook(MethodHook):
+    def __init__(self, plugin):
+        self.plugin = plugin
+
+    @hook_filters(HookFilter.ArgumentNotNull(0), HookFilter.ArgumentNotNull(1))
+    def after_hooked_method(self, param):
+        position_arg = param.args[1]
+        try:
+            position = int(position_arg)
+        except Exception:
+            position = position_arg
+        adapter = param.thisObject
+        activity = self._get_activity_from_adapter(adapter)
+        state = self.plugin.contact_status_activity_state.get(activity) if self.plugin else None
+        if not state or position != state.get("mutualRow", -1):
+            return
+
+        try:
+            holder = param.args[0]
+            item_view = holder.itemView
+            from org.telegram.ui.Cells import TextDetailCell
+            if isinstance(item_view, TextDetailCell):
+                item_view.setTextAndValue(
+                    "Mutual contact",
+                    "Both saved as contacts",
+                    True
+                )
+        except Exception:
+            pass
+
+    def _get_activity_from_adapter(self, adapter):
+        try:
+            field = adapter.getClass().getDeclaredField("this$0")
+            field.setAccessible(True)
+            return field.get(adapter)
+        except Exception:
+            return None
+
+
+class ContactStatusInProfilePlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self._class_cache = {}
+        self.contact_status_activity_state = {}
+        self.contact_status_update_rows_hook = None
+        self.contact_status_get_item_view_type_hook = None
+        self.contact_status_bind_view_holder_hook = None
+    
+    def _get_class(self, class_name):
+        if class_name not in self._class_cache:
+            self._class_cache[class_name] = find_class(class_name)
+        return self._class_cache[class_name]
+    
+    def on_plugin_load(self):
+        self._hook_contact_status_in_profile()
+    
+    def on_plugin_unload(self):
+        for hook_name in ['contact_status_update_rows_hook', 'contact_status_get_item_view_type_hook', 
+                          'contact_status_bind_view_holder_hook']:
+            hook = getattr(self, hook_name, None)
+            if hook:
+                try:
+                    self.unhook_method(hook)
+                except:
+                    pass
+                setattr(self, hook_name, None)
+        self.contact_status_activity_state.clear()
+    
+    def _hook_contact_status_in_profile(self):
+        try:
+            ProfileActivity = self._get_class("org.telegram.ui.ProfileActivity")
+            if not ProfileActivity:
+                return
+
+            java_class = ProfileActivity.getClass()
+
+            try:
+                update_rows = java_class.getDeclaredMethod("updateRowsIds")
+                update_rows.setAccessible(True)
+                self.contact_status_update_rows_hook = self.hook_method(
+                    update_rows,
+                    ContactStatusUpdateRowsIdsHook(self),
+                    priority=0,
+                )
+            except Exception:
+                pass
+
+            ListAdapter = self._get_class("org.telegram.ui.ProfileActivity$ListAdapter")
+            if not ListAdapter:
+                return
+
+            try:
+                int_type = jclass("java.lang.Integer").TYPE
+                view_holder = jclass("androidx.recyclerview.widget.RecyclerView$ViewHolder")
+
+                list_adapter_class = ListAdapter.getClass()
+
+                get_item_view_type = list_adapter_class.getDeclaredMethod("getItemViewType", int_type)
+                get_item_view_type.setAccessible(True)
+                self.contact_status_get_item_view_type_hook = self.hook_method(
+                    get_item_view_type,
+                    ContactStatusListAdapterGetItemViewTypeHook(self),
+                    priority=0,
+                )
+
+                on_bind_view_holder = list_adapter_class.getDeclaredMethod(
+                    "onBindViewHolder",
+                    view_holder,
+                    int_type,
+                )
+                on_bind_view_holder.setAccessible(True)
+                self.contact_status_bind_view_holder_hook = self.hook_method(
+                    on_bind_view_holder,
+                    ContactStatusListAdapterBindViewHolderHook(self),
+                    priority=0,
+                )
+            except Exception:
+                pass
+
+        except Exception:
+            pass

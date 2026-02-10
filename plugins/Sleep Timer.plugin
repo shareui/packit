@@ -1,0 +1,202 @@
+from base_plugin import BasePlugin, MethodHook, hook_filters, HookFilter
+from hook_utils import find_class, get_private_field
+from java import jclass, dynamic_proxy
+from android.os import Handler, Looper
+from android.widget import FrameLayout
+from ui.alert import AlertDialogBuilder
+from org.telegram.messenger import R as R_tg, LocaleController, AndroidUtilities
+
+__id__ = "sleep_timer"
+__name__ = "Music Sleep Timer"
+__type__ = "plugin"
+__description__ = "Add sleep timer option to music player - automatically pause after set duration"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+
+class SleepTimerConstructorHook(MethodHook):
+    def __init__(self, plugin):
+        MethodHook.__init__(self)
+        self.plugin = plugin
+    
+    @hook_filters(HookFilter.Condition("param.thisObject != null"))
+    def after_hooked_method(self, param):
+        try:
+            alert = param.thisObject
+            options_button = get_private_field(alert, "optionsButton")
+            if not options_button:
+                return
+            
+            options_button.addSubItem(1390, R_tg.drawable.menu_premium_clock, "Sleep Timer")
+        except:
+            pass
+
+
+class SleepTimerClickHook(MethodHook):
+    def __init__(self, plugin):
+        MethodHook.__init__(self)
+        self.plugin = plugin
+    
+    @hook_filters(HookFilter.Condition("param.thisObject != null"), HookFilter.ArgumentNotNull(0))
+    def before_hooked_method(self, param):
+        try:
+            item_id = param.args[0]
+            if item_id != 1390:
+                return
+            
+            alert = param.thisObject
+            self._show_sleep_timer_dialog(alert)
+        except:
+            pass
+    
+    def _show_sleep_timer_dialog(self, alert):
+        try:
+            preset_labels = [
+                "Disable",
+                LocaleController.formatPluralString("Minutes", 1),
+                LocaleController.formatPluralString("Minutes", 5),
+                LocaleController.formatPluralString("Minutes", 10),
+                LocaleController.formatPluralString("Minutes", 20),
+                LocaleController.formatPluralString("Minutes", 40),
+                LocaleController.formatPluralString("Hours", 1),
+                LocaleController.getString(R_tg.string.AutoDownloadCustom)
+            ]
+            
+            preset_values = [0, 1, 5, 10, 20, 40, 60]
+            hook_instance = self
+            
+            def on_preset_click(builder, which):
+                if which < len(preset_values):
+                    minutes = preset_values[which]
+                    hook_instance._set_sleep_timer(alert, minutes * 60)
+                else:
+                    Callback = jclass("org.telegram.messenger.Utilities$Callback")
+                    CallbackProxy = dynamic_proxy(Callback)
+                    
+                    class TimePickerCallback(CallbackProxy):
+                        def run(self, picked_minutes):
+                            hook_instance._set_sleep_timer(alert, picked_minutes * 60)
+                    
+                    from org.telegram.ui.Components import AlertsCreator
+                    AlertsCreator.createTimePickerDialog(
+                        alert.getContext(),
+                        "Sleep Timer",
+                        0,
+                        0,
+                        12 * 60,
+                        TimePickerCallback()
+                    )
+            
+            resources_provider = get_private_field(alert, "resourcesProvider")
+            builder = AlertDialogBuilder(alert.getContext(), resources_provider=resources_provider)
+            builder.set_title("Sleep Timer")
+            builder.set_items(preset_labels, on_preset_click)
+            builder.set_negative_button(LocaleController.getString(R_tg.string.Cancel))
+            builder.show()
+        except:
+            pass
+    
+    def _set_sleep_timer(self, alert, seconds):
+        try:
+            from android_utils import R as Runnable
+            
+            if not hasattr(self.plugin, '_sleep_handler') or self.plugin._sleep_handler is None:
+                self.plugin._sleep_handler = Handler(Looper.getMainLooper())
+            if hasattr(self.plugin, '_sleep_runnable') and self.plugin._sleep_runnable is not None:
+                self.plugin._sleep_handler.removeCallbacks(self.plugin._sleep_runnable)
+            
+            if seconds > 0:
+                def pause_music():
+                    from org.telegram.messenger import MediaController
+                    media_controller = MediaController.getInstance()
+                    if not media_controller.isMessagePaused():
+                        media_controller.pauseMessage(media_controller.getPlayingMessageObject())
+                    self.plugin.sleep_timer_active = False
+                
+                self.plugin._sleep_runnable = Runnable(pause_music)
+                self.plugin._sleep_handler.postDelayed(self.plugin._sleep_runnable, seconds * 1000)
+                
+                self.plugin.sleep_timer_active = True
+                if seconds < 3600:
+                    minutes = seconds // 60
+                    formatted_time = LocaleController.formatPluralString("Minutes", minutes)
+                else:
+                    hours = seconds // 3600
+                    formatted_time = LocaleController.formatPluralString("Hours", hours)
+                
+                from org.telegram.ui.Components import BulletinFactory
+                container_view = get_private_field(alert, "containerView")
+                resources_provider = get_private_field(alert, "resourcesProvider")
+                if container_view and isinstance(container_view, FrameLayout):
+                    message = "Sleep timer is set to {time}".format(time=formatted_time)
+                    BulletinFactory.of(container_view, resources_provider).createSimpleBulletin(
+                        R_tg.raw.done,
+                        AndroidUtilities.replaceTags(message)
+                    ).show()
+            else:
+                if self.plugin.sleep_timer_active:
+                    from org.telegram.ui.Components import BulletinFactory
+                    container_view = get_private_field(alert, "containerView")
+                    resources_provider = get_private_field(alert, "resourcesProvider")
+                    if container_view and isinstance(container_view, FrameLayout):
+                        BulletinFactory.of(container_view, resources_provider).createSimpleBulletin(
+                            R_tg.raw.done,
+                            "Sleep timer is disabled"
+                        ).show()
+                self.plugin.sleep_timer_active = False
+        except:
+            pass
+
+
+class SleepTimerPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self.hook_sleep_timer_ref = None
+        self.hook_sleep_timer_click_ref = None
+        self._sleep_handler = None
+        self._sleep_runnable = None
+        self.sleep_timer_active = False
+    
+    def on_plugin_load(self):
+        self._hook_sleep_timer()
+    
+    def on_plugin_unload(self):
+        if self._sleep_handler and self._sleep_runnable:
+            try:
+                self._sleep_handler.removeCallbacks(self._sleep_runnable)
+            except:
+                pass
+        
+        if self.hook_sleep_timer_ref:
+            try:
+                self.unhook_method(self.hook_sleep_timer_ref)
+            except:
+                pass
+            self.hook_sleep_timer_ref = None
+        
+        if self.hook_sleep_timer_click_ref:
+            try:
+                self.unhook_method(self.hook_sleep_timer_click_ref)
+            except:
+                pass
+            self.hook_sleep_timer_click_ref = None
+    
+    def _hook_sleep_timer(self):
+        try:
+            AudioPlayerAlert = find_class("org.telegram.ui.Components.AudioPlayerAlert")
+            if not AudioPlayerAlert:
+                return
+            Context = jclass("android.content.Context")
+            Theme_ResourcesProvider = jclass("org.telegram.ui.ActionBar.Theme$ResourcesProvider")
+            
+            constructor = AudioPlayerAlert.getClass().getDeclaredConstructor(Context, Theme_ResourcesProvider)
+            constructor.setAccessible(True)
+            self.hook_sleep_timer_ref = self.hook_method(constructor, SleepTimerConstructorHook(self))
+            
+            from java.lang import Integer
+            onSubItemClick = AudioPlayerAlert.getClass().getDeclaredMethod("onSubItemClick", Integer.TYPE)
+            onSubItemClick.setAccessible(True)
+            self.hook_sleep_timer_click_ref = self.hook_method(onSubItemClick, SleepTimerClickHook(self))
+        except:
+            pass

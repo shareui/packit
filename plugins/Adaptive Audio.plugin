@@ -1,0 +1,120 @@
+from base_plugin import BasePlugin, MethodHook, hook_filters, HookFilter
+from hook_utils import find_class
+from org.telegram.messenger import AndroidUtilities
+
+__id__ = "adaptive_audio"
+__name__ = "Adaptive Audio Length"
+__type__ = "plugin"
+__description__ = "Expand audio message bubbles for longer recordings"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+
+class AdaptiveAudioHook(MethodHook):
+    def __init__(self, plugin):
+        MethodHook.__init__(self)
+        self.plugin = plugin
+    
+    @hook_filters(HookFilter.Condition("param.thisObject != null"))
+    def after_hooked_method(self, param):
+        try:
+            cell = param.thisObject
+            
+            documentAttachTypeField = cell.getClass().getDeclaredField("documentAttachType")
+            documentAttachTypeField.setAccessible(True)
+            documentAttachType = documentAttachTypeField.getInt(cell)
+            
+            if documentAttachType != 3:
+                return
+            
+            currentMessageObjectField = cell.getClass().getDeclaredField("currentMessageObject")
+            currentMessageObjectField.setAccessible(True)
+            messageObject = currentMessageObjectField.get(cell)
+            
+            if messageObject is None:
+                return
+            
+            documentAttachField = cell.getClass().getDeclaredField("documentAttach")
+            documentAttachField.setAccessible(True)
+            documentAttach = documentAttachField.get(cell)
+            
+            if documentAttach is None:
+                return
+            
+            duration = 0
+            attributes = documentAttach.attributes
+            for i in range(attributes.size()):
+                attr = attributes.get(i)
+                attr_class_name = attr.getClass().getName()
+                if "TL_documentAttributeAudio" in attr_class_name:
+                    duration = attr.duration
+                    break
+            
+            if duration <= 0:
+                return
+            
+            backgroundWidthField = cell.getClass().getDeclaredField("backgroundWidth")
+            backgroundWidthField.setAccessible(True)
+            currentBackgroundWidth = backgroundWidthField.getInt(cell)
+            
+            extra = 0
+            if duration >= 180:
+                extra = AndroidUtilities.dp(120)
+            elif duration >= 120:
+                extra = AndroidUtilities.dp(80)
+            elif duration >= 60:
+                extra = AndroidUtilities.dp(40)
+            
+            if extra > 0:
+                from java.lang import Class
+                AndroidUtilitiesClass = Class.forName("org.telegram.messenger.AndroidUtilities")
+                displaySizeField = AndroidUtilitiesClass.getDeclaredField("displaySize")
+                displaySizeField.setAccessible(True)
+                displaySize = displaySizeField.get(None)
+                
+                screenLimit = displaySize.x - AndroidUtilities.dp(75)
+                
+                newBackgroundWidth = min(currentBackgroundWidth + extra, screenLimit)
+                backgroundWidthField.setInt(cell, newBackgroundWidth)
+        except:
+            pass
+
+
+class EnableAdaptiveAudioPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self._class_cache = {}
+        self.hook_adaptive_audio_ref = None
+    
+    def _get_class(self, class_name):
+        if class_name not in self._class_cache:
+            self._class_cache[class_name] = find_class(class_name)
+        return self._class_cache[class_name]
+    
+    def on_plugin_load(self):
+        self._hook_adaptive_audio_length()
+    
+    def on_plugin_unload(self):
+        if self.hook_adaptive_audio_ref:
+            try:
+                self.unhook_method(self.hook_adaptive_audio_ref)
+            except:
+                pass
+            self.hook_adaptive_audio_ref = None
+    
+    def _hook_adaptive_audio_length(self):
+        try:
+            ChatMessageCellClass = self._get_class("org.telegram.ui.Cells.ChatMessageCell")
+            if not ChatMessageCellClass:
+                return
+            
+            self.hook_adaptive_audio_ref = self.hook_all_methods(
+                ChatMessageCellClass,
+                "setMessageContent",
+                AdaptiveAudioHook(self),
+                priority=50
+            )
+            
+        except:
+            pass

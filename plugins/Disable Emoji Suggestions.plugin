@@ -1,0 +1,73 @@
+from base_plugin import BasePlugin, MethodHook
+from hook_utils import find_class
+
+__id__ = "disable_emoji_suggestions"
+__name__ = "Disable Emoji Suggestions"
+__type__ = "plugin"
+__description__ = "Disable emoji suggestions while typing"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+
+class DisableEmojiSuggestionsHook(MethodHook):
+    def before_hooked_method(self, param):
+        param.setResult(None)
+
+
+class DisableFireUpdateHook(MethodHook):
+    def before_hooked_method(self, param):
+        param.setResult(None)
+
+
+class DisableEmojiSuggestionsPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self._class_cache = {}
+        self.hook_disable_emoji_suggestions_ref = None
+        self.hook_refs = []
+    
+    def _get_class(self, class_name):
+        if class_name not in self._class_cache:
+            self._class_cache[class_name] = find_class(class_name)
+        return self._class_cache[class_name]
+    
+    def on_plugin_load(self):
+        self._hook_disable_emoji_suggestions()
+    
+    def on_plugin_unload(self):
+        if self.hook_disable_emoji_suggestions_ref:
+            try:
+                self.unhook_method(self.hook_disable_emoji_suggestions_ref)
+            except:
+                pass
+            self.hook_disable_emoji_suggestions_ref = None
+        for ref in self.hook_refs:
+            try:
+                self.unhook_method(ref)
+            except:
+                pass
+        self.hook_refs = []
+    
+    def _hook_disable_emoji_suggestions(self):
+        try:
+            SuggestEmojiViewClass = self._get_class("org.telegram.ui.Components.SuggestEmojiView")
+            if not SuggestEmojiViewClass:
+                return
+            
+            JavaClass = SuggestEmojiViewClass.getClass()
+            
+            update_method = JavaClass.getDeclaredMethod("update")
+            self.hook_disable_emoji_suggestions_ref = self.hook_method(update_method, DisableEmojiSuggestionsHook())
+            
+            fire_update_method = JavaClass.getDeclaredMethod("fireUpdate")
+            self.hook_refs.append(self.hook_method(fire_update_method, DisableFireUpdateHook()))
+            
+            StringClass = self._get_class("java.lang.String")
+            searchKeywords_method = JavaClass.getDeclaredMethod("searchKeywords", StringClass)
+            self.hook_refs.append(self.hook_method(searchKeywords_method, DisableEmojiSuggestionsHook()))
+            
+            searchAnimated_method = JavaClass.getDeclaredMethod("searchAnimated", StringClass)
+            self.hook_refs.append(self.hook_method(searchAnimated_method, DisableEmojiSuggestionsHook()))
+        except Exception:
+            pass

@@ -1,0 +1,211 @@
+from base_plugin import BasePlugin, MethodHook, MethodReplacement, hook_filters, HookFilter
+from hook_utils import find_class, get_private_field
+from java import jclass
+from ui.settings import Switch, Header
+from android.view import MotionEvent
+
+__id__ = "swipe_control"
+__name__ = "Swipe Control"
+__type__ = "plugin"
+__description__ = "Control swipe gestures in various contexts"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+
+class WebAppSwipeHook(MethodHook):
+    def __init__(self, plugin):
+        MethodHook.__init__(self)
+        self.plugin = plugin
+
+    def after_hooked_method(self, param):
+        try:
+            if not self.plugin.get_setting("prevent_webapp_swipe", True):
+                return
+            swipe_container = param.thisObject
+            if swipe_container:
+                swipe_container.setAllowSwipes(False)
+        except Exception:
+            pass
+
+
+class ChatSwipeHook(MethodReplacement):
+    def __init__(self, plugin):
+        MethodReplacement.__init__(self)
+        self.plugin = plugin
+
+    def replace_hooked_method(self, param):
+        try:
+            activity = param.thisObject
+            if activity is None:
+                return True
+            
+            swipe_back_enabled = True
+            try:
+                swipe_back_enabled = get_private_field(activity, "swipeBackEnabled")
+                if swipe_back_enabled is None:
+                    swipe_back_enabled = True
+            except:
+                pass
+            
+            forwarding_preview_view = None
+            try:
+                forwarding_preview_view = get_private_field(activity, "forwardingPreviewView")
+            except:
+                pass
+            
+            if not swipe_back_enabled or (forwarding_preview_view is not None and hasattr(forwarding_preview_view, 'isShowing') and forwarding_preview_view.isShowing()):
+                return False
+            
+            if self.plugin.get_setting("prevent_swipe_typing", True):
+                try:
+                    if activity.isKeyboardVisible():
+                        return False
+                except:
+                    pass
+            
+            if self.plugin.get_setting("prevent_swipe_editing", True):
+                try:
+                    editing_message = get_private_field(activity, "editingMessageObject")
+                    if editing_message is not None:
+                        return False
+                except:
+                    pass
+            
+            return True
+        except Exception:
+            return True
+
+
+class ArticleViewerSwipeHook(MethodHook):
+    def __init__(self, plugin):
+        MethodHook.__init__(self)
+        self.plugin = plugin
+
+    def before_hooked_method(self, param):
+        try:
+            if self.plugin.get_setting("disable_article_swipe", True):
+                param.setResult(False)
+        except Exception:
+            pass
+
+
+class TopicsSwipeHook(MethodHook):
+    def __init__(self, plugin):
+        MethodHook.__init__(self)
+        self.plugin = plugin
+    
+    @hook_filters(HookFilter.Condition("param.thisObject != null"))
+    def before_hooked_method(self, param):
+        if self.plugin.get_setting("disable_topics_swipe", True):
+            param.setResult(jclass("java.lang.Integer")(0))
+            param.returnEarly = True
+
+
+class SwipeControlPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self._class_cache = {}
+        self.hook_webapp_ref = None
+        self.hook_chat_ref = None
+        self.hook_article_ref = None
+        self.hook_topics_ref = None
+    
+    def _get_class(self, class_name):
+        if class_name not in self._class_cache:
+            self._class_cache[class_name] = find_class(class_name)
+        return self._class_cache[class_name]
+    
+    def create_settings(self):
+        return [
+            Header(text="Swipe Prevention"),
+            Switch(
+                key="prevent_webapp_swipe",
+                text="Web App Swipe Down",
+                default=True,
+                subtext="Prevent swipe down to close in webapp bots"
+            ),
+            Switch(
+                key="prevent_swipe_typing",
+                text="Swipe While Typing",
+                default=True,
+                subtext="Prevent swipe back when keyboard is open"
+            ),
+            Switch(
+                key="prevent_swipe_editing",
+                text="Swipe While Editing",
+                default=True,
+                subtext="Prevent swipe back when editing a message"
+            ),
+            Switch(
+                key="disable_article_swipe",
+                text="Article Viewer Swipe",
+                default=True,
+                subtext="Disable swipe to close in article viewer"
+            ),
+            Switch(
+                key="disable_topics_swipe",
+                text="Topics Swipe to Hide",
+                default=True,
+                subtext="Disable swipe gesture to hide topics in forums"
+            ),
+        ]
+    
+    def on_plugin_load(self):
+        self._hook_webapp_swipe()
+        self._hook_chat_swipe()
+        self._hook_article_swipe()
+        self._hook_topics_swipe()
+    
+    def on_plugin_unload(self):
+        for ref in [self.hook_webapp_ref, self.hook_chat_ref, self.hook_article_ref, self.hook_topics_ref]:
+            if ref:
+                try:
+                    self.unhook_method(ref)
+                except:
+                    pass
+    
+    def _hook_webapp_swipe(self):
+        try:
+            swipe_cls = self._get_class("org.telegram.ui.bots.ChatAttachAlertBotWebViewLayout$WebViewSwipeContainer")
+            context_class = jclass("android.content.Context")
+            method = swipe_cls.getClass().getDeclaredConstructor(context_class)
+            self.hook_webapp_ref = self.hook_method(method, WebAppSwipeHook(self))
+        except Exception:
+            pass
+    
+    def _hook_chat_swipe(self):
+        try:
+            cls = self._get_class("org.telegram.ui.ChatActivity")
+            if cls:
+                method = cls.getClass().getDeclaredMethod("isSwipeBackEnabled", 
+                    self._get_class("android.view.MotionEvent").getClass())
+                method.setAccessible(True)
+                self.hook_chat_ref = self.hook_method(method, ChatSwipeHook(self))
+        except Exception:
+            pass
+    
+    def _hook_article_swipe(self):
+        try:
+            cls = self._get_class("org.telegram.ui.ArticleViewer$WindowView")
+            method = cls.getClass().getDeclaredMethod("handleTouchEvent", MotionEvent)
+            method.setAccessible(True)
+            self.hook_article_ref = self.hook_method(method, ArticleViewerSwipeHook(self))
+        except Exception:
+            pass
+    
+    def _hook_topics_swipe(self):
+        try:
+            TouchHelperCallbackClass = self._get_class("org.telegram.ui.TopicsFragment$TouchHelperCallback")
+            if not TouchHelperCallbackClass:
+                return
+            
+            method = TouchHelperCallbackClass.getClass().getDeclaredMethod(
+                "getMovementFlags",
+                jclass("androidx.recyclerview.widget.RecyclerView"),
+                jclass("androidx.recyclerview.widget.RecyclerView$ViewHolder")
+            )
+            method.setAccessible(True)
+            self.hook_topics_ref = self.hook_method(method, TopicsSwipeHook(self))
+        except Exception:
+            pass

@@ -1,0 +1,272 @@
+from base_plugin import BasePlugin, MethodHook, hook_filters, HookFilter
+from hook_utils import find_class, get_private_field
+from java import jclass
+from android_utils import run_on_ui_thread, OnClickListener
+from client_utils import get_last_fragment
+
+__id__ = "message_preview_enhancement"
+__name__ = "Message Preview Enhancement"
+__type__ = "plugin"
+__description__ = "Send media from link previews"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+
+class MessagePreviewViewHook(MethodHook):
+    def __init__(self, plugin):
+        MethodHook.__init__(self)
+        self.plugin = plugin
+
+    @hook_filters(HookFilter.Condition("param.thisObject != null"))
+    def after_hooked_method(self, param):
+        try:
+            preview_view = param.thisObject
+            if preview_view and preview_view not in self.plugin.added_send_media_buttons:
+                run_on_ui_thread(lambda: self.plugin._add_send_media_button(preview_view), 100)
+        except:
+            pass
+
+
+class EnableMessagePreviewEnhancementPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self._class_cache = {}
+        self.hook_message_preview_view_ref = None
+        self.added_send_media_buttons = set()
+    
+    def _get_class(self, class_name):
+        if class_name not in self._class_cache:
+            self._class_cache[class_name] = find_class(class_name)
+        return self._class_cache[class_name]
+    
+    def on_plugin_load(self):
+        self._hook_message_preview_view()
+    
+    def on_plugin_unload(self):
+        if self.hook_message_preview_view_ref:
+            try:
+                self.unhook_method(self.hook_message_preview_view_ref)
+            except:
+                pass
+            self.hook_message_preview_view_ref = None
+        self.added_send_media_buttons.clear()
+    
+    def _hook_message_preview_view(self):
+        try:
+            if getattr(self, 'hook_message_preview_view_ref', None):
+                return
+                
+            cls = self._get_class("org.telegram.ui.Components.MessagePreviewView")
+            context_class = jclass("android.content.Context")
+            chat_activity_class = self._get_class("org.telegram.ui.ChatActivity")
+            params_class = self._get_class("org.telegram.messenger.MessagePreviewParams")
+            user_class = self._get_class("org.telegram.tgnet.TLRPC$User")
+            chat_class = self._get_class("org.telegram.tgnet.TLRPC$Chat")
+            int_class = jclass("java.lang.Integer").TYPE
+            boolean_class = jclass("java.lang.Boolean").TYPE
+            resources_class = self._get_class("org.telegram.ui.Components.MessagePreviewView$ResourcesDelegate")
+            
+            method = cls.getClass().getDeclaredConstructor(
+                context_class, chat_activity_class, params_class, user_class, 
+                chat_class, int_class, resources_class, int_class, boolean_class
+            )
+            self.hook_message_preview_view_ref = self.hook_method(method, MessagePreviewViewHook(self))
+        except:
+            pass
+
+    def _add_send_media_button(self, preview_view):
+        try:
+            message_preview_params = get_private_field(preview_view, "messagePreviewParams")
+            if not message_preview_params or not message_preview_params.webpage:
+                return
+
+            webpage = message_preview_params.webpage
+            if not (webpage.photo or webpage.document):
+                return
+
+            context = preview_view.getContext()
+            resources_provider = get_private_field(preview_view, "resourcesProvider")
+            
+            ActionBarMenuSubItem = jclass("org.telegram.ui.ActionBar.ActionBarMenuSubItem")
+            send_button = ActionBarMenuSubItem(context, False, False, resources_provider)
+            
+            R = jclass("org.telegram.messenger.R")
+            
+            if webpage.document:
+                if hasattr(message_preview_params, 'isVideo') and message_preview_params.isVideo:
+                    text = "Send Video"
+                else:
+                    text = "Send File"
+            else:
+                text = "Send Photo"
+            
+            send_button.setTextAndIcon(text, R.drawable.msg_send)
+            send_button.setVisibility(1 if (webpage.document or webpage.photo) else 8)
+            
+            def send_media(view=None):
+                run_on_ui_thread(lambda: self._send_media(preview_view, webpage))
+            
+            send_button.setOnClickListener(OnClickListener(send_media))
+            
+            menu = self._find_send_media_menu(preview_view)
+            if menu and hasattr(menu, 'addView'):
+                LayoutHelper = jclass("org.telegram.ui.Components.LayoutHelper")
+                menu.addView(send_button, LayoutHelper.createLinear(-1, 48))
+                self.added_send_media_buttons.add(preview_view)
+        except:
+            pass
+
+    def _find_send_media_menu(self, view):
+        try:
+            if hasattr(view, 'getChildCount'):
+                for i in range(view.getChildCount()):
+                    child = view.getChildAt(i)
+                    if child:
+                        class_name = child.getClass().getSimpleName()
+                        if "ActionBarPopupWindowLayout" in class_name and hasattr(child, 'addView'):
+                            return child
+                        menu = self._find_send_media_menu(child)
+                        if menu:
+                            return menu
+            return None
+        except:
+            return None
+
+    def _create_send_message_params_document(self, document, dialog_id, user_reply_to_msg, topic_reply_to_msg, caption, parent, has_spoiler):
+        from org.telegram.messenger import SendMessagesHelper
+        try:
+            return SendMessagesHelper.SendMessageParams.of(
+                document, None, None, dialog_id, 
+                user_reply_to_msg, 
+                topic_reply_to_msg, 
+                caption,
+                None, None, None, True, 0, 0, 
+                0,
+                parent, 
+                None, 
+                False, 
+                has_spoiler
+            )
+        except:
+            return SendMessagesHelper.SendMessageParams.of(
+                document, None, None, dialog_id, 
+                user_reply_to_msg, 
+                topic_reply_to_msg, 
+                caption,
+                None, None, None, True, 0, 0, 
+                parent, 
+                None, 
+                False, 
+                has_spoiler
+            )
+
+    def _create_send_message_params_photo(self, photo, dialog_id, user_reply_to_msg, topic_reply_to_msg, caption, parent, has_spoiler):
+        from org.telegram.messenger import SendMessagesHelper
+        try:
+            return SendMessagesHelper.SendMessageParams.of(
+                photo, None, dialog_id, 
+                user_reply_to_msg, 
+                topic_reply_to_msg, 
+                caption,
+                None, None, None, True, 0, 0, 
+                0,
+                parent, 
+                False, 
+                has_spoiler
+            )
+        except:
+            return SendMessagesHelper.SendMessageParams.of(
+                photo, None, dialog_id, 
+                user_reply_to_msg, 
+                topic_reply_to_msg, 
+                caption,
+                None, None, None, True, 0, 0, 
+                parent, 
+                False, 
+                has_spoiler
+            )
+
+    def _send_media(self, preview_view, webpage):
+        try:
+            from client_utils import get_send_messages_helper
+            from org.telegram.messenger import MessageObject, UserConfig, AccountInstance
+            
+            fragment = get_last_fragment()
+            if not fragment:
+                return
+            
+            dialog_id_field = fragment.getClass().getDeclaredField("dialog_id")
+            dialog_id_field.setAccessible(True)
+            dialog_id = dialog_id_field.getLong(fragment)
+            if not dialog_id:
+                return
+            
+            current_account = UserConfig.selectedAccount
+            account_instance = AccountInstance.getInstance(current_account)
+            
+            topic_id = 0
+            user_reply_to_msg = None
+            topic_reply_to_msg = None
+            
+            try:
+                if hasattr(fragment, 'getTopicId'):
+                    topic_id = fragment.getTopicId()
+                
+                if topic_id == 0 and hasattr(fragment, 'getThreadMessage'):
+                    thread_msg = fragment.getThreadMessage()
+                    if thread_msg:
+                        topic_id = thread_msg.getId()
+                
+                if topic_id == 0 and hasattr(fragment, 'threadMessageId'):
+                    topic_id = fragment.threadMessageId
+                
+                if hasattr(fragment, 'getChatActivityEnterView'):
+                    enter_view = fragment.getChatActivityEnterView()
+                    if enter_view and hasattr(enter_view, 'getReplyingMessageObject'):
+                        user_reply_to_msg = enter_view.getReplyingMessageObject()
+            except:
+                pass
+            
+            if topic_id != 0:
+                try:
+                    topic = account_instance.getMessagesController().getTopicsController().findTopic(-dialog_id, topic_id)
+                    if topic and topic.topicStartMessage:
+                        topic_reply_to_msg = MessageObject(current_account, topic.topicStartMessage, False, False)
+                        topic_reply_to_msg.isTopicMainMessage = True
+                except:
+                    pass
+            
+            message_preview_params = get_private_field(preview_view, "messagePreviewParams")
+            is_video = False
+            if message_preview_params and hasattr(message_preview_params, 'isVideo'):
+                is_video = message_preview_params.isVideo
+            
+            reply_msg = topic_reply_to_msg if topic_reply_to_msg else user_reply_to_msg
+            
+            params = None
+            if is_video and webpage.document:
+                params = self._create_send_message_params_document(
+                    webpage.document, dialog_id, user_reply_to_msg, reply_msg, None, webpage, False
+                )
+            elif webpage.photo:
+                params = self._create_send_message_params_photo(
+                    webpage.photo, dialog_id, user_reply_to_msg, reply_msg, None, webpage, False
+                )
+            elif webpage.document:
+                params = self._create_send_message_params_document(
+                    webpage.document, dialog_id, user_reply_to_msg, reply_msg, None, webpage, False
+                )
+            else:
+                return
+            
+            send_helper = get_send_messages_helper()
+            if send_helper and params:
+                send_helper.sendMessage(params)
+                try:
+                    if hasattr(preview_view, 'dismiss'):
+                        preview_view.dismiss(True)
+                except:
+                    pass
+        except:
+            pass

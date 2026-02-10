@@ -1,0 +1,256 @@
+from typing import List, Any
+from base_plugin import BasePlugin, MethodHook, hook_filters, HookFilter
+from hook_utils import find_class
+from java import jclass
+from ui.settings import Header, Switch
+
+__id__ = "unread_count_settings"
+__name__ = "Unread Count Settings"
+__type__ = "plugin"
+__description__ = "Customize unread count display - show chat count, message count, or exclude archived"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+
+class UnreadCountHook(MethodHook):
+    def __init__(self, plugin):
+        MethodHook.__init__(self)
+        self.plugin = plugin
+    
+    @hook_filters(HookFilter.Condition("param.thisObject != null"))
+    def after_hooked_method(self, param):
+        try:
+            show_message_count = self.plugin.get_setting("unread_message_count", False)
+            show_chat_count = self.plugin.get_setting("unread_chat_count", False)
+            exclude_archived = self.plugin.get_setting("exclude_archived_from_count", False)
+            process_counts = show_message_count or show_chat_count
+
+            if not (process_counts or exclude_archived):
+                return
+
+            messages_storage = param.thisObject
+            apply = param.args[0] if len(param.args) > 0 else False
+            from org.telegram.messenger import UserConfig
+            current_account = UserConfig.selectedAccount
+            MessagesController = jclass("org.telegram.messenger.MessagesController")
+            messages_controller = MessagesController.getInstance(current_account)
+
+            if process_counts:
+                dialog_filters_field = messages_controller.getClass().getDeclaredField("dialogFilters")
+                dialog_filters_field.setAccessible(True)
+                dialog_filters = dialog_filters_field.get(messages_controller)
+
+                for i in range(dialog_filters.size()):
+                    try:
+                        filter_dialog = dialog_filters.get(i)
+
+                        dialogs_field = filter_dialog.getClass().getDeclaredField("dialogs")
+                        dialogs_field.setAccessible(True)
+                        dialogs = dialogs_field.get(filter_dialog)
+
+                        if dialogs is None or dialogs.size() == 0:
+                            continue
+
+                        unread_count = 0
+
+                        for j in range(dialogs.size()):
+                            dialog = dialogs.get(j)
+
+                            dialog_unread_count = dialog.unread_count
+                            dialog_unread_mentions = dialog.unread_mentions_count
+
+                            if dialog_unread_count == 0 and dialog_unread_mentions == 0:
+                                continue
+
+                            if exclude_archived and hasattr(dialog, 'folder_id') and dialog.folder_id != 0:
+                                continue
+
+                            dialog_id = dialog.id
+                            is_muted = messages_controller.isDialogMuted(dialog_id, 0)
+
+                            if is_muted:
+                                if show_message_count and not show_chat_count:
+                                    unread_count += dialog_unread_count + dialog_unread_mentions
+                                elif dialog_unread_mentions > 0 and show_chat_count and not show_message_count:
+                                    unread_count += 1
+                                continue
+
+                            if show_message_count:
+                                unread_count += dialog_unread_count
+                            elif show_chat_count:
+                                unread_count += 1
+
+                        filter_dialog.unreadCount = unread_count
+                        filter_dialog.pendingUnreadCount = unread_count
+
+                    except:
+                        continue
+
+            if exclude_archived:
+                try:
+                    pending_archive_count_field = messages_storage.getClass().getDeclaredField("pendingArchiveUnreadCount")
+                    pending_archive_count_field.setAccessible(True)
+                    pending_archive_count_field.setInt(messages_storage, 0)
+
+                    archive_count_field = messages_storage.getClass().getDeclaredField("archiveUnreadCount")
+                    archive_count_field.setAccessible(True)
+                    archive_count_field.setInt(messages_storage, 0)
+                except:
+                    pass
+
+                if not process_counts:
+                    try:
+                        from org.telegram.messenger import NotificationCenter
+                        notification_center = NotificationCenter.getInstance(current_account)
+                        notification_center.postNotificationName(NotificationCenter.dialogsUnreadCounterChanged, current_account)
+                    except:
+                        pass
+
+            if process_counts:
+                main_unread_count_field = messages_storage.getClass().getDeclaredField("pendingMainUnreadCount")
+                main_unread_count_field.setAccessible(True)
+                previous_pending = main_unread_count_field.getInt(messages_storage)
+
+                previous_main = None
+                main_unread_count_apply_field = None
+                if apply:
+                    main_unread_count_apply_field = messages_storage.getClass().getDeclaredField("mainUnreadCount")
+                    main_unread_count_apply_field.setAccessible(True)
+                    previous_main = main_unread_count_apply_field.getInt(messages_storage)
+
+                main_dialogs_method = messages_controller.getClass().getMethod("getAllDialogs")
+                main_dialogs = main_dialogs_method.invoke(messages_controller)
+
+                filtered_count = 0
+                if main_dialogs is not None:
+                    for k in range(main_dialogs.size()):
+                        dialog = main_dialogs.get(k)
+                        dialog_unread_count = dialog.unread_count
+                        dialog_unread_mentions = dialog.unread_mentions_count
+
+                        if dialog_unread_count == 0 and dialog_unread_mentions == 0:
+                            continue
+
+                        if exclude_archived and hasattr(dialog, 'folder_id') and dialog.folder_id != 0:
+                            continue
+
+                        dialog_id = dialog.id
+                        is_muted = messages_controller.isDialogMuted(dialog_id, 0)
+
+                        if is_muted:
+                            if show_message_count and not show_chat_count:
+                                filtered_count += dialog_unread_count + dialog_unread_mentions
+                            elif dialog_unread_mentions > 0 and show_chat_count and not show_message_count:
+                                filtered_count += 1
+                            continue
+
+                        if show_message_count:
+                            filtered_count += dialog_unread_count
+                        elif show_chat_count:
+                            filtered_count += 1
+
+                main_unread_count_field.setInt(messages_storage, filtered_count)
+
+                if apply and main_unread_count_apply_field is not None:
+                    main_unread_count_apply_field.setInt(messages_storage, filtered_count)
+
+                should_notify = filtered_count != previous_pending or (apply and previous_main is not None and filtered_count != previous_main)
+
+                if should_notify:
+                    try:
+                        from org.telegram.messenger import NotificationCenter
+                        notification_center = NotificationCenter.getInstance(current_account)
+                        notification_center.postNotificationName(NotificationCenter.dialogsUnreadCounterChanged, current_account)
+                    except:
+                        pass
+            
+        except:
+            pass
+
+
+class UnreadCountSettingsPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self._class_cache = {}
+        self.hook_unread_count_ref = None
+    
+    def _get_class(self, class_name):
+        if class_name not in self._class_cache:
+            self._class_cache[class_name] = find_class(class_name)
+        return self._class_cache[class_name]
+    
+    def create_settings(self) -> List[Any]:
+        return [
+            Header(text="Unread Count Display"),
+            Switch(
+                key="unread_chat_count",
+                text="Show Unread Chat Count",
+                default=False,
+                subtext="Count unread chats instead of messages",
+                on_change=lambda v: self._apply_hooks(),
+                link_alias="unread_chat_count"
+            ),
+            Switch(
+                key="unread_message_count",
+                text="Show Unread Message Count",
+                default=False,
+                subtext="Count all unread messages",
+                on_change=lambda v: self._apply_hooks(),
+                link_alias="unread_message_count"
+            ),
+            Switch(
+                key="exclude_archived_from_count",
+                text="Exclude Archived Chats from Count",
+                default=False,
+                subtext="Don't count messages from archived chats",
+                on_change=lambda v: self._apply_hooks(),
+                link_alias="exclude_archived_from_count"
+            ),
+        ]
+    
+    def on_plugin_load(self):
+        self._apply_hooks()
+    
+    def on_plugin_unload(self):
+        if self.hook_unread_count_ref:
+            try:
+                self.unhook_method(self.hook_unread_count_ref)
+            except:
+                pass
+            self.hook_unread_count_ref = None
+    
+    def _apply_hooks(self):
+        if self.hook_unread_count_ref:
+            try:
+                self.unhook_method(self.hook_unread_count_ref)
+            except:
+                pass
+            self.hook_unread_count_ref = None
+        
+        if self.get_setting("unread_chat_count", False) or self.get_setting("unread_message_count", False) or self.get_setting("exclude_archived_from_count", False):
+            self._hook_unread_count()
+    
+    def _hook_unread_count(self):
+        try:
+            MessagesStorageClass = self._get_class("org.telegram.messenger.MessagesStorage")
+            if not MessagesStorageClass:
+                return
+
+            BooleanTYPE = jclass("java.lang.Boolean").TYPE
+            calcUnreadCountersMethod = MessagesStorageClass.getClass().getDeclaredMethod("calcUnreadCounters", BooleanTYPE)
+            calcUnreadCountersMethod.setAccessible(True)
+
+            self.hook_unread_count_ref = self.hook_method(calcUnreadCountersMethod, UnreadCountHook(self), priority=0)
+
+            if self.get_setting("exclude_archived_from_count", False):
+                try:
+                    from org.telegram.messenger import UserConfig
+                    current_account = UserConfig.selectedAccount
+                    messages_storage = MessagesStorageClass.getInstance(current_account)
+                    calcUnreadCountersMethod.invoke(messages_storage, True)
+                except:
+                    pass
+
+        except:
+            pass

@@ -1,0 +1,364 @@
+__id__ = "recent_chats_manager"
+__name__ = "Recent Chats Manager"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__description__ = "View recently opened chats from drawer"
+
+import json, base64
+from base_plugin import BasePlugin, MethodHook
+from hook_utils import find_class
+from client_utils import get_last_fragment, get_connections_manager
+from android_utils import run_on_ui_thread, OnClickListener
+from ui.alert import AlertDialogBuilder
+from java import dynamic_proxy, jclass
+from android.os import Bundle
+from android.view import Gravity, View
+from android.widget import TextView, LinearLayout, ScrollView, FrameLayout
+from android.util import TypedValue
+from org.telegram.messenger import MessagesController, UserConfig, R as R_tg, AndroidUtilities
+from org.telegram.ui.ActionBar import Theme
+from org.telegram.ui.Components import LayoutHelper
+from org.telegram.ui import ChatActivity, TopicsFragment
+from org.telegram.ui.Cells import UserCell
+from com.exteragram.messenger.plugins.ui.components.templates import UniversalFragment
+
+MAX_RECENT, MENU_CLEAR, DRAWER_ID = 50, 1, 1004
+
+TAB_ALL = 0
+TAB_CHANNELS = 1
+TAB_GROUPS = 2
+TAB_BOTS = 3
+TAB_USERS = 4
+
+class RecentChatsFragmentPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self.data = {}
+        self._hooks = []
+        self._fragment = None
+        self._is_fragment_visible = False
+
+    def on_plugin_load(self):
+        self._setup_drawer()
+        self._setup_activity_hooks()
+
+    def on_plugin_unload(self):
+        for h in self._hooks:
+            if h: self.unhook_method(h)
+
+    def _setup_drawer(self):
+        try:
+            Adapter = jclass("org.telegram.ui.Adapters.DrawerLayoutAdapter")
+            reset_m = Adapter.getClass().getDeclaredMethod("resetItems")
+            reset_m.setAccessible(True)
+            plugin = self
+
+            class ResetHook:
+                def after_hooked_method(s, p):
+                    try:
+                        items = p.thisObject.getClass().getDeclaredField("items")
+                        items.setAccessible(True)
+                        lst = items.get(p.thisObject)
+                        if lst and UserConfig.getInstance(UserConfig.selectedAccount).isClientActivated():
+                            Item = jclass("org.telegram.ui.Adapters.DrawerLayoutAdapter$Item")
+                            lst.add(0, Item(DRAWER_ID, "Recent Chats", R_tg.drawable.msg_topics_solar))
+                    except: pass
+
+            self._hooks.append(self.hook_method(reset_m, ResetHook()))
+
+            click_m = Adapter.getClass().getDeclaredMethod("click", jclass("android.view.View"), jclass("java.lang.Integer").TYPE)
+            click_m.setAccessible(True)
+
+            class ClickHook:
+                def before_hooked_method(s, p):
+                    try:
+                        adapter = p.thisObject
+                        pos = int(p.args[1])
+                        get_id = adapter.getClass().getDeclaredMethod("getId", jclass("java.lang.Integer").TYPE)
+                        get_id.setAccessible(True)
+                        from java.lang import Integer
+                        item_id = get_id.invoke(adapter, Integer(pos))
+                        if item_id == DRAWER_ID:
+                            if plugin._is_fragment_visible:
+                                p.setResult(True)
+                                return
+                            plugin._open_fragment()
+                            p.setResult(True)
+                    except: pass
+
+            self._hooks.append(self.hook_method(click_m, ClickHook()))
+        except: pass
+
+    def _open_fragment(self):
+        if self._is_fragment_visible:
+            return
+        def run():
+            try:
+                frag = get_last_fragment()
+                if frag:
+                    acc = UserConfig.selectedAccount
+                    self._fragment = UniversalFragment(self._make_delegate(acc))
+                    self._is_fragment_visible = True
+                    frag.presentFragment(self._fragment)
+            except:
+                self._is_fragment_visible = False
+        run_on_ui_thread(run)
+
+    def _fmt_time(self, ts):
+        try:
+            diff = get_connections_manager().getCurrentTime() - ts
+            if diff < 60: return "just now"
+            if diff < 3600: return f"{diff//60}m ago"
+            if diff < 86400: return f"{diff//3600}h ago"
+            if diff < 604800: return f"{diff//86400}d ago"
+            from java.util import Date
+            from java.text import SimpleDateFormat
+            return SimpleDateFormat("MMM d").format(Date(int(ts)*1000))
+        except: return ""
+
+    def _get_chat_type(self, did, acc):
+        try:
+            if did < 0:
+                chat = MessagesController.getInstance(acc).getChat(-did)
+                if chat:
+                    if chat.broadcast:
+                        return TAB_CHANNELS
+                    else:
+                        return TAB_GROUPS
+            else:
+                user = MessagesController.getInstance(acc).getUser(did)
+                if user:
+                    if user.bot:
+                        return TAB_BOTS
+                    else:
+                        return TAB_USERS
+        except: pass
+        return TAB_ALL
+
+    def _make_cell(self, ctx, did, acc, div):
+        try:
+            cell = UserCell(ctx, 6, 0, False)
+            ts = self._get_data(acc).get("ts", {}).get(str(did))
+            status = f"last opened {self._fmt_time(ts)}" if ts else None
+            obj = MessagesController.getInstance(acc).getChat(-did) if did < 0 else MessagesController.getInstance(acc).getUser(did)
+            if not obj: return None
+            cell.setData(obj, None, status, 0, div)
+            plugin = self
+
+            def click(v):
+                try:
+                    frag = plugin._fragment
+                    if not frag: return
+                    plugin._is_fragment_visible = False
+                    plugin._fragment = None
+                    b = Bundle()
+                    if did < 0:
+                        b.putLong("chat_id", -did)
+                        frag.presentFragment(TopicsFragment(b) if MessagesController.getInstance(acc).isForum(did) else ChatActivity(b), True)
+                    else:
+                        b.putLong("user_id", did)
+                        frag.presentFragment(ChatActivity(b), True)
+                except: pass
+
+            cell.setOnClickListener(OnClickListener(click))
+            cell.setBackground(Theme.getSelectorDrawable(False))
+            return cell
+        except: return None
+
+    def _get_data(self, acc):
+        if acc not in self.data:
+            try:
+                raw = self.get_setting(f"data_{acc}", "")
+                self.data[acc] = json.loads(base64.b64decode(raw).decode()) if raw else {"ids": [], "ts": {}}
+            except: self.data[acc] = {"ids": [], "ts": {}}
+        return self.data[acc]
+
+    def _save(self, acc):
+        try: self.set_setting(f"data_{acc}", base64.b64encode(json.dumps(self.data[acc]).encode()).decode())
+        except: pass
+
+    def add(self, acc, did):
+        d = self._get_data(acc)
+        if did in d["ids"]: d["ids"].remove(did)
+        d["ids"].insert(0, did)
+        while len(d["ids"]) > MAX_RECENT:
+            rem = d["ids"].pop()
+            d["ts"].pop(str(rem), None)
+        d["ts"][str(did)] = get_connections_manager().getCurrentTime()
+        self._save(acc)
+
+    def clear(self, acc):
+        self.data[acc] = {"ids": [], "ts": {}}
+        self._save(acc)
+
+    def _make_delegate(self, acc):
+        plugin = self
+
+        class Delegate(dynamic_proxy(UniversalFragment.UniversalFragmentDelegate)):
+            def __init__(s):
+                super().__init__()
+                s.acc = acc
+                s.box = None
+                s.scroll_view = None
+                s.tabs_view = None
+                s.current_tab = TAB_ALL
+                s.root = None
+
+            def getTitle(s): return "Recent Chats"
+            def beforeCreateView(s): return None
+
+            def afterCreateView(s, v):
+                try:
+                    if plugin._fragment:
+                        m = plugin._fragment.getActionBarMenu()
+                        if m: m.addItem(MENU_CLEAR, R_tg.drawable.msg_reset_solar)
+                    ctx = plugin._fragment.getParentActivity() if plugin._fragment else None
+                    if not ctx: return None
+                    
+                    s.root = FrameLayout(ctx)
+                    s.root.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite))
+                    
+                    main_layout = LinearLayout(ctx)
+                    main_layout.setOrientation(LinearLayout.VERTICAL)
+                    main_layout.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite))
+                    
+                    s.tabs_view = s._create_tabs(ctx)
+                    main_layout.addView(s.tabs_view, LayoutHelper.createLinear(-1, 44))
+                    
+                    s.box = LinearLayout(ctx)
+                    s.box.setOrientation(LinearLayout.VERTICAL)
+                    s.box.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite))
+                    
+                    s.scroll_view = ScrollView(ctx)
+                    s.scroll_view.addView(s.box)
+                    s.scroll_view.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite))
+                    
+                    main_layout.addView(s.scroll_view, LayoutHelper.createLinear(-1, 0, 1.0))
+                    s.root.addView(main_layout, LayoutHelper.createFrame(-1, -1))
+                    
+                    s._fill(ctx)
+                    return s.root
+                except: return None
+
+            def _create_tabs(s, ctx):
+                try:
+                    from org.telegram.ui.Components import ScrollSlidingTextTabStrip
+                    
+                    tabs_view = ScrollSlidingTextTabStrip(ctx, None)
+                    tabs_view.setBackgroundColor(Theme.getColor(Theme.key_actionBarDefault))
+                    
+                    tabs_view.addTextTab(TAB_ALL, "All")
+                    tabs_view.addTextTab(TAB_CHANNELS, "Channels")
+                    tabs_view.addTextTab(TAB_GROUPS, "Groups")
+                    tabs_view.addTextTab(TAB_BOTS, "Bots")
+                    tabs_view.addTextTab(TAB_USERS, "Users")
+                    
+                    delegate_ref = s
+                    TabStripDelegate = jclass("org.telegram.ui.Components.ScrollSlidingTextTabStrip$ScrollSlidingTabStripDelegate")
+                    
+                    class TabsDelegate(dynamic_proxy(TabStripDelegate)):
+                        def onPageSelected(self, page, forward):
+                            delegate_ref.current_tab = page
+                            ctx = plugin._fragment.getParentActivity() if plugin._fragment else None
+                            if ctx:
+                                delegate_ref._fill(ctx)
+                        
+                        def onPageScrolled(self, progress): pass
+                        def onSamePageSelected(self): pass
+                        def showOptions(self, page, view): return False
+                        def canReorder(self, page): return False
+                    
+                    tabs_view.setDelegate(TabsDelegate())
+                    tabs_view.finishAddingTabs()
+                    
+                    return tabs_view
+                except: return None
+
+            def _fill(s, ctx):
+                s.box.removeAllViews()
+                ids = plugin._get_data(s.acc)["ids"]
+                
+                if s.current_tab != TAB_ALL:
+                    ids = [did for did in ids if plugin._get_chat_type(did, s.acc) == s.current_tab]
+                
+                for i, did in enumerate(ids):
+                    c = plugin._make_cell(ctx, did, s.acc, i < len(ids)-1)
+                    if c: s.box.addView(c)
+                
+                if not ids:
+                    t = TextView(ctx)
+                    tab_names = {TAB_ALL: "", TAB_CHANNELS: "channel ", TAB_GROUPS: "group ", TAB_BOTS: "bot ", TAB_USERS: "user "}
+                    t.setText(f"No {tab_names.get(s.current_tab, '')}chats")
+                    t.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16)
+                    t.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText))
+                    t.setGravity(Gravity.CENTER)
+                    s.box.addView(t, LayoutHelper.createLinear(-1, 200, Gravity.CENTER))
+
+            def onFragmentCreate(s): pass
+            def onFragmentDestroy(s):
+                try:
+                    if s.box:
+                        s.box.removeAllViews()
+                        if s.box.getParent():
+                            s.box.getParent().removeView(s.box)
+                        s.box = None
+                    if s.scroll_view:
+                        s.scroll_view.removeAllViews()
+                        if s.scroll_view.getParent():
+                            s.scroll_view.getParent().removeView(s.scroll_view)
+                        s.scroll_view = None
+                    if s.tabs_view:
+                        if s.tabs_view.getParent():
+                            s.tabs_view.getParent().removeView(s.tabs_view)
+                        s.tabs_view = None
+                    if s.root:
+                        s.root.removeAllViews()
+                        s.root = None
+                except: pass
+                plugin._fragment = None
+                plugin._is_fragment_visible = False
+
+            def onBackPressed(s):
+                plugin._is_fragment_visible = False
+                plugin._fragment = None
+                return None
+            def fillItems(s, i, a): pass
+            def onClick(s, i, v, p, x, y): pass
+            def onLongClick(s, i, v, p, x, y): return False
+
+            def onMenuItemClick(s, mid):
+                if mid == MENU_CLEAR and plugin._fragment:
+                    ctx = plugin._fragment.getParentActivity()
+                    if not ctx: return
+                    b = AlertDialogBuilder(ctx)
+                    b.set_title("Clear Recent Chats")
+                    b.set_message("Clear all recent chats?")
+                    def yes(d, w): plugin.clear(s.acc); s._fill(ctx) if s.box else None; d.dismiss()
+                    def no(d, w): d.dismiss()
+                    b.set_positive_button("Clear", yes)
+                    b.set_negative_button("Cancel", no)
+                    b.make_button_red(AlertDialogBuilder.BUTTON_POSITIVE)
+                    b.show()
+
+        return Delegate()
+
+    def _setup_activity_hooks(self):
+        plugin = self
+        for cls, getter in [("ChatActivity", lambda a: a.getDialogId()), ("ProfileActivity", lambda a: a.getDialogId()), ("TopicsFragment", lambda a: -a.getChatId())]:
+            try:
+                C = find_class(f"org.telegram.ui.{cls}")
+                if not C: continue
+                m = C.getClass().getDeclaredMethod("onResume")
+                m.setAccessible(True)
+                g = getter
+
+                class Hook(MethodHook):
+                    def __init__(h, fn): super().__init__(); h.fn = fn
+                    def after_hooked_method(h, p):
+                        try:
+                            obj = p.thisObject
+                            if obj: plugin.add(obj.getCurrentAccount(), h.fn(obj))
+                        except: pass
+
+                self._hooks.append(self.hook_method(m, Hook(g)))
+            except: pass

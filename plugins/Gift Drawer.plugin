@@ -1,0 +1,245 @@
+from base_plugin import BasePlugin
+from java import jclass
+
+__id__ = "gift_drawer"
+__name__ = "gift"
+__version__ = "1.0.0"
+__type__ = "plugin"
+__description__ = "Add gift to drawer for quick access"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+
+class GiftDrawerPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self.drawer_hook_ref = None
+        self.click_hook_ref = None
+        self.drawer_cell_hook_ref = None
+        
+    def on_plugin_load(self):
+        try:
+            self._hook_drawer()
+        except Exception:
+            pass
+    
+    def on_plugin_unload(self):
+        for ref in [self.drawer_hook_ref, self.click_hook_ref, self.drawer_cell_hook_ref]:
+            if ref:
+                self.unhook_method(ref)
+    
+    def _hook_drawer(self):
+        try:
+            from java import jclass
+            
+            DrawerLayoutAdapter = jclass("org.telegram.ui.Adapters.DrawerLayoutAdapter")
+            resetItems_method = DrawerLayoutAdapter.getClass().getDeclaredMethod("resetItems")
+            resetItems_method.setAccessible(True)
+            
+            class DrawerResetHook:
+                def __init__(self, plugin):
+                    self.plugin = plugin
+                
+                def after_hooked_method(self, param):
+                    try:
+                        adapter = param.thisObject
+                        
+                        items_field = adapter.getClass().getDeclaredField("items")
+                        items_field.setAccessible(True)
+                        items = items_field.get(adapter)
+                        
+                        if items is None:
+                            return
+                        
+                        insert_position = -1
+                        found_bots = False
+                        
+                        for i in range(items.size()):
+                            item = items.get(i)
+                            if item is not None:
+                                try:
+                                    bot_field = item.getClass().getDeclaredField("bot")
+                                    bot_field.setAccessible(True)
+                                    bot = bot_field.get(item)
+                                    if bot is not None:
+                                        found_bots = True
+                                except:
+                                    pass
+                            elif found_bots and item is None:
+                                insert_position = i
+                                break
+                        
+                        if insert_position == -1:
+                            insert_position = 0
+                        
+                        from org.telegram.messenger import LocaleController, R, UserConfig
+                        
+                        current_account = UserConfig.selectedAccount
+                        if not UserConfig.getInstance(current_account).isClientActivated():
+                            return
+                        
+                        Item = jclass("org.telegram.ui.Adapters.DrawerLayoutAdapter$Item")
+                        gift_icon = R.drawable.menu_gift
+                        gift_text = LocaleController.getString(R.string.Gift2TitleSelf1)
+                        gift_item = Item(1003, gift_text, gift_icon)
+                        items.add(insert_position, gift_item)
+                        
+                    except Exception:
+                        pass
+            
+            self.drawer_hook_ref = self.hook_method(resetItems_method, DrawerResetHook(self))
+            self._hook_drawer_click()
+            self._hook_drawer_cell()
+            
+        except Exception:
+            pass
+    
+    def _hook_drawer_click(self):
+        try:
+            from java import jclass
+            
+            DrawerLayoutAdapter = jclass("org.telegram.ui.Adapters.DrawerLayoutAdapter")
+            click_method = DrawerLayoutAdapter.getClass().getDeclaredMethod("click", 
+                jclass("android.view.View"), 
+                jclass("java.lang.Integer").TYPE)
+            click_method.setAccessible(True)
+            
+            class DrawerClickHook:
+                def __init__(self, plugin):
+                    self.plugin = plugin
+                
+                def before_hooked_method(self, param):
+                    try:
+                        adapter = param.thisObject
+                        position = int(param.args[1])
+                        
+                        getId_method = adapter.getClass().getDeclaredMethod("getId", jclass("java.lang.Integer").TYPE)
+                        getId_method.setAccessible(True)
+                        
+                        from java.lang import Integer
+                        item_id = getId_method.invoke(adapter, Integer(position))
+                        
+                        if item_id == 1003:
+                            self._open_gift_sheet()
+                            param.setResult(True)
+                            
+                    except Exception:
+                        pass
+                
+                def _open_gift_sheet(self):
+                    try:
+                        from org.telegram.messenger import UserConfig, AndroidUtilities
+                        from org.telegram.ui import LaunchActivity
+                        from android_utils import run_on_ui_thread
+                        
+                        def open_sheet():
+                            try:
+                                current_account = UserConfig.selectedAccount
+                                client_user_id = UserConfig.getInstance(current_account).getClientUserId()
+                                
+                                if not hasattr(LaunchActivity, 'instance') or LaunchActivity.instance is None:
+                                    return
+                                
+                                launch_activity = LaunchActivity.instance
+                                
+                                getSafeLastFragment_method = launch_activity.getClass().getDeclaredMethod("getSafeLastFragment")
+                                getSafeLastFragment_method.setAccessible(True)
+                                last_fragment = getSafeLastFragment_method.invoke(launch_activity)
+                                
+                                if last_fragment is None or last_fragment.getContext() is None:
+                                    return
+                                
+                                GiftSheet = jclass("org.telegram.ui.Gifts.GiftSheet")
+                                gift_sheet = GiftSheet(
+                                    last_fragment.getContext(),
+                                    current_account,
+                                    client_user_id,
+                                    None,
+                                    None
+                                )
+                                gift_sheet.show()
+                                
+                            except Exception:
+                                pass
+                        
+                        run_on_ui_thread(open_sheet)
+                        
+                    except Exception:
+                        pass
+            
+            self.click_hook_ref = self.hook_method(click_method, DrawerClickHook(self))
+            
+        except Exception:
+            pass
+    
+    def _hook_drawer_cell(self):
+        try:
+            from java import jclass
+            
+            DrawerActionCell = jclass("org.telegram.ui.Cells.DrawerActionCell")
+            onDraw_method = DrawerActionCell.getClass().getDeclaredMethod("onDraw", jclass("android.graphics.Canvas"))
+            onDraw_method.setAccessible(True)
+            
+            class DrawerCellDrawHook:
+                def __init__(self, plugin):
+                    self.plugin = plugin
+                
+                def after_hooked_method(self, param):
+                    try:
+                        cell = param.thisObject
+                        canvas = param.args[0]
+                        
+                        currentId_field = cell.getClass().getDeclaredField("currentId")
+                        currentId_field.setAccessible(True)
+                        current_id = currentId_field.getInt(cell)
+                        
+                        if current_id != 1003:
+                            return
+                        
+                        from org.telegram.messenger import UserConfig, AndroidUtilities, R
+                        from org.telegram.ui.Stars import StarsController
+                        from org.telegram.ui.ActionBar import Theme
+                        
+                        current_account = UserConfig.selectedAccount
+                        balance = StarsController.getInstance(current_account).getBalance()
+                        if balance is None:
+                            return
+                        
+                        counter = balance.amount
+                        text = str(counter)
+                        
+                        star_drawable = cell.getContext().getResources().getDrawable(R.drawable.star_small_inner).mutate()
+                        star_size = AndroidUtilities.dp(17)
+                        
+                        countTop = AndroidUtilities.dp(12.5)
+                        textWidth = int(Theme.dialogs_countTextPaint.measureText(text))
+                        countWidth = max(AndroidUtilities.dp(10), textWidth + star_size + AndroidUtilities.dp(4))
+                        countLeft = cell.getMeasuredWidth() - countWidth - AndroidUtilities.dp(25)
+                        
+                        x = countLeft - AndroidUtilities.dp(5.5)
+                        
+                        from android.graphics import RectF
+                        rect = RectF()
+                        rect.set(x, countTop, x + countWidth + AndroidUtilities.dp(14), countTop + AndroidUtilities.dp(23))
+                        
+                        canvas.drawRoundRect(rect, 11.5 * AndroidUtilities.density, 11.5 * AndroidUtilities.density, Theme.dialogs_countGrayPaint)
+                        
+                        text_x = rect.left + (rect.width() - textWidth - star_size - AndroidUtilities.dp(4)) / 2
+                        canvas.drawText(text, text_x, countTop + AndroidUtilities.dp(16), Theme.dialogs_countTextPaint)
+                        
+                        star_x = int(text_x + textWidth + AndroidUtilities.dp(4))
+                        star_y = int(countTop + (AndroidUtilities.dp(23) - star_size) / 2)
+                        star_drawable.setBounds(star_x, star_y, star_x + star_size, star_y + star_size)
+                        star_drawable.draw(canvas)
+                        
+                    except Exception:
+                        pass
+            
+            self.drawer_cell_hook_ref = self.hook_method(onDraw_method, DrawerCellDrawHook(self))
+            
+        except Exception:
+            pass
+    
+
+def create_plugin():
+    return GiftDrawerPlugin()

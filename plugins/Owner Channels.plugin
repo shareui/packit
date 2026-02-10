@@ -1,0 +1,159 @@
+import traceback
+from base_plugin import BasePlugin
+from hook_utils import find_class
+from android_utils import run_on_ui_thread
+from client_utils import get_last_fragment
+from ui.alert import AlertDialogBuilder
+from java import dynamic_proxy
+from org.telegram.tgnet import TLRPC, SerializedData
+from android.os import Bundle
+
+__id__ = "owner_channels"
+__name__ = "OwnerChannels"
+__description__ = "Shows owned/admin channels and groups on drawer long-click"
+__version__ = "2.0.0"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+DIALOGS_TYPE_BOT_REQUEST_PEER = 15
+
+
+class OwnerChannels(BasePlugin):
+    def on_plugin_load(self):
+        run_on_ui_thread(self._setup)
+    
+    def _setup(self):
+        try:
+            f = get_last_fragment()
+            if not f:
+                return
+            a = f.getParentActivity()
+            if not a or "LaunchActivity" not in a.getClass().getName():
+                return
+            
+            sm = a.getClass().getDeclaredField("sideMenu")
+            sm.setAccessible(True)
+            menu = sm.get(a)
+            if not menu:
+                return
+            
+            ad = a.getClass().getDeclaredField("drawerLayoutAdapter")
+            ad.setAccessible(True)
+            adapter = ad.get(a)
+            
+            orig = None
+            try:
+                lf = menu.getClass().getSuperclass().getDeclaredField("onItemLongClickListener")
+                lf.setAccessible(True)
+                orig = lf.get(menu)
+            except:
+                pass
+            
+            Listener = find_class("org.telegram.ui.Components.RecyclerListView$OnItemLongClickListener")
+            plugin, activity = self, a
+            
+            class W(dynamic_proxy(Listener)):
+                def onItemClick(self, v, p):
+                    try:
+                        i = adapter.getId(p) if adapter else -1
+                        if i == 2:
+                            plugin._show_options(activity, True)
+                            return True
+                        if i == 4:
+                            plugin._show_options(activity, False)
+                            return True
+                        if orig:
+                            return orig.onItemClick(v, p)
+                    except:
+                        pass
+                    return False
+            
+            menu.setOnItemLongClickListener(W())
+        except:
+            pass
+    
+    def _show_options(self, ctx, is_group):
+        try:
+            type_name = "Groups" if is_group else "Channels"
+            
+            b = AlertDialogBuilder(ctx)
+            b.set_title(type_name)
+            
+            items = [
+                f"{type_name} where I'm admin",
+                f"My {type_name}"
+            ]
+            
+            def on_item_click(dialog, which):
+                try:
+                    dialog.dismiss()
+                    is_owner_only = (which == 1)
+                    self._open_dialogs_activity(ctx, is_group, is_owner_only)
+                except Exception as e:
+                    pass
+            
+            b.set_items(items, on_item_click)
+            b.set_negative_button("Cancel", lambda d, _: d.dismiss())
+            b.show()
+        except Exception as e:
+            pass
+    
+    def _open_dialogs_activity(self, ctx, is_group, is_owner_only):
+        try:
+            f = get_last_fragment()
+            if not f:
+                return
+            
+            try:
+                dlc_field = f.getParentActivity().getClass().getDeclaredField("drawerLayoutContainer")
+                dlc_field.setAccessible(True)
+                dlc = dlc_field.get(f.getParentActivity())
+                if dlc:
+                    dlc.closeDrawer(False)
+            except Exception as e:
+                pass
+            
+            if is_group:
+                request_peer = TLRPC.TL_requestPeerTypeChat()
+            else:
+                request_peer = TLRPC.TL_requestPeerTypeBroadcast()
+            
+            if is_owner_only:
+                request_peer.creator = True
+            else:
+                admin_rights = TLRPC.TL_chatAdminRights()
+                admin_rights.other = True
+                request_peer.user_admin_rights = admin_rights
+            
+            buffer = SerializedData()
+            request_peer.serializeToStream(buffer)
+            request_peer_bytes = buffer.toByteArray()
+            buffer.cleanup()
+            
+            args = Bundle()
+            args.putBoolean("onlySelect", True)
+            args.putInt("dialogsType", DIALOGS_TYPE_BOT_REQUEST_PEER)
+            args.putByteArray("requestPeerType", request_peer_bytes)
+            
+            if is_group:
+                args.putBoolean("allowChannels", False)
+                args.putBoolean("allowUsers", False)
+                args.putBoolean("allowBots", False)
+                args.putBoolean("allowGroups", True)
+                args.putBoolean("allowMegagroups", True)
+                args.putBoolean("allowLegacyGroups", True)
+            else:
+                args.putBoolean("allowChannels", True)
+                args.putBoolean("allowUsers", False)
+                args.putBoolean("allowBots", False)
+                args.putBoolean("allowGroups", False)
+                args.putBoolean("allowMegagroups", False)
+                args.putBoolean("allowLegacyGroups", False)
+            
+            DialogsActivity = find_class("org.telegram.ui.DialogsActivity")
+            
+            dialogs = DialogsActivity(args)
+            
+            f.presentFragment(dialogs)
+        except Exception as e:
+            pass

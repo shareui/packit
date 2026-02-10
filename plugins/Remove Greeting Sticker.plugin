@@ -1,0 +1,70 @@
+from base_plugin import BasePlugin, MethodReplacement
+from hook_utils import find_class, get_private_field, set_private_field
+
+__id__ = "remove_greeting_sticker"
+__name__ = "Remove Greeting Sticker"
+__type__ = "plugin"
+__description__ = "Remove the greeting sticker shown when starting a new chat"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+
+class RemoveGreetingStickerHook(MethodReplacement):
+    def replace_hooked_method(self, param):
+        result = self.invoke_original_method(param)
+        
+        try:
+            chat_activity = param.thisObject
+            greetings_container = get_private_field(chat_activity, "greetingsViewContainer")
+            
+            if greetings_container is not None:
+                parent = greetings_container.getParent()
+                if parent is not None:
+                    parent.removeView(greetings_container)
+                set_private_field(chat_activity, "greetingsViewContainer", None)
+                
+        except Exception:
+            pass
+        
+        return result
+
+
+class RemoveGreetingStickerPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self._class_cache = {}
+        self.hook_remove_greeting_sticker_ref = None
+    
+    def _get_class(self, class_name):
+        if class_name not in self._class_cache:
+            self._class_cache[class_name] = find_class(class_name)
+        return self._class_cache[class_name]
+    
+    def on_plugin_load(self):
+        self._hook_remove_greeting_sticker()
+    
+    def on_plugin_unload(self):
+        if self.hook_remove_greeting_sticker_ref:
+            try:
+                self.unhook_method(self.hook_remove_greeting_sticker_ref)
+            except:
+                pass
+            self.hook_remove_greeting_sticker_ref = None
+    
+    def _hook_remove_greeting_sticker(self):
+        try:
+            ChatActivityClass = self._get_class("org.telegram.ui.ChatActivity")
+            if not ChatActivityClass:
+                return
+            
+            BooleanTYPE = self._get_class("java.lang.Boolean").TYPE
+            create_empty_view_method = ChatActivityClass.getClass().getDeclaredMethod(
+                "createEmptyView",
+                BooleanTYPE
+            )
+            create_empty_view_method.setAccessible(True)
+            
+            self.hook_remove_greeting_sticker_ref = self.hook_method(create_empty_view_method, RemoveGreetingStickerHook())
+        except Exception:
+            pass

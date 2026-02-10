@@ -1,0 +1,223 @@
+from base_plugin import BasePlugin, MethodHook, hook_filters, HookFilter
+from hook_utils import find_class, get_private_field
+from java import jclass
+from android_utils import run_on_ui_thread, OnClickListener
+
+from android.widget import LinearLayout
+from org.telegram.messenger import AndroidUtilities, R as R_tg
+from org.telegram.ui.ActionBar import Theme, ActionBarMenuItem
+
+__id__ = "select_all_media"
+__name__ = "Select All Media"
+__type__ = "plugin"
+__description__ = "Select all shared media with one click"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+
+class EnableSelectAllMediaPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self.hook_ref = None
+        self._class_cache = {}
+    
+    def _get_class(self, class_name):
+        if class_name not in self._class_cache:
+            self._class_cache[class_name] = find_class(class_name)
+        return self._class_cache[class_name]
+    
+    def on_plugin_load(self):
+        self._hook_select_all_media()
+    
+    def on_plugin_unload(self):
+        if self.hook_ref:
+            try:
+                self.unhook_method(self.hook_ref)
+            except:
+                pass
+    
+    def _hook_select_all_media(self):
+        try:
+            SharedMediaLayoutClass = self._get_class("org.telegram.ui.Components.SharedMediaLayout")
+            if not SharedMediaLayoutClass:
+                return
+            
+            plugin = self
+            
+            class SharedMediaLayoutHook(MethodHook):
+                def after_hooked_method(hook_self, param):
+                    try:
+                        # plugin already set to self
+                        if plugin and param.thisObject is not None:
+                            plugin._add_select_all_button(param.thisObject)
+                    except:
+                        pass
+            
+            for constructor in SharedMediaLayoutClass.getClass().getDeclaredConstructors():
+                if len(constructor.getParameterTypes()) >= 5:
+                    constructor.setAccessible(True)
+                    self.hook_ref = self.hook_method(constructor, SharedMediaLayoutHook())
+                    break
+        except:
+            pass
+    
+    def _add_select_all_button(self, shared_media_layout):
+        try:
+            action_mode_layout = get_private_field(shared_media_layout, "actionModeLayout")
+            action_mode_views = get_private_field(shared_media_layout, "actionModeViews")
+            if not action_mode_layout or action_mode_views is None:
+                return
+            
+            select_all_item = ActionBarMenuItem(
+                action_mode_layout.getContext(), None,
+                Theme.getColor(Theme.key_actionBarActionModeDefaultSelector),
+                Theme.getColor(Theme.key_actionBarActionModeDefaultIcon), False
+            )
+            select_all_item.setIcon(R_tg.drawable.msg_select_between_solar)
+            select_all_item.setContentDescription("Select All")
+            select_all_item.setDuplicateParentStateEnabled(False)
+            select_all_item.setOnClickListener(OnClickListener(lambda v: self._select_all_media(shared_media_layout)))
+            
+            action_mode_layout.addView(select_all_item, 2, LinearLayout.LayoutParams(AndroidUtilities.dp(54), LinearLayout.LayoutParams.MATCH_PARENT))
+            action_mode_views.add(2, select_all_item)
+        except:
+            pass
+    
+    def _scroll_and_select(self, shared_media_layout, current_page, selected_files, dialog_id, shared_media_data, media_type):
+        try:
+            list_view = get_private_field(current_page, "listView")
+            if not list_view:
+                return
+            
+            messages = get_private_field(shared_media_data[media_type], "messages")
+            total_count = get_private_field(shared_media_data[media_type], "totalCount")
+            
+            state = {"index": 0, "count": messages.size() if messages else 0, "load_attempts": 0}
+            BATCH_SIZE = 20
+            MAX_LOAD_ATTEMPTS = 5
+            MAX_SELECTION = 100
+            
+            plugin = self
+            shared_media_ref = shared_media_layout
+            
+            def step():
+                try:
+                    # plugin already set to self
+                    shared_media = shared_media_ref
+                    if not plugin or not shared_media:
+                        return
+                    
+                    messages_now = get_private_field(shared_media_data[media_type], "messages")
+                    if not messages_now:
+                        return
+                    
+                    done = False
+                    for _ in range(BATCH_SIZE):
+                        i = state["index"]
+                        if i >= state["count"]:
+                            if state["count"] < total_count and state["count"] < MAX_SELECTION:
+                                def attempt_load():
+                                    try:
+                                        pos = max(0, state["count"] - 1)
+                                        list_view.scrollToPosition(pos)
+                                        
+                                        def check_new_count():
+                                            try:
+                                                new_messages = get_private_field(shared_media_data[media_type], "messages")
+                                                new_count = new_messages.size() if new_messages else 0
+                                                if new_count > state["count"]:
+                                                    state["count"] = new_count
+                                                    state["load_attempts"] = 0
+                                                    run_on_ui_thread(step)
+                                                else:
+                                                    state["load_attempts"] += 1
+                                                    if state["load_attempts"] < MAX_LOAD_ATTEMPTS:
+                                                        run_on_ui_thread(attempt_load, 300)
+                                            except:
+                                                pass
+                                        run_on_ui_thread(check_new_count, 300)
+                                    except:
+                                        pass
+                                attempt_load()
+                            else:
+                                def scroll_to_start():
+                                    try:
+                                        list_view.scrollToPosition(0)
+                                    except:
+                                        pass
+                                run_on_ui_thread(scroll_to_start, 200)
+                            return
+                        
+                        if selected_files[0].size() + selected_files[1].size() >= MAX_SELECTION:
+                            def scroll_to_start():
+                                try:
+                                    list_view.scrollToPosition(0)
+                                except:
+                                    pass
+                            run_on_ui_thread(scroll_to_start, 200)
+                            return
+                        
+                        try:
+                            message_obj = messages_now.get(i)
+                            state["index"] = i + 1
+                            if message_obj:
+                                load_index = 0 if message_obj.getDialogId() == dialog_id else 1
+                                if selected_files[load_index].indexOfKey(message_obj.getId()) < 0:
+                                    selected_files[load_index].put(message_obj.getId(), message_obj)
+                        except:
+                            pass
+                    
+                    selected_messages_count_text_view = get_private_field(shared_media, "selectedMessagesCountTextView")
+                    if selected_messages_count_text_view:
+                        selected_messages_count_text_view.setNumber(selected_files[0].size() + selected_files[1].size(), True)
+                    
+                    adapter = list_view.getAdapter()
+                    if adapter:
+                        adapter.notifyDataSetChanged()
+                    
+                    run_on_ui_thread(step)
+                except:
+                    pass
+            
+            run_on_ui_thread(step)
+        except:
+            pass
+    
+    def _select_all_media(self, shared_media_layout):
+        try:
+            media_pages = get_private_field(shared_media_layout, "mediaPages")
+            if not media_pages:
+                return
+            
+            scroll_sliding_tab = get_private_field(shared_media_layout, "scrollSlidingTextTabStrip")
+            current_tab_id = scroll_sliding_tab.getCurrentTabId() if scroll_sliding_tab else 0
+            
+            current_page = None
+            for page in media_pages:
+                if page and get_private_field(page, "selectedType") == current_tab_id:
+                    current_page = page
+                    break
+            
+            if not current_page:
+                return
+            
+            list_view = get_private_field(current_page, "listView")
+            selected_files = get_private_field(shared_media_layout, "selectedFiles")
+            dialog_id = get_private_field(shared_media_layout, "dialog_id")
+            shared_media_data = get_private_field(shared_media_layout, "sharedMediaData")
+            
+            if not list_view or not selected_files or not shared_media_data:
+                return
+            
+            media_type = get_private_field(current_page, "selectedType")
+            if media_type >= len(shared_media_data):
+                return
+            
+            messages = get_private_field(shared_media_data[media_type], "messages")
+            if not messages:
+                return
+            
+            self._scroll_and_select(shared_media_layout, current_page, selected_files, dialog_id, shared_media_data, media_type)
+        except:
+            pass

@@ -1,0 +1,348 @@
+from base_plugin import BasePlugin
+from hook_utils import find_class
+from java import jclass
+from android_utils import run_on_ui_thread, OnClickListener
+from android.view import Gravity
+from android.widget import ImageView
+from android.graphics import PorterDuff, PorterDuffColorFilter
+from org.telegram.messenger import R as R_tg, AndroidUtilities
+from org.telegram.ui.ActionBar import Theme
+from org.telegram.tgnet import TLRPC
+
+__id__ = "search_filter"
+__name__ = "Search Filter"
+__description__ = "Filter messages by type in chat search"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+FILTER_NONE = 0
+FILTER_PHOTOS = 1
+FILTER_VIDEOS = 2
+FILTER_VOICE_MESSAGES = 3
+FILTER_VIDEO_MESSAGES = 4
+FILTER_FILES = 5
+FILTER_MUSIC = 6
+FILTER_GIFS = 7
+FILTER_GEO = 8
+FILTER_CONTACTS = 9
+FILTER_MENTIONS = 10
+
+class SearchFilterPlugin(BasePlugin):
+    
+    def __init__(self):
+        super().__init__()
+        self.current_filter = FILTER_NONE
+        self.hooks = []
+        self.filter_buttons = {}
+        
+    def on_plugin_load(self):
+        try:
+            self._register_hooks()
+        except:
+            pass
+    
+    def on_plugin_unload(self):
+        try:
+            for hook_ref in self.hooks:
+                self.unhook_method(hook_ref)
+            self.hooks.clear()
+            self.filter_buttons.clear()
+        except:
+            pass
+    
+    def _register_hooks(self):
+        try:
+            ChatActivityClass = find_class("org.telegram.ui.ChatActivity")
+            if not ChatActivityClass:
+                return
+            
+            String_class = jclass("java.lang.String")
+            open_search_method = ChatActivityClass.getClass().getDeclaredMethod(
+                "openSearchWithText",
+                String_class
+            )
+            
+            if open_search_method:
+                hook_ref = self.hook_method(open_search_method, OpenSearchHook(self))
+                self.hooks.append(hook_ref)
+            
+            ConnectionsManagerClass = find_class("org.telegram.tgnet.ConnectionsManager")
+            if ConnectionsManagerClass:
+                TLObject_class = find_class("org.telegram.tgnet.TLObject")
+                RequestDelegate_class = find_class("org.telegram.tgnet.RequestDelegate")
+                int_type = jclass("java.lang.Integer").TYPE
+                
+                try:
+                    send_request_method = ConnectionsManagerClass.getClass().getDeclaredMethod(
+                        "sendRequest",
+                        TLObject_class, RequestDelegate_class, int_type
+                    )
+                    
+                    if send_request_method:
+                        hook_ref = self.hook_method(send_request_method, SendRequestHook(self))
+                        self.hooks.append(hook_ref)
+                except:
+                    pass
+                
+        except:
+            pass
+    
+    def create_filter_button(self, chat_activity):
+        try:
+            activity_id = id(chat_activity)
+            if activity_id in self.filter_buttons:
+                return
+            
+            context = chat_activity.getParentActivity()
+            if not context:
+                return
+            
+            from hook_utils import get_private_field
+            search_container = get_private_field(chat_activity, "searchContainer")
+            
+            if not search_container:
+                return
+            
+            search_filter_button = ImageView(context)
+            search_filter_button.setScaleType(ImageView.ScaleType.CENTER)
+            search_filter_button.setImageResource(R_tg.drawable.menu_tag_filter_solar)
+            
+            color = Theme.getColor(Theme.key_chat_searchPanelIcons)
+            search_filter_button.setColorFilter(PorterDuffColorFilter(color, PorterDuff.Mode.MULTIPLY))
+            
+            selector_color = Theme.getColor(Theme.key_actionBarActionModeDefaultSelector)
+            search_filter_button.setBackgroundDrawable(Theme.createSelectorDrawable(selector_color, 1))
+            
+            search_filter_button.setOnClickListener(OnClickListener(lambda v: self.show_filter_selector(chat_activity)))
+            
+            left_margin = 44
+            try:
+                search_user_button = get_private_field(chat_activity, "searchUserButton")
+                if search_user_button:
+                    left_margin = 88
+                    self._hook_user_search_button(search_user_button, search_filter_button, chat_activity)
+            except:
+                pass
+            
+            LayoutHelper = jclass("org.telegram.ui.Components.LayoutHelper")
+            search_container.addView(
+                search_filter_button,
+                LayoutHelper.createFrame(44, 44, Gravity.LEFT | Gravity.TOP, left_margin, 0, 0, 0)
+            )
+            
+            self.filter_buttons[activity_id] = search_filter_button
+            
+            try:
+                search_count_text = get_private_field(chat_activity, "searchCountText")
+                if search_count_text:
+                    current_padding_left = search_count_text.getPaddingLeft()
+                    new_padding_left = current_padding_left + AndroidUtilities.dp(44)
+                    search_count_text.setPadding(
+                        new_padding_left,
+                        search_count_text.getPaddingTop(),
+                        search_count_text.getPaddingRight(),
+                        search_count_text.getPaddingBottom()
+                    )
+            except:
+                pass
+            
+        except:
+            pass
+    
+    def _hook_user_search_button(self, user_button, filter_button, chat_activity):
+        try:
+            from android.view import View
+            
+            original_listener = None
+            try:
+                ViewClass = find_class("android.view.View")
+                mListenerInfoField = ViewClass.getClass().getDeclaredField("mListenerInfo")
+                mListenerInfoField.setAccessible(True)
+                listenerInfo = mListenerInfoField.get(user_button)
+                
+                if listenerInfo:
+                    ListenerInfoClass = find_class("android.view.View$ListenerInfo")
+                    mOnClickListenerField = ListenerInfoClass.getClass().getDeclaredField("mOnClickListener")
+                    mOnClickListenerField.setAccessible(True)
+                    original_listener = mOnClickListenerField.get(listenerInfo)
+            except:
+                pass
+            
+            plugin_ref = self
+            
+            def on_user_button_click(v):
+                try:
+                    plugin_ref.current_filter = FILTER_NONE
+                    plugin_ref.set_setting("messages_search_filter", FILTER_NONE)
+                    
+                    if filter_button:
+                        filter_button.setVisibility(View.GONE)
+                    
+                    if original_listener:
+                        original_listener.onClick(v)
+                except:
+                    pass
+            
+            user_button.setOnClickListener(OnClickListener(on_user_button_click))
+        except:
+            pass
+    
+    def show_filter_selector(self, chat_activity):
+        try:
+            activity = chat_activity.getParentActivity()
+            if not activity:
+                return
+            
+            filter_names = [
+                "None", "Photos", "Videos", "Voice Messages", "Video Messages",
+                "Files", "Music", "GIFs", "Geolocation", "Contacts", "My Mentions"
+            ]
+            
+            filter_values = [
+                FILTER_NONE, FILTER_PHOTOS, FILTER_VIDEOS, FILTER_VOICE_MESSAGES,
+                FILTER_VIDEO_MESSAGES, FILTER_FILES, FILTER_MUSIC, FILTER_GIFS,
+                FILTER_GEO, FILTER_CONTACTS, FILTER_MENTIONS
+            ]
+            
+            current_index = filter_values.index(self.current_filter) if self.current_filter in filter_values else 0
+            
+            from android.widget import LinearLayout
+            from org.telegram.ui.ActionBar import AlertDialog, Theme
+            
+            builder = AlertDialog.Builder(activity)
+            builder.setTitle("Search Filter")
+            
+            linear_layout = LinearLayout(activity)
+            linear_layout.setOrientation(LinearLayout.VERTICAL)
+            builder.setView(linear_layout)
+            
+            RadioColorCellClass = find_class("org.telegram.ui.Cells.RadioColorCell")
+            
+            for i in range(len(filter_names)):
+                cell = RadioColorCellClass(activity)
+                cell.setPadding(AndroidUtilities.dp(4), 0, AndroidUtilities.dp(4), 0)
+                cell.setTag(i)
+                cell.setCheckColor(
+                    Theme.getColor(Theme.key_radioBackground),
+                    Theme.getColor(Theme.key_dialogRadioBackgroundChecked)
+                )
+                cell.setTextAndValue(filter_names[i], i == current_index)
+                cell.setBackground(Theme.getSelectorDrawable(False))
+                linear_layout.addView(cell)
+                
+                plugin_ref = self
+                
+                def create_click_listener(index):
+                    def on_click(v):
+                        try:
+                            selected_filter = filter_values[index]
+                            plugin_ref.current_filter = selected_filter
+                            plugin_ref.set_setting("messages_search_filter", selected_filter)
+                            
+                            chat_activity.openSearchWithText(None)
+                            
+                            def jump_to_first():
+                                try:
+                                    from org.telegram.messenger import AccountInstance
+                                    account_num = chat_activity.getCurrentAccount()
+                                    account = AccountInstance.getInstance(account_num)
+                                    media_data_controller = account.getMediaDataController()
+                                    
+                                    guid = chat_activity.getClassGuid()
+                                    media_data_controller.jumpToSearchedMessage(guid, 0)
+                                except:
+                                    pass
+                            
+                            from android_utils import R
+                            AndroidUtilities.runOnUIThread(R(jump_to_first), 500)
+                            
+                            builder.getDismissRunnable().run()
+                        except:
+                            pass
+                    return on_click
+                
+                cell.setOnClickListener(OnClickListener(create_click_listener(i)))
+            
+            builder.setNegativeButton("Cancel", None)
+            builder.show()
+            
+        except:
+            pass
+    
+    def get_search_filter_type(self):
+        try:
+            if self.current_filter == FILTER_PHOTOS:
+                return TLRPC.TL_inputMessagesFilterPhotos()
+            elif self.current_filter == FILTER_VIDEOS:
+                return TLRPC.TL_inputMessagesFilterVideo()
+            elif self.current_filter == FILTER_VOICE_MESSAGES:
+                return TLRPC.TL_inputMessagesFilterVoice()
+            elif self.current_filter == FILTER_VIDEO_MESSAGES:
+                return TLRPC.TL_inputMessagesFilterRoundVideo()
+            elif self.current_filter == FILTER_FILES:
+                return TLRPC.TL_inputMessagesFilterDocument()
+            elif self.current_filter == FILTER_MUSIC:
+                return TLRPC.TL_inputMessagesFilterMusic()
+            elif self.current_filter == FILTER_GIFS:
+                return TLRPC.TL_inputMessagesFilterGif()
+            elif self.current_filter == FILTER_GEO:
+                return TLRPC.TL_inputMessagesFilterGeo()
+            elif self.current_filter == FILTER_CONTACTS:
+                return TLRPC.TL_inputMessagesFilterContacts()
+            elif self.current_filter == FILTER_MENTIONS:
+                return TLRPC.TL_inputMessagesFilterMyMentions()
+            else:
+                return TLRPC.TL_inputMessagesFilterEmpty()
+        except:
+            return TLRPC.TL_inputMessagesFilterEmpty()
+
+
+class OpenSearchHook:
+    
+    def __init__(self, plugin):
+        self.plugin = plugin
+    
+    def after_hooked_method(self, param):
+        try:
+            from android.view import View
+            chat_activity = param.thisObject
+            def create_and_show_button():
+                self.plugin.create_filter_button(chat_activity)
+                activity_id = id(chat_activity)
+                if activity_id in self.plugin.filter_buttons:
+                    filter_button = self.plugin.filter_buttons[activity_id]
+                    filter_button.setVisibility(View.VISIBLE)
+            run_on_ui_thread(create_and_show_button)
+        except:
+            pass
+
+
+class SendRequestHook:
+   
+    def __init__(self, plugin):
+        self.plugin = plugin
+    
+    def before_hooked_method(self, param):
+        try:
+            if self.plugin.current_filter == FILTER_NONE:
+                return
+            
+            request = param.args[0]
+            request_class_name = request.getClass().getName()
+            
+            if "TL_messages_search" in request_class_name:
+                filter_obj = self.plugin.get_search_filter_type()
+                
+                try:
+                    filter_field = request.getClass().getDeclaredField("filter")
+                    filter_field.setAccessible(True)
+                    filter_field.set(request, filter_obj)
+                except:
+                    pass
+                    
+        except:
+            pass
+
+
+plugin = SearchFilterPlugin()

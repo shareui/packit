@@ -1,0 +1,134 @@
+from base_plugin import BasePlugin, MethodHook, hook_filters, HookFilter
+from hook_utils import find_class, get_private_field, set_private_field
+from java import jclass
+
+__id__ = "join_request_direct_profile"
+__name__ = "Join Request Direct Profile"
+__type__ = "plugin"
+__description__ = "Open user profile directly when clicking on join request in group"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+
+class DirectProfileHook(MethodHook):
+    def __init__(self, plugin):
+        MethodHook.__init__(self)
+        self.plugin = plugin
+    
+    @hook_filters(HookFilter.Condition("param.thisObject != null"))
+    def before_hooked_method(self, param):
+        try:
+            delegate = param.thisObject
+            if not delegate:
+                return
+            
+            if len(param.args) < 1:
+                return
+            
+            view = param.args[0]
+            
+            member_request_cell_class = find_class("org.telegram.ui.Cells.MemberRequestCell")
+            if not member_request_cell_class:
+                return
+                
+            if not isinstance(view, member_request_cell_class):
+                return
+            
+            is_search_expanded = get_private_field(delegate, "isSearchExpanded")
+            if is_search_expanded:
+                fragment = get_private_field(delegate, "fragment")
+                if fragment and fragment.getParentActivity():
+                    AndroidUtilities = jclass("org.telegram.messenger.AndroidUtilities")
+                    AndroidUtilities.hideKeyboard(fragment.getParentActivity().getCurrentFocus())
+            
+            cell = view
+            
+            def open_profile_directly():
+                try:
+                    importer = cell.getImporter()
+                    if not importer:
+                        return
+                    
+                    users = get_private_field(delegate, "users")
+                    if not users:
+                        return
+                    
+                    user = users.get(importer.user_id)
+                    if not user:
+                        return
+                    
+                    fragment = get_private_field(delegate, "fragment")
+                    if not fragment:
+                        return
+                    
+                    fragment.getMessagesController().putUser(user, False)
+                    
+                    set_private_field(delegate, "isNeedRestoreList", True)
+                    
+                    fragment.dismissCurrentDialog()
+                    
+                    Bundle = jclass("android.os.Bundle")
+                    args = Bundle()
+                    args.putLong("user_id", user.id)
+                    args.putBoolean("removeFragmentOnChatOpen", False)
+                    
+                    ProfileActivity = jclass("org.telegram.ui.ProfileActivity")
+                    profileActivity = ProfileActivity(args)
+                    
+                    fragment.presentFragment(profileActivity)
+                    
+                except Exception:
+                    pass
+            
+            from android_utils import R
+            
+            AndroidUtilities = jclass("org.telegram.messenger.AndroidUtilities")
+            delay = 100 if is_search_expanded else 0
+            AndroidUtilities.runOnUIThread(R(open_profile_directly), delay)
+            
+            param.setResult(None)
+            
+        except Exception:
+            pass
+
+
+class EnableJoinRequestDirectProfilePlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self.hook_join_request_direct_profile_ref = None
+    
+    def on_plugin_load(self):
+        self._hook_join_request_direct_profile()
+    
+    def on_plugin_unload(self):
+        if self.hook_join_request_direct_profile_ref:
+            try:
+                self.unhook_method(self.hook_join_request_direct_profile_ref)
+            except:
+                pass
+            self.hook_join_request_direct_profile_ref = None
+    
+    def _hook_join_request_direct_profile(self):
+        try:
+            delegate_class = find_class("org.telegram.ui.Delegates.MemberRequestsDelegate")
+            
+            if not delegate_class:
+                return
+            
+            view_class = find_class("android.view.View")
+            int_type = jclass("java.lang.Integer").TYPE
+            
+            method = delegate_class.getClass().getDeclaredMethod(
+                "onItemClick",
+                view_class,
+                int_type
+            )
+            
+            if not method:
+                return
+                
+            self.hook_join_request_direct_profile_ref = self.hook_method(method, DirectProfileHook(self))
+            
+        except Exception:
+            pass

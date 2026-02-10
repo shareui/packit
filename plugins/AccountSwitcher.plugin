@@ -1,0 +1,393 @@
+
+
+import weakref
+from base_plugin import BasePlugin, MethodHook
+from android_utils import run_on_ui_thread
+from client_utils import get_last_fragment
+from hook_utils import find_class, get_private_field, set_private_field
+from java import dynamic_proxy
+from java.util import ArrayList
+from org.telegram.messenger import UserConfig, MessagesController
+from org.telegram.ui import ChatActivity, LaunchActivity
+from org.telegram.ui.Components import SenderSelectView, LayoutHelper, SenderSelectPopup
+from org.telegram.tgnet import TLRPC
+from android.view import Gravity, View
+
+__name__ = "Account Switcher"
+__id__ = "account_switcher"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__description__ = "Switch between accounts in chat"
+__min_version__ = "12.2.10"
+
+class AccountSwitcher(BasePlugin):
+    
+    def __init__(self):
+        super().__init__()
+        self.hooks = []
+        self.chat_info = None
+        self.user_to_account = {}
+        self.hooked_views = set()
+        self._popup = None
+        self.chat_view_accounts = {}
+    
+    def on_plugin_load(self):
+        try:
+            clazz = find_class("org.telegram.ui.Components.ChatActivityEnterView")
+            for m in clazz.getClass().getDeclaredMethods():
+                if m.getName() == "updateSendAsButton" and len(m.getParameterTypes()) == 2:
+                    m.setAccessible(True)
+                    self.hooks.append(self.hook_method(m, UpdateSendAsHook(self)))
+                    break
+            
+            clazz = find_class("org.telegram.messenger.MessagesController")
+            for m in clazz.getClass().getDeclaredMethods():
+                if m.getName() == "setDefaultSendAs" and len(m.getParameterTypes()) == 2:
+                    m.setAccessible(True)
+                    self.hooks.append(self.hook_method(m, SetDefaultSendAsHook(self)))
+                    break
+        except:
+            pass
+    
+    def on_plugin_unload(self):
+        for h in self.hooks:
+            try:
+                self.unhook_method(h)
+            except:
+                pass
+        self.hooks.clear()
+    
+    def get_accounts(self):
+        accounts = []
+        for i in range(16):
+            cfg = UserConfig.getInstance(i)
+            if cfg and cfg.isClientActivated():
+                u = cfg.getCurrentUser()
+                if u:
+                    accounts.append((i, u))
+        return accounts
+    
+    def setup_for_private_chat(self, enter_view):
+        try:
+            vid = id(enter_view)
+            
+            pf = get_private_field(enter_view, "parentFragment")
+            if not pf:
+                return
+            
+            cu = get_private_field(pf, "currentUser")
+            if not cu:
+                return
+            
+            if cu.bot:
+                return
+            
+            my_id = UserConfig.getInstance(UserConfig.selectedAccount).getClientUserId()
+            if cu.id == my_id:
+                return
+            
+            accounts = self.get_accounts()
+            if len(accounts) <= 1:
+                return
+            
+            ssv = get_private_field(enter_view, "senderSelectView")
+            if ssv:
+                dialog_id = pf.getDialogId()
+                frag_account = get_private_field(pf, "currentAccount")
+                if frag_account is not None:
+                    view_account = frag_account
+                else:
+                    view_account = self.chat_view_accounts.get(dialog_id, UserConfig.selectedAccount)
+                view_user = UserConfig.getInstance(view_account).getCurrentUser()
+                if view_user:
+                    ssv.setAvatar(view_user)
+            
+            if vid in self.hooked_views:
+                return
+            
+            self.chat_info = {
+                'dialog_id': pf.getDialogId(),
+                'user_id': cu.id,
+                'user': cu
+            }
+            
+            peers = TLRPC.TL_channels_sendAsPeers()
+            peers.peers = ArrayList()
+            
+            for acc_num, user in accounts:
+                sp = TLRPC.TL_sendAsPeer()
+                sp.peer = TLRPC.TL_peerUser()
+                sp.peer.user_id = user.id
+                sp.premium_required = False
+                peers.peers.add(sp)
+                self.user_to_account[user.id] = acc_num
+            
+            if not ssv:
+                ctx = enter_view.getContext()
+                ssv = SenderSelectView(ctx)
+                my_user = UserConfig.getInstance(UserConfig.selectedAccount).getCurrentUser()
+                if my_user:
+                    ssv.setAvatar(my_user)
+                ssv.setVisibility(View.VISIBLE)
+                container = get_private_field(enter_view, "messageEditTextContainer")
+                if container:
+                    container.addView(ssv, LayoutHelper.createFrame(32, 32, Gravity.BOTTOM | Gravity.LEFT, 8, 8, 8, 8))
+                    set_private_field(enter_view, "senderSelectView", ssv)
+                    
+                    plugin = self
+                    ev = enter_view
+                    parent_frag = pf
+                    p = peers
+                    
+                    from android.view import View as AndroidView
+                    
+                    class ClickListener(dynamic_proxy(AndroidView.OnClickListener)):
+                        def onClick(self, v):
+                            try:
+                                plugin.show_account_popup(ev, parent_frag, p, v)
+                            except:
+                                pass
+                    
+                    ssv.setOnClickListener(ClickListener())
+            
+            self.hooked_views.add(vid)
+            
+        except:
+            pass
+    
+    def show_account_popup(self, enter_view, parent_fragment, peers, anchor_view):
+        try:
+            from android.view import HapticFeedbackConstants
+            from android.widget import LinearLayout, TextView, FrameLayout
+            from android.util import TypedValue
+            from android.graphics import PorterDuff, PorterDuffColorFilter
+            from androidx.recyclerview.widget import RecyclerView, LinearLayoutManager
+            from org.telegram.ui.ActionBar import Theme, ActionBarPopupWindow
+            from org.telegram.ui.Components import RecyclerListView, SimpleAvatarView
+            from org.telegram.messenger import R, AndroidUtilities
+            
+            try:
+                anchor_view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING)
+            except:
+                pass
+            
+            ctx = enter_view.getContext()
+            current_account = get_private_field(enter_view, "currentAccount")
+            
+            container = FrameLayout(ctx)
+            container.setLayoutParams(LayoutHelper.createFrame(-2, -2))
+            
+            bg = ctx.getResources().getDrawable(R.drawable.popup_fixed_alert3).mutate()
+            bg.setColorFilter(PorterDuffColorFilter(Theme.getColor(Theme.key_actionBarDefaultSubmenuBackground), PorterDuff.Mode.MULTIPLY))
+            container.setBackground(bg)
+            
+            from android.graphics import Rect
+            padding = Rect()
+            bg.getPadding(padding)
+            container.setPadding(padding.left, padding.top, padding.right, padding.bottom)
+            
+            linear = LinearLayout(ctx)
+            linear.setOrientation(LinearLayout.VERTICAL)
+            container.addView(linear)
+            
+            header = TextView(ctx)
+            header.setTextColor(Theme.getColor(Theme.key_dialogTextBlue))
+            header.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14)
+            header.setText("Switch Account")
+            header.setTypeface(AndroidUtilities.getTypeface(AndroidUtilities.TYPEFACE_ROBOTO_MEDIUM))
+            header.setPadding(AndroidUtilities.dp(18), AndroidUtilities.dp(10), AndroidUtilities.dp(18), AndroidUtilities.dp(10))
+            linear.addView(header)
+            
+            accounts = self.get_accounts()
+            AVATAR_SIZE = 40
+            
+            for acc_num, user in accounts:
+                is_current = (acc_num == UserConfig.selectedAccount)
+                
+                item = LinearLayout(ctx)
+                item.setOrientation(LinearLayout.HORIZONTAL)
+                item.setGravity(Gravity.CENTER_VERTICAL)
+                item.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(7), AndroidUtilities.dp(14), AndroidUtilities.dp(7))
+                
+                if not is_current:
+                    item.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), 2))
+                
+                avatar = SimpleAvatarView(ctx)
+                from com.exteragram.messenger import ExteraConfig
+                avatar.setAvatarCorners(ExteraConfig.getAvatarCorners(AVATAR_SIZE))
+                avatar.setAvatar(user)
+                item.addView(avatar, LayoutHelper.createLinear(AVATAR_SIZE, AVATAR_SIZE))
+                
+                text_container = LinearLayout(ctx)
+                text_container.setOrientation(LinearLayout.VERTICAL)
+                item.addView(text_container, LayoutHelper.createLinear(0, -1, 1.0, 12, 0, 0, 0))
+                
+                name = TextView(ctx)
+                name.setTextColor(Theme.getColor(Theme.key_actionBarDefaultSubmenuItem))
+                name.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16)
+                name.setMaxLines(1)
+                name.setTypeface(AndroidUtilities.getTypeface(AndroidUtilities.TYPEFACE_ROBOTO_MEDIUM))
+                from org.telegram.messenger import UserObject
+                name.setText(UserObject.getUserName(user))
+                text_container.addView(name)
+                
+                phone_text = TextView(ctx)
+                from androidx.core.graphics import ColorUtils
+                phone_text.setTextColor(ColorUtils.setAlphaComponent(Theme.getColor(Theme.key_actionBarDefaultSubmenuItem), 0x66))
+                phone_text.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14)
+                phone_text.setMaxLines(1)
+                from android.text import TextUtils
+                phone_text.setEllipsize(TextUtils.TruncateAt.END)
+                if user.username:
+                    phone_text.setText(f"@{user.username}")
+                else:
+                    phone_text.setText(f"Account {acc_num}")
+                text_container.addView(phone_text)
+                
+                linear.addView(item, LayoutHelper.createLinear(-1, -2))
+                
+                plugin = self
+                captured_acc = acc_num
+                
+                from android.view import View as AndroidView
+                
+                def make_click_listener(acc_to_switch):
+                    class ItemClick(dynamic_proxy(AndroidView.OnClickListener)):
+                        def onClick(self, v):
+                            if plugin._popup:
+                                plugin._popup.dismiss()
+                                plugin._popup = None
+                            plugin.switch_to_account(acc_to_switch)
+                    return ItemClick()
+                
+                item.setOnClickListener(make_click_listener(captured_acc))
+            
+            self._popup = ActionBarPopupWindow(container, -2, -2)
+            self._popup.setDismissAnimationDuration(220)
+            self._popup.setOutsideTouchable(True)
+            self._popup.setClippingEnabled(True)
+            self._popup.setFocusable(True)
+            self._popup.setInputMethodMode(ActionBarPopupWindow.INPUT_METHOD_NOT_NEEDED)
+            self._popup.setAnimationEnabled(False)
+            
+            ssv_ref = get_private_field(enter_view, "senderSelectView")
+            from android.widget import PopupWindow
+            class DismissListener(dynamic_proxy(PopupWindow.OnDismissListener)):
+                def onDismiss(self):
+                    if ssv_ref:
+                        ssv_ref.setProgress(0)
+            
+            self._popup.setOnDismissListener(DismissListener())
+            
+            container.measure(
+                View.MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(1000), View.MeasureSpec.AT_MOST),
+                View.MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(1000), View.MeasureSpec.AT_MOST)
+            )
+            
+            location = [0, 0]
+            anchor_view.getLocationInWindow(location)
+            
+            height = container.getMeasuredHeight()
+            x = location[0] - AndroidUtilities.dp(4)
+            y = location[1] - height - AndroidUtilities.dp(4)
+            
+            ssv = get_private_field(enter_view, "senderSelectView")
+            if ssv:
+                ssv.setProgress(1)
+            
+            self._popup.showAtLocation(anchor_view, Gravity.LEFT | Gravity.TOP, x, y)
+            
+            from androidx.dynamicanimation.animation import SpringAnimation, SpringForce, DynamicAnimation
+            
+            container.setPivotX(AndroidUtilities.dp(8))
+            container.setPivotY(container.getMeasuredHeight() - AndroidUtilities.dp(8))
+            
+            SPRING_STIFFNESS = 750.0
+            SCALE_START = 0.5
+            
+            container.setScaleX(SCALE_START)
+            container.setScaleY(SCALE_START)
+            container.setAlpha(SCALE_START)
+            
+            spring_x = SpringAnimation(container, DynamicAnimation.SCALE_X, 1.0)
+            spring_x.getSpring().setStiffness(SPRING_STIFFNESS)
+            spring_x.getSpring().setDampingRatio(1.0)
+            spring_x.start()
+            
+            spring_y = SpringAnimation(container, DynamicAnimation.SCALE_Y, 1.0)
+            spring_y.getSpring().setStiffness(SPRING_STIFFNESS)
+            spring_y.getSpring().setDampingRatio(1.0)
+            spring_y.start()
+            
+            spring_alpha = SpringAnimation(container, DynamicAnimation.ALPHA, 1.0)
+            spring_alpha.getSpring().setStiffness(SPRING_STIFFNESS)
+            spring_alpha.getSpring().setDampingRatio(1.0)
+            spring_alpha.start()
+            
+        except:
+            pass
+    
+    def switch_to_account(self, acc):
+        try:
+            if not self.chat_info:
+                return
+            
+            target_user_id = self.chat_info['user_id']
+            target_user = self.chat_info.get('user')
+            dialog_id = self.chat_info['dialog_id']
+            self.chat_view_accounts[dialog_id] = acc
+            
+            self.hooked_views.clear()
+            
+            try:
+                from android.os import Bundle
+                f = get_last_fragment()
+                if not f:
+                    return
+                
+                if target_user:
+                    target_mc = MessagesController.getInstance(acc)
+                    target_mc.putUser(target_user, False)
+                
+                args = Bundle()
+                args.putLong("user_id", target_user_id)
+                
+                new_chat = ChatActivity(args)
+                new_chat.setCurrentAccount(acc)
+                
+                ConnectionsManagerClass = find_class("org.telegram.tgnet.ConnectionsManager")
+                if ConnectionsManagerClass:
+                    ConnectionsManagerClass.getInstance(acc).setAppPaused(False, False)
+                
+                f.presentFragment(new_chat, True)
+                
+            except:
+                pass
+        except:
+            pass
+
+
+class UpdateSendAsHook(MethodHook):
+    def __init__(self, p):
+        self.p = weakref.ref(p)
+    
+    def after_hooked_method(self, param):
+        try:
+            plugin = self.p()
+            if plugin:
+                run_on_ui_thread(lambda: plugin.setup_for_private_chat(param.thisObject))
+        except:
+            pass
+
+
+class SetDefaultSendAsHook(MethodHook):
+    def __init__(self, p):
+        self.p = weakref.ref(p)
+    
+    def before_hooked_method(self, param):
+        try:
+            plugin = self.p()
+            if plugin and plugin.chat_info:
+                param.setResult(None)
+        except:
+            pass

@@ -1,0 +1,144 @@
+from base_plugin import BasePlugin
+from org.telegram.messenger import R as R_tg
+from client_utils import get_last_fragment, get_account_instance
+import quantahut
+
+__id__ = "message_repeat"
+__name__ = "Message Repeat"
+__type__ = "plugin"
+__description__ = "Add a 'Repeat' option to message context menu to resend the same message"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+
+class MessageRepeatPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self.repeat_menu_handle = None
+    
+    def on_plugin_load(self):
+        self._add_message_repeat_menu_item()
+    
+    def on_plugin_unload(self):
+        self._remove_message_repeat_menu_item()
+    
+    def _add_message_repeat_menu_item(self):
+        try:
+            self.repeat_menu_handle = quantahut.utilities.register_message_menu_item(
+                text="Repeat",
+                option_id=2035,
+                icon_res=R_tg.drawable.msg_addbot_solar,
+                condition_predicate=lambda m: (
+                    m is not None and 
+                    not self._is_service_message(m) and 
+                    not self._is_failed_message(m) and 
+                    not self._is_scheduled_message(m) and
+                    self._can_use_repeat(m)
+                ),
+                on_click=self._on_message_repeat_click,
+                insert_at_top=False
+            )
+        except Exception:
+            pass
+
+    def _remove_message_repeat_menu_item(self):
+        try:
+            if hasattr(self, 'repeat_menu_handle') and self.repeat_menu_handle:
+                quantahut.utilities.unregister_message_menu_item(self.repeat_menu_handle)
+                self.repeat_menu_handle = None
+        except Exception:
+            pass
+
+    def _is_service_message(self, message):
+        try:
+            return message.isSponsored() or (hasattr(message, 'messageOwner') and 
+                   hasattr(message.messageOwner, 'action') and 
+                   message.messageOwner.action is not None)
+        except:
+            return False
+
+    def _is_failed_message(self, message):
+        try:
+            return hasattr(message, 'messageOwner') and message.messageOwner.send_state == 2
+        except:
+            return False
+
+    def _is_scheduled_message(self, message):
+        try:
+            return message.isScheduled()
+        except:
+            return False
+
+    def _can_use_repeat(self, message):
+        try:
+            from org.telegram.messenger import ChatObject
+            current_fragment = get_last_fragment()
+            if current_fragment:
+                dialog_id = current_fragment.getDialogId()
+                if dialog_id < 0:
+                    chat = get_account_instance().getMessagesController().getChat(-dialog_id)
+                    if ChatObject.isChannel(chat) and not ChatObject.isMegagroup(chat):
+                        return ChatObject.canPost(chat)
+            return True
+        except:
+            return True
+
+    def _on_message_repeat_click(self, chat_activity, message, grouped_messages=None):
+        try:
+            if not message or not chat_activity:
+                return
+            
+            from org.telegram.messenger import SendMessagesHelper, AccountInstance, MessageObject, UserConfig
+            from java.util import ArrayList
+            
+            current_account = UserConfig.selectedAccount
+            send_helper = SendMessagesHelper.getInstance(current_account)
+            account_instance = AccountInstance.getInstance(current_account)
+            
+            try:
+                dialog_id = chat_activity.getDialogId()
+            except:
+                return
+            
+            topic_id = 0
+            try:
+                current_fragment = get_last_fragment()
+                if current_fragment and hasattr(current_fragment, 'getTopicId'):
+                    topic_id = current_fragment.getTopicId()
+            except:
+                pass
+            
+            reply_to_msg = None
+            if topic_id != 0:
+                try:
+                    topic = account_instance.getMessagesController().getTopicsController().findTopic(-dialog_id, topic_id)
+                    if topic and topic.topicStartMessage:
+                        reply_to_msg = MessageObject(current_account, topic.topicStartMessage, False, False)
+                        reply_to_msg.isTopicMainMessage = True
+                except:
+                    pass
+            
+            messages_to_forward = ArrayList()
+            
+            if grouped_messages and not grouped_messages.isDocuments:
+                for msg in grouped_messages.messages:
+                    messages_to_forward.add(msg)
+            else:
+                messages_to_forward.add(message)
+            
+            send_helper.sendMessage(
+                messages_to_forward,
+                dialog_id,
+                False,
+                False,
+                True,
+                0,
+                reply_to_msg,
+                topic_id,
+                0,
+                0,
+                None
+            )
+        except:
+            pass

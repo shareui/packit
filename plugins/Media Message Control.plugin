@@ -1,0 +1,113 @@
+from base_plugin import BasePlugin, MethodHook, hook_filters, HookFilter
+from java import jclass
+from ui.settings import Switch, Header
+
+__id__ = "media_message_control"
+__name__ = "Media Message Control"
+__type__ = "plugin"
+__description__ = "Stop auto-playing next voice/video message after current one ends"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+
+class MediaMessageControlHook(MethodHook):
+    def __init__(self, plugin):
+        MethodHook.__init__(self)
+        self.plugin = plugin
+
+    @hook_filters(HookFilter.Condition("param.thisObject != null"), HookFilter.ArgumentIsTrue(2))
+    def before_hooked_method(self, param):
+        try:
+            by_voice_end = param.args[2]
+            if not by_voice_end or not param.thisObject:
+                return
+            
+            media_controller = param.thisObject
+            
+            try:
+                playing_field = media_controller.getClass().getDeclaredField("playingMessageObject")
+                playing_field.setAccessible(True)
+                playing_message = playing_field.get(media_controller)
+                
+                if not playing_message:
+                    return
+                
+                is_voice = hasattr(playing_message, 'isVoice') and playing_message.isVoice()
+                is_round_video = hasattr(playing_message, 'isRoundVideo') and playing_message.isRoundVideo()
+                
+                should_stop = False
+                if is_voice and self.plugin.get_setting("stop_voice_autoplay", True):
+                    should_stop = True
+                elif is_round_video and self.plugin.get_setting("stop_video_autoplay", True):
+                    should_stop = True
+                
+                if should_stop:
+                    playlist_field = media_controller.getClass().getDeclaredField("voiceMessagesPlaylist")
+                    playlist_field.setAccessible(True)
+                    voice_playlist = playlist_field.get(media_controller)
+                    
+                    if voice_playlist and voice_playlist.size() > 1:
+                        playlist_field.set(media_controller, None)
+                        
+                        playlist_map_field = media_controller.getClass().getDeclaredField("voiceMessagesPlaylistMap")
+                        playlist_map_field.setAccessible(True)
+                        playlist_map_field.set(media_controller, None)
+                        
+            except Exception:
+                pass
+                
+        except Exception:
+            pass
+
+
+class MediaMessageControlPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self.hook_ref = None
+    
+    def create_settings(self):
+        return [
+            Header(text="Auto-Play Control"),
+            Switch(
+                key="stop_voice_autoplay",
+                text="Stop Voice Message Auto-Play",
+                default=True,
+                subtext="Prevent next voice message from auto-playing"
+            ),
+            Switch(
+                key="stop_video_autoplay",
+                text="Stop Video Message Auto-Play",
+                default=True,
+                subtext="Prevent next video message from auto-playing"
+            ),
+        ]
+    
+    def on_plugin_load(self):
+        self._hook_media_message_control()
+    
+    def on_plugin_unload(self):
+        if self.hook_ref:
+            try:
+                self.unhook_method(self.hook_ref)
+            except:
+                pass
+            self.hook_ref = None
+    
+    def _hook_media_message_control(self):
+        try:
+            MediaControllerClass = jclass("org.telegram.messenger.MediaController")
+            java_class = MediaControllerClass.getClass()
+            
+            method = java_class.getDeclaredMethod(
+                "cleanupPlayer", 
+                jclass("java.lang.Boolean").TYPE,
+                jclass("java.lang.Boolean").TYPE,
+                jclass("java.lang.Boolean").TYPE,
+                jclass("java.lang.Boolean").TYPE
+            )
+            method.setAccessible(True)
+            self.hook_ref = self.hook_method(method, MediaMessageControlHook(self))
+            
+        except Exception:
+            pass

@@ -1,0 +1,76 @@
+from base_plugin import BasePlugin, MethodHook, hook_filters, HookFilter
+from hook_utils import find_class
+from client_utils import send_message
+from org.telegram.tgnet import TLRPC
+
+__id__ = "hide_via_bot"
+__name__ = "Hide Via Bot Attribution"
+__type__ = "plugin"
+__description__ = "Hide 'via @bot' attribution when sending inline bot results"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+
+class HideViaBotHook(MethodHook):
+    def __init__(self, plugin):
+        MethodHook.__init__(self)
+        self.plugin = plugin
+    
+    @hook_filters(HookFilter.ArgumentNotNull(2))
+    def before_hooked_method(self, param):
+        try:
+            result = param.args[2]
+            if result is None:
+                return
+            
+            document = getattr(result, 'document', None)
+            photo = getattr(result, 'photo', None)
+            
+            if not isinstance(document, TLRPC.TL_document) and not isinstance(photo, TLRPC.TL_photo):
+                return
+            
+            send_message_obj = getattr(result, 'send_message', None)
+            caption = getattr(send_message_obj, 'caption', "") if send_message_obj else ""
+            
+            send_params = {
+                "peer": param.args[4],
+                "document": document if isinstance(document, TLRPC.TL_document) else None,
+                "photo": photo if isinstance(photo, TLRPC.TL_photo) else None,
+                "message": caption or None,
+                "replyToMsg": param.args[5],
+                "replyToTopMsg": param.args[6],
+                "scheduleDate": param.args[10]
+            }
+            send_message(send_params)
+            param.setResult(None)
+        except Exception:
+            pass
+
+
+class HideViaBotPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self.hook_hide_via_bot_ref = None
+    
+    def on_plugin_load(self):
+        self._hook_hide_via_bot()
+    
+    def on_plugin_unload(self):
+        if self.hook_hide_via_bot_ref:
+            try:
+                self.unhook_method(self.hook_hide_via_bot_ref)
+            except:
+                pass
+            self.hook_hide_via_bot_ref = None
+    
+    def _hook_hide_via_bot(self):
+        try:
+            send_messages_helper_class = find_class("org.telegram.messenger.SendMessagesHelper")
+            if send_messages_helper_class is None:
+                return
+            
+            handler = HideViaBotHook(self)
+            self.hook_hide_via_bot_ref = self.hook_all_methods(send_messages_helper_class, "prepareSendingBotContextResult", handler)
+        except Exception:
+            pass

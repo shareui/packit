@@ -1,0 +1,126 @@
+__id__ = "send_comment_after_forward"
+__name__ = "Send Comment After Forward"
+__type__ = "plugin"
+__description__ = "Send comment after forward"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+from base_plugin import BasePlugin, HookResult, HookStrategy
+from client_utils import run_on_queue, PLUGINS_QUEUE
+from android_utils import run_on_ui_thread
+from org.telegram.messenger import SendMessagesHelper, DialogObject
+from java import jclass
+from hook_utils import get_private_field
+
+
+class SendCommentAfterForwardPlugin(BasePlugin):
+
+    def on_plugin_load(self):
+        self._bypass = False
+        self._pending = {}
+        self.add_on_send_message_hook()
+        self.add_hook("TL_messages_forwardMessages")
+
+    def pre_request_hook(self, request_name, account, request):
+        if request_name != "TL_messages_forwardMessages":
+            return HookResult()
+
+        if not hasattr(request, "to_peer") or request.to_peer is None:
+            return HookResult()
+
+        try:
+            peer = DialogObject.getPeerDialogId(request.to_peer)
+        except Exception:
+            return HookResult()
+
+        if not peer:
+            return HookResult()
+
+        entry = self._pending.pop(peer, None)
+        if entry is not None:
+            params, acc = entry
+
+            def after_forward():
+                def send_on_main_thread():
+                    self._bypass = True
+                    try:
+                        helper = SendMessagesHelper.getInstance(acc)
+                        helper.sendMessage(params)
+                    except Exception:
+                        pass
+                    finally:
+                        self._bypass = False
+
+                run_on_ui_thread(send_on_main_thread)
+
+            run_on_queue(after_forward, PLUGINS_QUEUE, 400)
+
+        return HookResult()
+
+    def on_send_message_hook(self, account, params):
+        if self._bypass:
+            return HookResult()
+
+        if not hasattr(params, "message") or not isinstance(params.message, str):
+            return HookResult()
+
+        if not params.message:
+            return HookResult()
+
+        if not hasattr(params, "peer") or not params.peer:
+            return HookResult()
+
+        if hasattr(params, 'replyToStoryItem') and params.replyToStoryItem is not None:
+            return HookResult()    
+
+
+        try:
+            LaunchActivity = jclass("org.telegram.ui.LaunchActivity")
+            ChatActivity = jclass("org.telegram.ui.ChatActivity")
+            DialogsActivity = jclass("org.telegram.ui.DialogsActivity")
+            ShareAlert = jclass("org.telegram.ui.Components.ShareAlert")
+            fragment = LaunchActivity.getLastFragment()
+        except Exception:
+            return HookResult()
+
+        if fragment is None:
+            return HookResult()
+
+        should_intercept = False
+
+        try:
+            if isinstance(fragment, ChatActivity):
+                preview = get_private_field(fragment, "messagePreviewParams")
+                if preview is not None:
+                    forward = getattr(preview, "forwardMessages", None)
+                    if forward is not None:
+                        messages = getattr(forward, "messages", None)
+                        try:
+                            has_forward = messages is not None and not messages.isEmpty()
+                        except Exception:
+                            has_forward = False
+                        if has_forward:
+                            should_intercept = True
+
+                visibleDialog = get_private_field(fragment, "visibleDialog")
+                if visibleDialog is not None and isinstance(visibleDialog, ShareAlert):
+                    sendingMessageObjects = get_private_field(visibleDialog, "sendingMessageObjects")
+                    if sendingMessageObjects is not None and not sendingMessageObjects.isEmpty():
+                        should_intercept = True
+
+            elif isinstance(fragment, DialogsActivity):
+                dialogs_type = get_private_field(fragment, "dialogsType")
+                forward_type = getattr(DialogsActivity, "DIALOGS_TYPE_FORWARD", None)
+                if dialogs_type == forward_type:
+                    should_intercept = True
+
+        except Exception:
+            should_intercept = False
+
+        if not should_intercept:
+            return HookResult()
+
+        peer = params.peer
+        self._pending[peer] = (params, account)
+        return HookResult(strategy=HookStrategy.CANCEL)

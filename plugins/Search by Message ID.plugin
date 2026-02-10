@@ -1,0 +1,356 @@
+from base_plugin import BasePlugin, MethodHook, hook_filters, HookFilter
+from hook_utils import find_class, get_private_field
+from java import jclass
+from android_utils import run_on_ui_thread
+from ui.settings import Header, Switch, Divider
+from ui.alert import AlertDialogBuilder
+
+from android.view import Gravity
+from android.widget import FrameLayout
+from android.text import InputType
+from android.util import TypedValue
+from org.telegram.messenger import AndroidUtilities
+from org.telegram.ui.ActionBar import Theme
+from org.telegram.ui.Components import EditTextBoldCursor
+
+__id__ = "search_message_id"
+__name__ = "Search by Message ID"
+__type__ = "plugin"
+__description__ = "Search messages by its ID"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+
+class ChatActionBarItemsHook(MethodHook):
+    def __init__(self, plugin):
+        MethodHook.__init__(self)
+        self.plugin = plugin
+    
+    def after_hooked_method(self, param):
+        try:
+            plugin = self.plugin
+            if not plugin:
+                return
+            
+            chat_activity = param.thisObject
+            if chat_activity is None:
+                return
+            
+            activity_id = id(chat_activity)
+            
+            if activity_id not in plugin.chat_action_bar_hooked_activities:
+                plugin.chat_action_bar_hooked_activities.add(activity_id)
+                self.add_goto_message_menu_item(chat_activity)
+        except Exception as e:
+            if self.plugin:
+                self.plugin.log(f"Error in Chat Action Bar Items Hook: {e}")
+    
+    def add_goto_message_menu_item(self, chat_activity):
+        try:
+            headerItem = get_private_field(chat_activity, "headerItem")
+            if headerItem is None:
+                return
+            
+            R = find_class("org.telegram.messenger.R")
+            if R is None:
+                return
+            
+            try:
+                goto_icon = R.drawable.msg_to_beginning_solar
+                goto_text = "Go to Message"
+                
+                lazy_list = get_private_field(headerItem, "lazyList")
+                lazy_map = get_private_field(headerItem, "lazyMap")
+                
+                if lazy_list is not None:
+                    def find_position(target):
+                        if target is not None:
+                            for i in range(lazy_list.size()):
+                                if lazy_list.get(i) == target:
+                                    return i
+                        return None
+
+                    plugins_item = get_private_field(chat_activity, "pluginsMenuItem")
+                    admin_gap = get_private_field(chat_activity, "adminItemsGap")
+                    insert_position = find_position(plugins_item) or find_position(admin_gap) or lazy_list.size()
+                    
+                    ItemClass = jclass("org.telegram.ui.ActionBar.ActionBarMenuItem$Item")
+                    item_java_class = ItemClass.getClass()
+                    
+                    asSubItemMethod = item_java_class.getDeclaredMethod("asSubItem", 
+                        jclass("java.lang.Integer").TYPE,
+                        jclass("java.lang.Integer").TYPE, 
+                        jclass("android.graphics.drawable.Drawable"),
+                        jclass("java.lang.CharSequence"),
+                        jclass("java.lang.Boolean").TYPE,
+                        jclass("java.lang.Boolean").TYPE
+                    )
+                    asSubItemMethod.setAccessible(True)
+                    
+                    Integer = jclass("java.lang.Integer")
+                    Boolean = jclass("java.lang.Boolean")
+                    
+                    our_item = asSubItemMethod.invoke(None, 
+                        Integer(self.plugin.goto_message_menu_id),
+                        Integer(goto_icon),
+                        None,
+                        goto_text,
+                        Boolean(True),
+                        Boolean(False)
+                    )
+                    
+                    lazy_list.add(insert_position, our_item)
+                    
+                    if lazy_map is not None:
+                        lazy_map.put(self.plugin.goto_message_menu_id, our_item)
+                else:
+                    headerItem.lazilyAddSubItem(
+                        self.plugin.goto_message_menu_id,
+                        goto_icon,
+                        goto_text
+                    )
+                
+                self.hook_action_bar_callback(chat_activity)
+                
+            except Exception as e:
+                if self.plugin:
+                    self.plugin.log(f"Error adding Goto Message menu item: {e}")
+                
+        except Exception as e:
+            if self.plugin:
+                self.plugin.log(f"Error in add_goto_message_menu_item: {e}")
+    
+    def hook_action_bar_callback(self, chat_activity):
+        try:
+            action_bar = get_private_field(chat_activity, "actionBar")
+            if action_bar is None:
+                return
+            
+            current_callback = get_private_field(action_bar, "actionBarMenuOnItemClick")
+            if current_callback is None:
+                return
+            
+            callback_class = current_callback.getClass()
+            jint = jclass("java.lang.Integer").TYPE
+            
+            onItemClickMethod = callback_class.getDeclaredMethod("onItemClick", jint)
+            onItemClickMethod.setAccessible(True)
+            
+            hook_handler = ChatActionBarMenuItemClickHook(self.plugin, chat_activity)
+            
+            if self.plugin.hook_item_click_ref:
+                self.plugin.unhook_method(self.plugin.hook_item_click_ref)
+            
+            self.plugin.hook_item_click_ref = self.plugin.hook_method(
+                onItemClickMethod,
+                hook_handler
+            )
+            
+        except Exception as e:
+            if self.plugin:
+                self.plugin.log(f"Error hooking action bar callback: {e}")
+
+
+class ChatActionBarMenuItemClickHook(MethodHook):
+    def __init__(self, plugin, chat_activity):
+        MethodHook.__init__(self)
+        self.plugin = plugin
+        self.chat_activity = chat_activity
+    
+    def before_hooked_method(self, param):
+        try:
+            plugin = self.plugin
+            if not plugin:
+                return
+            
+            if param.args[0] is None:
+                return
+            
+            item_id = int(param.args[0])
+            
+            if item_id == plugin.goto_message_menu_id:
+                plugin.show_goto_message_dialog(self.chat_activity)
+                param.setResult(None)
+                
+        except Exception as e:
+            if self.plugin:
+                self.plugin.log(f"Error in Chat Action Bar Menu Item Click Hook: {e}")
+
+
+class EnableGotoMessagePlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self.goto_message_menu_id = 99996
+        self.chat_action_bar_hooked_activities = set()
+        self.hook_create_view_ref = None
+        self.hook_item_click_ref = None
+        self.header_item_field = None
+    
+    def on_plugin_load(self):
+        self._hook_chat_action_bar_items()
+    
+    def on_plugin_unload(self):
+        if self.hook_create_view_ref:
+            try:
+                self.unhook_method(self.hook_create_view_ref)
+            except:
+                pass
+        if self.hook_item_click_ref:
+            try:
+                self.unhook_method(self.hook_item_click_ref)
+            except:
+                pass
+        self.chat_action_bar_hooked_activities.clear()
+    
+    def _hook_chat_action_bar_items(self):
+        try:
+            ChatActivity = find_class("org.telegram.ui.ChatActivity")
+            if not ChatActivity:
+                return
+            
+            createViewMethod = ChatActivity.getClass().getDeclaredMethod("createView", jclass("android.content.Context"))
+            createViewMethod.setAccessible(True)
+            self.hook_create_view_ref = self.hook_method(createViewMethod, ChatActionBarItemsHook(self))
+        except Exception as e:
+            self.log(f"Error hooking Chat Action Bar Items: {e}")
+    
+    def show_goto_message_dialog(self, chat_activity):
+        try:
+            if not chat_activity:
+                return
+                
+            fragment = self._resolve_target_fragment(chat_activity)
+            if not fragment:
+                return
+                
+            activity = fragment.getParentActivity()
+            if not activity:
+                return
+            
+            current_activity = chat_activity
+            
+            message_id_edit_text = EditTextBoldCursor(activity)
+            message_id_edit_text.setHint("ID")
+            message_id_edit_text.setInputType(InputType.TYPE_CLASS_NUMBER)
+            message_id_edit_text.setMaxLines(1)
+            message_id_edit_text.setSingleLine(True)
+            message_id_edit_text.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18)
+            message_id_edit_text.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText))
+            message_id_edit_text.setHintTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteHintText))
+            message_id_edit_text.setBackground(Theme.createEditTextDrawable(activity, True))
+            message_id_edit_text.setCursorColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueHeader))
+            message_id_edit_text.setCursorSize(AndroidUtilities.dp(20))
+            message_id_edit_text.setCursorWidth(1.5)
+            message_id_edit_text.setPadding(0, 0, 0, 0)
+            message_id_edit_text.setFocusable(True)
+            
+            plugin = self
+            
+            def close_dialog_and_menu(dialog, message_id=None):
+                try:
+                    AndroidUtilities.hideKeyboard(message_id_edit_text)
+                except Exception:
+                    pass
+                dialog.dismiss()
+                try:
+                    # plugin already set to self
+                    if current_activity and plugin:
+                        header_item = get_private_field(current_activity, "headerItem")
+                        if header_item:
+                            header_item.closeSubMenu()
+                except Exception:
+                    pass
+                if message_id:
+                    # plugin already set to self
+                    if plugin:
+                        target_fragment = plugin._resolve_target_fragment(current_activity) if current_activity else fragment
+                        if target_fragment:
+                            run_on_ui_thread(lambda: plugin.scroll_to_message(target_fragment, message_id))
+            
+            def on_search_click(dialog, which):
+                try:
+                    AndroidUtilities.hideKeyboard(message_id_edit_text)
+                    
+                    editable = message_id_edit_text.getText()
+                    if editable is not None:
+                        message_id_text = editable.toString().strip()
+                        numeric_only = ''.join(c for c in message_id_text if c.isdigit())
+                        if numeric_only:
+                            # plugin already set to self
+                            if plugin:
+                                message_id = plugin._validate_message_id(numeric_only)
+                                if message_id:
+                                    close_dialog_and_menu(dialog, message_id)
+                                    return
+                except Exception as e:
+                    pass
+                close_dialog_and_menu(dialog)
+            
+            def on_cancel_click(dialog, which):
+                try:
+                    AndroidUtilities.hideKeyboard(message_id_edit_text)
+                except Exception:
+                    pass
+                close_dialog_and_menu(dialog)
+            
+            builder = AlertDialogBuilder(activity)
+            builder.set_title("Search Messages")
+            builder.set_view(message_id_edit_text)
+            builder.set_negative_button("Cancel", on_cancel_click)
+            builder.set_positive_button("Search", on_search_click)
+            
+            dialog = builder.show()
+            
+            def apply_layout_params():
+                try:
+                    layout_params = message_id_edit_text.getLayoutParams()
+                    if layout_params is not None:
+                        if isinstance(layout_params, FrameLayout.LayoutParams):
+                            layout_params.gravity = Gravity.CENTER_HORIZONTAL
+                        
+                        if hasattr(layout_params, 'rightMargin'):
+                            layout_params.rightMargin = AndroidUtilities.dp(24)
+                            layout_params.leftMargin = AndroidUtilities.dp(24)
+                            layout_params.height = AndroidUtilities.dp(36)
+                            layout_params.bottomMargin = AndroidUtilities.dp(15)
+                        message_id_edit_text.setLayoutParams(layout_params)
+                    
+                    message_id_edit_text.requestFocus()
+                    text_length = message_id_edit_text.getText().length() if message_id_edit_text.getText() else 0
+                    message_id_edit_text.setSelection(0, text_length)
+                    AndroidUtilities.showKeyboard(message_id_edit_text)
+                except Exception as e:
+                    pass
+            
+            run_on_ui_thread(apply_layout_params, delay=100)
+            
+        except Exception as e:
+            self.log(f"Error in show_goto_message_dialog: {e}")
+    
+    def scroll_to_message(self, chat_activity, message_id):
+        try:
+            if not message_id or message_id <= 0 or not chat_activity:
+                return
+            chat_activity.scrollToMessageId(message_id, 0, False, 0, False, 0)
+        except Exception as e:
+            self.log(f"Error in scroll_to_message: {e}")
+    
+    def _resolve_target_fragment(self, chat_activity):
+        from client_utils import get_last_fragment
+        if not chat_activity:
+            return get_last_fragment()
+        if hasattr(chat_activity, 'fragment') and chat_activity.fragment:
+            return chat_activity.fragment
+        elif hasattr(chat_activity, 'getParentActivity'):
+            return chat_activity
+        return get_last_fragment()
+    
+    def _validate_message_id(self, message_id_text):
+        if not message_id_text or not message_id_text.strip():
+            return None
+        try:
+            message_id = int(message_id_text.strip())
+            return message_id if message_id > 0 else None
+        except ValueError:
+            return None

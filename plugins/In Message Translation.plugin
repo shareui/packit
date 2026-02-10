@@ -1,0 +1,128 @@
+from base_plugin import BasePlugin, MethodHook
+from hook_utils import find_class, get_private_field
+from java import dynamic_proxy, jclass
+from java.util import ArrayList
+from android_utils import run_on_ui_thread
+from org.telegram.messenger import MessageObject
+from org.telegram.tgnet import TLRPC
+
+__id__ = "in_message_translation"
+__name__ = "InMessageTranslation"
+__type__ = "plugin"
+__description__ = "Translate messages inline"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+_classes = {}
+_translated = set()
+
+def _init():
+    try:
+        _classes['TU'] = jclass("com.exteragram.messenger.utils.text.TranslatorUtils")
+        _classes['CU'] = jclass("com.exteragram.messenger.utils.ChatUtils")
+        _classes['TA'] = jclass("org.telegram.ui.Components.TranslateAlert2")
+        _classes['CA'] = jclass("org.telegram.ui.ChatActivity")
+        _classes['CM'] = jclass("org.telegram.ui.Cells.ChatMessageCell")
+        return True
+    except: return False
+
+class Callback(dynamic_proxy(find_class("com.exteragram.messenger.utils.text.TranslatorUtils$TranslateCallback"))):
+    def __init__(s, msg, lang, activity):
+        super().__init__()
+        s.msg, s.lang, s.activity = msg, lang, activity
+    
+    def onSuccess(s, *a):
+        try:
+            txt, ent = (a[0], None) if len(a) == 1 and isinstance(a[0], str) else \
+                       (a[0].result.get(0).text, a[0].result.get(0).entities) if len(a) == 2 and a[0] and not a[1] and a[0].result and not a[0].result.isEmpty() else (None, None)
+            if txt: s._apply(txt, ent)
+        except: pass
+    
+    def onFailed(s): pass
+    def onReqId(s, _): pass
+    
+    def _apply(s, txt, ent):
+        try:
+            mo = s.msg.messageOwner
+            if not mo: return
+            te = TLRPC.TL_textWithEntities()
+            te.text, te.entities = txt, ent if ent else ArrayList()
+            mo.translatedText, mo.translatedToLanguage = te, s.lang
+            _translated.add((s.msg.getDialogId(), s.msg.getId()))
+            def ui():
+                try:
+                    s.msg.translated = True
+                    s.msg.applyNewText(txt)
+                    s.msg.generateCaption()
+                    if s.activity:
+                        lv = get_private_field(s.activity, "chatListView")
+                        if lv:
+                            for i in range(lv.getChildCount()):
+                                c = lv.getChildAt(i)
+                                if isinstance(c, _classes['CM']) and c.getMessageObject() and c.getMessageObject().getId() == s.msg.getId():
+                                    c.invalidate(); break
+                except: pass
+            run_on_ui_thread(ui)
+        except: pass
+
+class BlockRevertHook(MethodHook):
+    def before_hooked_method(s, p):
+        try:
+            m = p.thisObject
+            if m and (m.getDialogId(), m.getId()) in _translated and m.translated and m.messageOwner and m.messageOwner.translatedText:
+                p.setResult(False)
+        except: pass
+
+class AlertHook(MethodHook):
+    def __init__(s): s.pending = None
+    
+    def before_hooked_method(s, p):
+        try:
+            if len(p.args) < 7: return
+            f = p.args[1]
+            if not f or not isinstance(f, _classes['CA']): return
+            obj = get_private_field(f, "selectedObject")
+            if not obj:
+                try:
+                    fld = f.getClass().getDeclaredField("selectedObject")
+                    fld.setAccessible(True)
+                    obj = fld.get(f)
+                except: pass
+            if not obj: return
+            txt = next((a for a in p.args if a and hasattr(a, '__class__') and ('String' in a.__class__.__name__ or 'CharSequence' in a.__class__.__name__ or isinstance(a, str)) and len(str(a)) > 5), None)
+            if not txt:
+                txt = _classes['CU'].getInstance().getMessageText(obj, None)
+            if not txt or not len(str(txt)): return
+            _classes['TU'].translate(txt, _classes['TA'].getToLanguage(), Callback(obj, _classes['TA'].getToLanguage(), f))
+            s.pending = True
+        except: pass
+    
+    def after_hooked_method(s, p):
+        try:
+            if s.pending:
+                a = p.getResult()
+                if a: a.dismiss()
+                s.pending = None
+        except: pass
+
+class InMessageTranslationPlugin(BasePlugin):
+    def __init__(s):
+        super().__init__()
+        s.h1 = s.h2 = None
+    
+    def on_plugin_load(s):
+        if not _init(): return
+        try:
+            s.h1 = s.hook_all_methods(_classes['TA'], "showAlert", AlertHook())
+            s.h2 = s.hook_all_methods(MessageObject, "updateTranslation", BlockRevertHook())
+        except: pass
+    
+    def on_plugin_unload(s):
+        for h in [s.h1, s.h2]:
+            if h:
+                for u in h:
+                    try: s.unhook_method(u)
+                    except: pass
+        s.h1 = s.h2 = None
+        _translated.clear()

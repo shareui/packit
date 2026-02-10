@@ -1,0 +1,240 @@
+from base_plugin import BasePlugin, MethodHook
+from hook_utils import find_class
+from java import jclass, dynamic_proxy
+from ui.settings import Header, Switch, Divider
+
+__id__ = "forward_sheet_behaviour"
+__name__ = "Forward Sheet Behaviour"
+__type__ = "plugin"
+__description__ = "Configure forward sheet behavior - use classic forward sheet or ShareAlert for all forwards"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+
+class ProcessSelectedOptionHook(MethodHook):
+    def __init__(self, plugin):
+        super().__init__()
+        self.plugin = plugin
+    
+    def before_hooked_method(self, param):
+        plugin = self.plugin
+        if not plugin or not plugin.get_setting("enable_share_alert_forward", False):
+            return
+        
+        if param.args[0] == 2:
+            activity = param.thisObject
+            activity_class = activity.getClass()
+            
+            selected = activity_class.getDeclaredField("selectedObject")
+            selected.setAccessible(True)
+            
+            selected_group = activity_class.getDeclaredField("selectedObjectGroup")
+            selected_group.setAccessible(True)
+            
+            forwarding = activity_class.getDeclaredField("forwardingMessage")
+            forwarding.setAccessible(True)
+            forwarding.set(activity, selected.get(activity))
+            
+            forwarding_group = activity_class.getDeclaredField("forwardingMessageGroup")
+            forwarding_group.setAccessible(True)
+            forwarding_group.set(activity, selected_group.get(activity))
+            
+            try:
+                scrim = activity_class.getDeclaredField("scrimPopupWindow")
+                scrim.setAccessible(True)
+                popup = scrim.get(activity)
+                if popup:
+                    popup.dismiss()
+            except:
+                pass
+            
+            method = activity_class.getDeclaredMethod("openForward", jclass("java.lang.Boolean").TYPE)
+            method.setAccessible(True)
+            method.invoke(activity, False)
+            
+            param.setResult(None)
+
+
+class OpenForwardHook(MethodHook):
+    def __init__(self, plugin):
+        super().__init__()
+        self.plugin = plugin
+    
+    def before_hooked_method(self, param):
+        plugin = self.plugin
+        if not plugin or not plugin.get_setting("enable_share_alert_forward", False):
+            return
+        
+        if param.args[0]:
+            param.args[0] = False
+
+
+def OnClickListener(callback):
+    ViewOnClickListener = jclass("android.view.View$OnClickListener")
+    
+    class ClickListenerImpl(dynamic_proxy(ViewOnClickListener)):
+        def __init__(self, cb):
+            super().__init__()
+            self.callback = cb
+        
+        def onClick(self, view):
+            self.callback(view)
+    
+    return ClickListenerImpl(callback)
+
+
+class SetForwardListenerHook(MethodHook):
+    def __init__(self, plugin):
+        super().__init__()
+        self.plugin = plugin
+    
+    def before_hooked_method(self, param):
+        plugin = self.plugin
+        if not plugin or not plugin.get_setting("enable_old_forward", False):
+            return
+        
+        try:
+            original_listener = param.args[0]
+            if original_listener is None:
+                return
+            
+            def open_old_share_sheet():
+                try:
+                    from client_utils import get_last_fragment
+                    from java.lang import Boolean
+                    chat_activity = get_last_fragment()
+                    if chat_activity:
+                        openForwardMethod = chat_activity.getClass().getDeclaredMethod("openForward", Boolean.TYPE)
+                        openForwardMethod.setAccessible(True)
+                        openForwardMethod.invoke(chat_activity, True)
+                except Exception:
+                    pass
+            
+            def wrapped_click(view):
+                try:
+                    if plugin.get_setting("enable_old_forward", False):
+                        open_old_share_sheet()
+                    else:
+                        if original_listener is not None:
+                            original_listener.onClick(view)
+                except Exception:
+                    if original_listener is not None:
+                        original_listener.onClick(view)
+            
+            param.args[0] = OnClickListener(wrapped_click)
+        except Exception:
+            pass
+
+
+class LayoutConstructorHook(MethodHook):
+    def __init__(self, plugin):
+        super().__init__()
+        self.plugin = plugin
+    
+    def after_hooked_method(self, param):
+        plugin = self.plugin
+        if not plugin:
+            return
+        
+        try:
+            layout = param.thisObject
+            plugin._setup_forward_button(layout)
+        except Exception:
+            pass
+
+
+class ForwardSettingsPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self.ref1 = None
+        self.ref2 = None
+        self.ref_layout = None
+        self.ref_forward_button = None
+    
+    def on_plugin_load(self):
+        self._hook_share_alert_forward()
+        self._hook_actions_buttons_layout()
+    
+    def on_plugin_unload(self):
+        for ref in [self.ref1, self.ref2, self.ref_layout, self.ref_forward_button]:
+            if ref:
+                try:
+                    self.unhook_method(ref)
+                except:
+                    pass
+    
+    def _hook_share_alert_forward(self):
+        try:
+            ChatActivity = find_class("org.telegram.ui.ChatActivity")
+            activity_class = ChatActivity.getClass()
+            
+            method1 = activity_class.getDeclaredMethod("openForward", jclass("java.lang.Boolean").TYPE)
+            method1.setAccessible(True)
+            self.ref1 = self.hook_method(method1, OpenForwardHook(self))
+            
+            method2 = activity_class.getDeclaredMethod("processSelectedOption", jclass("java.lang.Integer").TYPE)
+            method2.setAccessible(True)
+            self.ref2 = self.hook_method(method2, ProcessSelectedOptionHook(self))
+        except Exception:
+            pass
+    
+    def _hook_actions_buttons_layout(self):
+        try:
+            ChatActivityActionsButtonsLayoutClass = find_class(
+                "org.telegram.ui.Components.chat.layouts.ChatActivityActionsButtonsLayout"
+            )
+            
+            if ChatActivityActionsButtonsLayoutClass is None:
+                return
+            
+            ContextClass = find_class("android.content.Context")
+            ResourcesProviderClass = find_class("org.telegram.ui.ActionBar.Theme$ResourcesProvider")
+            ColorProviderClass = find_class("org.telegram.ui.Components.blur3.drawable.color.BlurredBackgroundColorProvider")
+            BlurredBackgroundDrawableViewFactoryClass = find_class("org.telegram.ui.Components.blur3.BlurredBackgroundDrawableViewFactory")
+            
+            constructor = ChatActivityActionsButtonsLayoutClass.getClass().getDeclaredConstructor(
+                ContextClass,
+                ResourcesProviderClass,
+                ColorProviderClass,
+                BlurredBackgroundDrawableViewFactoryClass
+            )
+            constructor.setAccessible(True)
+            
+            self.ref_layout = self.hook_method(constructor, LayoutConstructorHook(self))
+            
+        except Exception:
+            pass
+    
+    def _setup_forward_button(self, layout):
+        try:
+            ViewOnClickListenerClass = find_class("android.view.View$OnClickListener")
+            setForwardButtonMethod = layout.getClass().getDeclaredMethod(
+                "setForwardButtonOnClickListener",
+                ViewOnClickListenerClass
+            )
+            setForwardButtonMethod.setAccessible(True)
+            
+            self.ref_forward_button = self.hook_method(setForwardButtonMethod, SetForwardListenerHook(self))
+            
+        except Exception:
+            pass
+    
+    def create_settings(self):
+        return [
+            Header(text="Forward Behavior"),
+            
+            Switch(
+                key="enable_old_forward",
+                text="Classic Forward Sheet",
+                default=False
+            ),
+            Divider(text="Use the classic share sheet when forwarding messages from the forward button."),
+            
+            Switch(
+                key="enable_share_alert_forward",
+                text="ShareAlert for All Forwards",
+                default=False
+            ),
+            Divider(text="Force all forward actions to use the ShareAlert dialog instead of the new forward UI."),
+        ]

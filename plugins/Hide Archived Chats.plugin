@@ -1,0 +1,189 @@
+from base_plugin import BasePlugin, MethodHook, hook_filters, HookFilter
+from ui.settings import Header, Switch, Divider
+from java import jclass
+
+__id__ = "hide_archived_chats"
+__name__ = "Hide Archived Chats"
+__type__ = "plugin"
+__description__ = "Hide the archived chats folder from the chat list and/or drawer"
+__version__ = "1.1.0"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+
+class MessagesControllerGetDialogsHook(MethodHook):
+    def __init__(self, plugin):
+        super().__init__()
+        self.plugin = plugin
+        self._processed_accounts = set()
+
+    def _remove_folder_dialog(self, dialog_list, dialog_object):
+        if dialog_list is None:
+            return
+        for i in range(dialog_list.size() - 1, -1, -1):
+            if dialog_object.isFolderDialogId(dialog_list.get(i).id):
+                dialog_list.remove(i)
+                return
+
+    @hook_filters(HookFilter.Condition("param.thisObject != null"))
+    def before_hooked_method(self, param):
+        try:
+            if not self.plugin.get_setting("hide_archived_chats", True):
+                self._processed_accounts.clear()
+                return
+
+            mc = param.thisObject
+            account_id = mc.currentAccount
+            
+            if account_id in self._processed_accounts:
+                return
+            
+            dialog_object = jclass("org.telegram.messenger.DialogObject")
+            archive_id = dialog_object.makeFolderDialogId(1)
+            
+            if mc.dialogs_dict.get(archive_id) is not None:
+                mc.dialogs_dict.remove(archive_id)
+            
+            self._remove_folder_dialog(mc.allDialogs, dialog_object)
+            
+            folder_dialogs = mc.dialogsByFolder.get(0) if mc.dialogsByFolder else None
+            self._remove_folder_dialog(folder_dialogs, dialog_object)
+            
+            self._processed_accounts.add(account_id)
+        except Exception:
+            pass
+
+
+class ChatUtilsHasArchivedHook(MethodHook):
+    def __init__(self, plugin):
+        super().__init__()
+        self.plugin = plugin
+
+    @hook_filters(HookFilter.RESULT_NOT_NULL)
+    def after_hooked_method(self, param):
+        try:
+            if self.plugin.get_setting("hide_archived_chats", True) and not self.plugin.get_setting("hide_archived_from_drawer", False):
+                param.setResult(True)
+        except Exception:
+            pass
+
+
+class ExteraConfigArchivedHook(MethodHook):
+    def __init__(self, plugin):
+        super().__init__()
+        self.plugin = plugin
+
+    @hook_filters(HookFilter.Condition("param.thisObject != null"), HookFilter.ArgumentNotNull(0))
+    def before_hooked_method(self, param):
+        try:
+            if self.plugin.get_setting("hide_archived_chats", True) and not self.plugin.get_setting("hide_archived_from_drawer", False):
+                if len(param.args) >= 2 and param.args[0] == "archivedChats":
+                    param.thisObject.setObj("archivedChats", True)
+                    param.setResult(None)
+        except Exception:
+            pass
+
+
+class HideArchivedChatsPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self.hook_messages_controller_ref = None
+        self.hook_chat_utils_has_archived_ref = None
+        self.hook_extera_config_archived_ref = None
+    
+    def on_plugin_load(self):
+        self._apply_hooks()
+    
+    def on_plugin_unload(self):
+        self._unhook_all()
+    
+    def _unhook_all(self):
+        if self.hook_messages_controller_ref:
+            try:
+                self.unhook_method(self.hook_messages_controller_ref)
+            except:
+                pass
+            self.hook_messages_controller_ref = None
+        
+        if self.hook_chat_utils_has_archived_ref:
+            try:
+                self.unhook_method(self.hook_chat_utils_has_archived_ref)
+            except:
+                pass
+            self.hook_chat_utils_has_archived_ref = None
+        
+        if self.hook_extera_config_archived_ref:
+            try:
+                self.unhook_method(self.hook_extera_config_archived_ref)
+            except:
+                pass
+            self.hook_extera_config_archived_ref = None
+
+    def _apply_hooks(self):
+        if self.get_setting("hide_archived_chats", True):
+            if self.get_setting("hide_archived_from_drawer", False):
+                if not self.hook_messages_controller_ref:
+                    self._hook_messages_controller()
+            else:
+                if not self.hook_messages_controller_ref:
+                    self._hook_messages_controller()
+                if not self.hook_chat_utils_has_archived_ref:
+                    self._hook_chat_utils_has_archived()
+                if not self.hook_extera_config_archived_ref:
+                    self._hook_extera_config_archived()
+
+    def _hook_messages_controller(self):
+        try:
+            method = jclass("org.telegram.messenger.MessagesController").getClass().getDeclaredMethod("getDialogs", jclass("java.lang.Integer").TYPE)
+            method.setAccessible(True)
+            ref = self.hook_method(method, MessagesControllerGetDialogsHook(self))
+            self.hook_messages_controller_ref = ref
+        except Exception:
+            pass
+
+    def _hook_chat_utils_has_archived(self):
+        try:
+            chat_utils_class = jclass("com.exteragram.messenger.utils.ChatUtils")
+            method = chat_utils_class.getClass().getDeclaredMethod("hasArchivedChats")
+            method.setAccessible(True)
+            ref = self.hook_method(method, ChatUtilsHasArchivedHook(self))
+            self.hook_chat_utils_has_archived_ref = ref
+        except Exception:
+            pass
+
+    def _hook_extera_config_archived(self):
+        try:
+            extera_config_class = jclass("com.exteragram.messenger.ExteraConfig")
+            method = extera_config_class.getClass().getDeclaredMethod("setObj", jclass("java.lang.String"), jclass("java.lang.Boolean").TYPE)
+            method.setAccessible(True)
+            ref = self.hook_method(method, ExteraConfigArchivedHook(self))
+            self.hook_extera_config_archived_ref = ref
+        except Exception:
+            pass
+
+    def create_settings(self):
+        settings = [
+            Header(text="Hide Archived Chats"),
+            Switch(
+                key="hide_archived_chats",
+                text="Hide Archived Chats",
+                default=True,
+                on_change=lambda v: self._apply_hooks()
+            ),
+        ]
+        
+        if self.get_setting("hide_archived_chats", True):
+            settings.append(
+                Switch(
+                    key="hide_archived_from_drawer",
+                    text="Hide from drawer",
+                    default=False,
+                    on_change=lambda v: self._apply_hooks()
+                )
+            )
+        
+        settings.append(
+            Divider(text="This will remove archived chats cell from the chat list by filtering them out of the dialogs query.")
+        )
+        
+        return settings

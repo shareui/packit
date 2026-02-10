@@ -1,0 +1,281 @@
+from base_plugin import BasePlugin, MethodHook, hook_filters, HookFilter
+from hook_utils import find_class, get_private_field
+from java import jclass
+from android_utils import run_on_ui_thread
+
+from org.telegram.messenger import R as R_tg
+
+__id__ = "select_all_chats"
+__name__ = "Select All Chats"
+__type__ = "plugin"
+__description__ = "Add 'Select All' option to chat list action mode menu"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+
+def jlong(val):
+    return jclass("java.lang.Long").valueOf(val)
+
+
+class EnableSelectAllDialogsPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self._select_all_id = 1000
+        self._select_all_added_modes = set()
+        self.hook_create_action_mode_ref = None
+        self.hook_on_item_click_ref = None
+    
+    def on_plugin_load(self):
+        self._setup_select_all_dialogs()
+    
+    def on_plugin_unload(self):
+        for ref in [self.hook_create_action_mode_ref, self.hook_on_item_click_ref]:
+            if ref:
+                try:
+                    self.unhook_method(ref)
+                except:
+                    pass
+        self._select_all_added_modes.clear()
+
+    def _setup_select_all_dialogs(self):
+        try:
+            DialogsActivityCls = find_class("org.telegram.ui.DialogsActivity")
+            CreateActionMode = DialogsActivityCls.getClass().getDeclaredMethod("createActionMode", find_class("java.lang.String").getClass())
+            CreateActionMode.setAccessible(True)
+            ActionBarMenuCls = find_class("org.telegram.ui.ActionBar.ActionBarMenu")
+            OnItemClick = ActionBarMenuCls.getClass().getDeclaredMethod("onItemClick", find_class("java.lang.Integer").TYPE)
+            OnItemClick.setAccessible(True)
+
+            plugin = self
+
+            class AddSelectAllMenuHook(MethodHook):
+                def after_hooked_method(hook_self, param):
+                    try:
+                        # plugin already set to self
+                        if not plugin or param.thisObject is None:
+                            return
+                        
+                        dlg = param.thisObject
+                        actionBar = getattr(dlg, "actionBar", None)
+                        if actionBar is None:
+                            return
+                        actionMode = actionBar.getActionMode()
+                        if actionMode is None:
+                            return
+                        try:
+                            hc = actionMode.hashCode()
+                            if hc in plugin._select_all_added_modes:
+                                return
+                        except Exception:
+                            pass
+                        otherItem = None
+                        for i in range(actionMode.getChildCount()):
+                            child = actionMode.getChildAt(i)
+                            if child is not None and child.getClass().getName().endswith("ActionBarMenuItem"):
+                                try:
+                                    if hasattr(child, "hasSubMenu") and child.hasSubMenu():
+                                        otherItem = child
+                                        break
+                                except Exception:
+                                    pass
+                        if otherItem is None:
+                            return
+                        try:
+                            popup = get_private_field(otherItem, "popupLayout")
+                            if popup is not None:
+                                for k in range(popup.getItemsCount()):
+                                    v = popup.getItemAt(k)
+                                    if v is not None and v.getTag() == plugin._select_all_id:
+                                        plugin._select_all_added_modes.add(hc)
+                                        return
+                        except Exception:
+                            pass
+                        title = "Select all"
+                        otherItem.addSubItem(plugin._select_all_id, R_tg.drawable.msg_select_between_solar, title)
+                        try:
+                            plugin._select_all_added_modes.add(hc)
+                        except Exception:
+                            pass
+                    except Exception:
+                        pass
+
+            class InterceptSelectAllClickHook(MethodHook):
+                def before_hooked_method(hook_self, param):
+                    try:
+                        # plugin already set to self
+                        if not plugin or param.args[0] is None:
+                            return
+                        
+                        itemId = int(param.args[0])
+                        if itemId != plugin._select_all_id:
+                            return
+                        menu = param.thisObject
+                        actionBar = get_private_field(menu, "parentActionBar")
+                        if actionBar is None:
+                            return
+                        fragment = get_private_field(actionBar, "parentFragment")
+                        if fragment is None:
+                            return
+                        if fragment.getClass().getName() != "org.telegram.ui.DialogsActivity":
+                            return
+                        dlg = fragment
+
+                        viewPages = get_private_field(dlg, "viewPages")
+                        adapter = None
+                        listView = None
+                        if viewPages is not None:
+                            try:
+                                vp0 = viewPages[0]
+                                adapter = get_private_field(vp0, "dialogsAdapter") or getattr(vp0, "dialogsAdapter", None)
+                                listView = get_private_field(vp0, "listView") or getattr(vp0, "listView", None)
+                            except Exception:
+                                pass
+                        if adapter is None or listView is None:
+                            try:
+                                GetListView = dlg.getClass().getDeclaredMethod("getListView")
+                                GetListView.setAccessible(True)
+                                listView = GetListView.invoke(dlg)
+                                adapter = listView.getAdapter() if listView is not None else None
+                            except Exception:
+                                pass
+                        selected = get_private_field(dlg, "selectedDialogs")
+                        if adapter is None or listView is None or selected is None:
+                            return
+
+                        DialogsActivityCls2 = dlg.getClass()
+                        ShowOrUpdate = None
+                        methods = DialogsActivityCls2.getDeclaredMethods()
+                        for m in methods:
+                            try:
+                                if m.getName() == "showOrUpdateActionMode" and len(m.getParameterTypes()) == 2:
+                                    ShowOrUpdate = m
+                                    break
+                            except Exception:
+                                pass
+                        if ShowOrUpdate is None:
+                            return
+                        ShowOrUpdate.setAccessible(True)
+
+                        LongClass = find_class("java.lang.Long")
+                        DialogInterface = find_class("org.telegram.tgnet.TLRPC$Dialog")
+
+                        state = {"index": 0}
+                        state["count"] = adapter.getItemCount()
+                        BATCH_SIZE = 24
+                        MAX_LOAD_ATTEMPTS = 8
+                        state["load_attempts"] = 0
+                        initial_adapter = adapter
+
+                        def step():
+                            try:
+                                if listView.getAdapter() != initial_adapter:
+                                    return
+                                actionBar2 = getattr(dlg, "actionBar", None)
+                                actionMode2 = actionBar2.getActionMode() if actionBar2 is not None else None
+                                if actionMode2 is None:
+                                    return
+                     
+                                try:
+                                    if not actionBar2.isActionModeShowed():
+                                        return
+                                except Exception:
+                                    pass
+
+                                done = False
+                                for _ in range(BATCH_SIZE):
+                                    i = state["index"]
+                                    if i >= state.get("count", 0):
+                                        def _attempt_load_more():
+                                            try:
+                                                if listView.getAdapter() != initial_adapter:
+                                                    return
+                                                actionBar3 = getattr(dlg, "actionBar", None)
+                                                actionMode3 = actionBar3.getActionMode() if actionBar3 is not None else None
+                                                if actionMode3 is None:
+                                                    return
+                                  
+                                                try:
+                                                    if not actionBar3.isActionModeShowed():
+                                                        return
+                                                except Exception:
+                                                    pass
+                                                try:
+                                                    pos = max(0, state.get("count", 0) - 1)
+                                                    listView.scrollToPosition(pos)
+                                                except Exception:
+                                                    pass
+                                                def _check_new_count():
+                                                    try:
+                                                        new_count = adapter.getItemCount()
+                                                        if new_count > state.get("count", 0):
+                                                            state["count"] = new_count
+                                                            state["load_attempts"] = 0
+                                                            run_on_ui_thread(step)
+                                                        else:
+                                                            state["load_attempts"] = state.get("load_attempts", 0) + 1
+                                                            if state["load_attempts"] < MAX_LOAD_ATTEMPTS:
+                                                                run_on_ui_thread(_attempt_load_more, 200)
+                                                            else:
+                                                                try:
+                                                                    update_counters = dlg.getClass().getDeclaredMethod("updateCounters", find_class("java.lang.Boolean").TYPE)
+                                                                    update_counters.setAccessible(True)
+                                                                    update_counters.invoke(dlg, True)
+                                                                except Exception:
+                                                                    pass
+                                                    except Exception:
+                                                        pass
+                                                run_on_ui_thread(_check_new_count, 200)
+                                            except Exception:
+                                                pass
+                                        _attempt_load_more()
+                                        return
+                                    try:
+                                        item = adapter.getItem(i)
+                                        state["index"] = i + 1
+                                        if item is None:
+                                            continue
+                                        try:
+                                            if not DialogInterface.isInstance(item):
+                                                continue
+                                        except Exception:
+                                            if not str(item.getClass().getName()).startswith("org.telegram.tgnet.TLRPC$"):
+                                                continue
+                                        did = getattr(item, "id", None)
+                                        if did is None:
+                                            continue
+                                        try:
+                                            if selected.contains(LongClass.valueOf(did)):
+                                                continue
+                                        except Exception:
+                                            try:
+                                                if selected.contains(jlong(did)):
+                                                    continue
+                                            except Exception:
+                                                pass
+                                        holder = listView.findViewHolderForAdapterPosition(i)
+                                        cellView = holder.itemView if holder is not None else None
+                                        ShowOrUpdate.invoke(dlg, jlong(did), cellView)
+                                    except Exception:
+                                        pass
+
+                                if done:
+                                    try:
+                                        update_counters = dlg.getClass().getDeclaredMethod("updateCounters", find_class("java.lang.Boolean").TYPE)
+                                        update_counters.setAccessible(True)
+                                        update_counters.invoke(dlg, True)
+                                    except Exception:
+                                        pass
+                                else:
+                                    run_on_ui_thread(step)
+                            except Exception:
+                                pass
+
+                        run_on_ui_thread(step)
+                    except Exception:
+                        pass
+
+            self.hook_create_action_mode_ref = self.hook_method(CreateActionMode, AddSelectAllMenuHook())
+            self.hook_on_item_click_ref = self.hook_method(OnItemClick, InterceptSelectAllClickHook(), priority=10)
+        except Exception:
+            pass

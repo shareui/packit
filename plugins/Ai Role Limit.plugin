@@ -1,0 +1,103 @@
+from base_plugin import BasePlugin, MethodHook, hook_filters, HookFilter
+from hook_utils import find_class
+
+__id__ = "ai_role_limit"
+__name__ = "Increase AI Role Character Limit"
+__type__ = "plugin"
+__description__ = "Increase the character limit for AI assistant role from 1024 to 9999"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+NEW_LIMIT = 9999
+
+
+class LimitHook(MethodHook):
+    def __init__(self, plugin):
+        MethodHook.__init__(self)
+        self.plugin = plugin
+    
+    @hook_filters(HookFilter.Condition("param.thisObject != null"))
+    def after_hooked_method(self, param):
+        try:
+            obj = param.thisObject
+            obj_class = obj.getClass()
+            superclass = obj_class.getSuperclass()
+            mMax_field = superclass.getDeclaredField("mMax")
+            mMax_field.setAccessible(True)
+            current_max = mMax_field.getInt(obj)
+            
+            if current_max == 1024:
+                from java.lang.reflect import Field, Modifier
+                modifiers_field = Field.getClass().getDeclaredField("accessFlags")
+                modifiers_field.setAccessible(True)
+                modifiers_field.setInt(mMax_field, mMax_field.getModifiers() & ~Modifier.FINAL)
+                mMax_field.setInt(obj, NEW_LIMIT)
+        except:
+            pass
+
+
+class SetTextHook(MethodHook):
+    def __init__(self):
+        MethodHook.__init__(self)
+    
+    @hook_filters(HookFilter.ArgumentNotNull(0))
+    def before_hooked_method(self, param):
+        try:
+            if len(param.args) > 0 and param.args[0]:
+                text = str(param.args[0])
+                if "1024" in text:
+                    new_text = text.replace("1024", str(NEW_LIMIT))
+                    param.args[0] = new_text
+        except:
+            pass
+
+
+class EnableAiRoleLimitPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self._class_cache = {}
+        self.hook_ai_role_limit_constructor_ref = None
+        self.hook_ai_role_limit_settext_ref = None
+    
+    def _get_class(self, class_name):
+        if class_name not in self._class_cache:
+            self._class_cache[class_name] = find_class(class_name)
+        return self._class_cache[class_name]
+    
+    def on_plugin_load(self):
+        self._hook_ai_role_limit()
+    
+    def on_plugin_unload(self):
+        if self.hook_ai_role_limit_constructor_ref:
+            try:
+                self.unhook_method(self.hook_ai_role_limit_constructor_ref)
+            except:
+                pass
+            self.hook_ai_role_limit_constructor_ref = None
+        if self.hook_ai_role_limit_settext_ref:
+            try:
+                self.unhook_method(self.hook_ai_role_limit_settext_ref)
+            except:
+                pass
+            self.hook_ai_role_limit_settext_ref = None
+    
+    def _hook_ai_role_limit(self):
+        try:
+            CodepointsLengthInputFilterClass = self._get_class("org.telegram.ui.Components.CodepointsLengthInputFilter")
+            if not CodepointsLengthInputFilterClass:
+                return
+            
+            from java.lang import Integer
+            java_class = CodepointsLengthInputFilterClass.getClass()
+            constructor = java_class.getDeclaredConstructor(Integer.TYPE)
+            self.hook_ai_role_limit_constructor_ref = self.hook_method(constructor, LimitHook(self))
+            
+            OutlineTextContainerViewClass = find_class("org.telegram.ui.Components.OutlineTextContainerView")
+            if OutlineTextContainerViewClass:
+                StringClass = find_class("java.lang.String")
+                setText_method = OutlineTextContainerViewClass.getClass().getDeclaredMethod("setText", StringClass)
+                self.hook_ai_role_limit_settext_ref = self.hook_method(setText_method, SetTextHook())
+            
+        except:
+            pass

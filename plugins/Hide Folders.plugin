@@ -1,0 +1,227 @@
+from base_plugin import BasePlugin
+from hook_utils import find_class
+from ui.settings import Header, Switch, Divider, Text
+from android_utils import run_on_ui_thread
+from quantahut import showmultiselector
+
+from org.telegram.messenger import UserConfig, NotificationCenter, MessagesController
+
+__id__ = "hidefolders_enabled"
+__name__ = "Hide Folders"
+__type__ = "plugin"
+__description__ = "Hide specific folders from the tab bar"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__min_version__ = "12.1.1"
+
+
+class HideFoldersPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self.hidden_folders_data = {}
+    
+    def on_plugin_load(self):
+        self._load_hidden_folders()
+        if self.get_setting("hidefolders_enabled", False):
+            self._hook_folder_visibility(post_notification=True)
+    
+    def on_plugin_unload(self):
+        try:
+            MessagesControllerClass = find_class("org.telegram.messenger.MessagesController")
+            if MessagesControllerClass:
+                current_account = UserConfig.selectedAccount
+                controller = MessagesControllerClass.getInstance(current_account)
+                frozen_field = controller.getClass().getDeclaredField("frozenDialogFilters")
+                frozen_field.setAccessible(True)
+                frozen_field.set(controller, None)
+                self._post_update_notification()
+        except:
+            pass
+    
+    def create_settings(self):
+        settings = [
+            Header(text="Hide Folders"),
+            Switch(
+                key="hidefolders_enabled",
+                text="Enable Hide Folders",
+                default=False,
+                on_change=self._toggle_hide_folders
+            ),
+        ]
+        
+        if self.get_setting("hidefolders_enabled", False):
+            settings.append(
+                Text(
+                    text="Select Folders",
+                    on_click=lambda v: self._show_folder_selector()
+                )
+            )
+            settings.append(
+                Divider(text="Hide specific folders from the folder list. Select which folders to hide.")
+            )
+        
+        return settings
+    
+    def _get_account_key(self):
+        try:
+            return str(UserConfig.selectedAccount)
+        except:
+            return "0"
+    
+    def _load_hidden_folders(self):
+        try:
+            import json
+            data = self.get_setting("hidden_folders_data", "{}")
+            self.hidden_folders_data = json.loads(data) if data else {}
+        except:
+            self.hidden_folders_data = {}
+    
+    def _save_hidden_folders(self):
+        try:
+            import json
+            self.set_setting("hidden_folders_data", json.dumps(self.hidden_folders_data))
+        except:
+            pass
+    
+    def _get_hidden_folders_for_account(self):
+        account_key = self._get_account_key()
+        return self.hidden_folders_data.get(account_key, [])
+    
+    def _is_all_chats_hidden(self):
+        account_key = self._get_account_key()
+        hidden = self.hidden_folders_data.get(account_key, [])
+        return "all_chats" in hidden
+    
+    def _show_folder_selector(self):
+        try:
+            controller = MessagesController.getInstance(UserConfig.selectedAccount)
+            filters_field = controller.getClass().getDeclaredField("dialogFilters")
+            filters_field.setAccessible(True)
+            filters = filters_field.get(controller)
+
+            if filters is None:
+                filters = controller.getDialogFilters()
+
+            hidden_folders = self._get_hidden_folders_for_account()
+
+            items = []
+            keys = []
+            key_to_folder = {}
+
+            for i in range(filters.size()):
+                filter_obj = filters.get(i)
+                if filter_obj.isDefault():
+                    continue
+
+                key = f"hidefolders_folder_{filter_obj.id}"
+                keys.append(key)
+                items.append(str(filter_obj.name))
+                key_to_folder[key] = filter_obj.id
+
+            if not items:
+                return
+
+            for key in keys:
+                folder_id = key_to_folder[key]
+                self.set_setting(key, folder_id in hidden_folders)
+
+            plugin = self
+            
+            def on_selection_change(selected_keys):
+                try:
+                    # plugin already set to self
+                    if not plugin:
+                        return False
+                    account_key = plugin._get_account_key()
+                    new_hidden = [key_to_folder[key] for key in selected_keys if key in key_to_folder]
+                    plugin.hidden_folders_data[account_key] = new_hidden
+                    plugin._save_hidden_folders()
+                    plugin._hook_folder_visibility(post_notification=True)
+                    return False
+                except Exception:
+                    return False
+
+            showmultiselector(
+                items=items,
+                title="Hide Folders",
+                subtitle="Select folders to hide",
+                setting_keys=keys,
+                plugin_instance=self,
+                on_selection_change=on_selection_change,
+                action_text="Apply"
+            )
+        except Exception:
+            pass
+    
+    def _toggle_hide_folders(self, enabled):
+        self.set_setting("hidefolders_enabled", enabled)
+        self._hook_folder_visibility(post_notification=True)
+    
+    def _post_update_notification(self):
+        try:
+            from android.os import Handler, Looper
+            from android_utils import R
+            
+            def post_update():
+                try:
+                    NotificationCenter.getInstance(UserConfig.selectedAccount).postNotificationName(
+                        NotificationCenter.dialogFiltersUpdated
+                    )
+                except:
+                    pass
+            
+            Handler(Looper.getMainLooper()).post(R(post_update))
+        except Exception:
+            pass
+    
+    def _hook_folder_visibility(self, post_notification=False):
+        try:
+            if not self.get_setting("hidefolders_enabled", False):
+                return
+                
+            MessagesControllerClass = find_class("org.telegram.messenger.MessagesController")
+            if not MessagesControllerClass:
+                return
+            
+            current_account = UserConfig.selectedAccount
+            controller = MessagesControllerClass.getInstance(current_account)
+            
+            hidden_folders = self._get_hidden_folders_for_account()
+            hide_all_chats = self._is_all_chats_hidden()
+            
+            if not hidden_folders and not hide_all_chats:
+                frozen_field = controller.getClass().getDeclaredField("frozenDialogFilters")
+                frozen_field.setAccessible(True)
+                frozen_field.set(controller, None)
+                return
+            
+            dialog_filters_field = controller.getClass().getDeclaredField("dialogFilters")
+            dialog_filters_field.setAccessible(True)
+            original_filters = dialog_filters_field.get(controller)
+            
+            if original_filters is None or original_filters.size() == 0:
+                return
+            
+            from java.util import ArrayList
+            filtered_list = ArrayList()
+            for i in range(original_filters.size()):
+                filter_item = original_filters.get(i)
+                try:
+                    is_default = filter_item.isDefault()
+                except:
+                    is_default = False
+                if is_default and hide_all_chats:
+                    continue
+                if not is_default and filter_item.id in hidden_folders:
+                    continue
+                filtered_list.add(filter_item)
+            
+            frozen_field = controller.getClass().getDeclaredField("frozenDialogFilters")
+            frozen_field.setAccessible(True)
+            frozen_field.set(controller, filtered_list)
+            
+            if post_notification:
+                self._post_update_notification()
+            
+        except Exception:
+            pass

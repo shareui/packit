@@ -1,0 +1,264 @@
+from base_plugin import BasePlugin, MethodHook, hook_filters, HookFilter
+from java import jclass
+from android_utils import OnClickListener
+
+__id__ = "non_clickable_preview"
+__name__ = "Non-Clickable Chat Preview"
+__type__ = "plugin"
+__description__ = "Makes chat previews non-clickable and adds Open Profile/Open Chat buttons"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__min_version__ = "12.2.10"
+
+
+class NonClickablePreviewDispatchTouchHook(MethodHook):
+    @hook_filters(HookFilter.Condition("param.thisObject != null"))
+    def before_hooked_method(self, param):
+        try:
+            fragment_view = param.thisObject
+            if not fragment_view:
+                return
+            
+            chat_activity_field = fragment_view.getClass().getDeclaredField("this$0")
+            chat_activity_field.setAccessible(True)
+            chat_activity = chat_activity_field.get(fragment_view)
+            if not chat_activity:
+                return
+            
+            parent_layout_field = chat_activity.getClass().getSuperclass().getDeclaredField("parentLayout")
+            parent_layout_field.setAccessible(True)
+            parent_layout = parent_layout_field.get(chat_activity)
+            if not parent_layout:
+                return
+            
+            is_preview_method = parent_layout.getClass().getDeclaredMethod("isInPreviewMode")
+            is_preview_method.setAccessible(True)
+            in_preview_mode = is_preview_method.invoke(parent_layout)
+            
+            if in_preview_mode:
+                try:
+                    allow_field = chat_activity.getClass().getDeclaredField("allowExpandPreviewByClick")
+                    allow_field.setAccessible(True)
+                    allow_expand = allow_field.getBoolean(chat_activity)
+                    
+                    if allow_expand:
+                        allow_field.setBoolean(chat_activity, False)
+                except:
+                    pass
+        except:
+            pass
+
+
+class NonClickablePreviewPresentFragmentHook(MethodHook):
+    @hook_filters(HookFilter.ArgumentNotNull(0), HookFilter.ArgumentNotNull(1))
+    def after_hooked_method(self, param):
+        try:
+            fragment = param.thisObject
+            preview_fragment = param.args[0]
+            preview_menu = param.args[1]
+            
+            if not preview_fragment or not preview_menu:
+                return
+                
+            ChatActivity = jclass("org.telegram.ui.ChatActivity")
+            if not isinstance(preview_fragment, ChatActivity):
+                return
+                
+            try:
+                allow_field = preview_fragment.getClass().getDeclaredField("allowExpandPreviewByClick")
+                allow_field.setAccessible(True)
+                allow_field.setBoolean(preview_fragment, False)
+            except:
+                pass
+
+            try:
+                chat_list_field = preview_fragment.getClass().getDeclaredField("chatListView")
+                chat_list_field.setAccessible(True)
+                chat_list_view = chat_list_field.get(preview_fragment)
+                if chat_list_view is not None:
+                    try:
+                        chat_list_view.setOnItemClickListener(None)
+                    except:
+                        pass
+                    try:
+                        chat_list_view.setOnItemLongClickListener(None)
+                    except:
+                        pass
+                    try:
+                        chat_list_view.setClickable(False)
+                    except:
+                        pass
+                    try:
+                        chat_list_view.setLongClickable(False)
+                    except:
+                        pass
+            except:
+                pass
+
+            dialog_id = preview_fragment.getDialogId()
+            
+            MessagesController = jclass("org.telegram.messenger.MessagesController")
+            DialogObject = jclass("org.telegram.messenger.DialogObject")
+            
+            if DialogObject.isUserDialog(dialog_id):
+                user = MessagesController.getInstance(fragment.currentAccount).getUser(dialog_id)
+                if not user:
+                    return
+                self._add_open_profile_item(fragment, preview_menu, dialog_id)
+                self._add_open_chat_item(fragment, preview_menu, dialog_id)
+            else:
+                chat_id_for_lookup = -dialog_id
+                chat = MessagesController.getInstance(fragment.currentAccount).getChat(chat_id_for_lookup)
+                if not chat:
+                    return
+                self._add_open_profile_item(fragment, preview_menu, dialog_id)
+                self._add_open_chat_item(fragment, preview_menu, dialog_id)
+        except:
+            pass
+    
+    def _add_open_profile_item(self, fragment, preview_menu, dialog_id):
+        try:
+            ActionBarMenuSubItem = jclass("org.telegram.ui.ActionBar.ActionBarMenuSubItem")
+            R = jclass("org.telegram.messenger.R")
+            
+            item_text = "Open Profile"
+            item_icon = R.drawable.msg_openprofile
+            
+            open_profile_item = ActionBarMenuSubItem(fragment.getParentActivity(), False, False)
+            open_profile_item.setTextAndIcon(item_text, item_icon)
+            open_profile_item.setMinimumWidth(160)
+            
+            click_listener = OnClickListener(lambda *args: self._open_profile(fragment, dialog_id))
+            open_profile_item.setOnClickListener(click_listener)
+            
+            preview_menu.addView(open_profile_item)
+        except:
+            pass
+    
+    def _add_open_chat_item(self, fragment, preview_menu, dialog_id):
+        try:
+            ActionBarMenuSubItem = jclass("org.telegram.ui.ActionBar.ActionBarMenuSubItem")
+            R = jclass("org.telegram.messenger.R")
+            
+            item_text = "Open Chat"
+            item_icon = R.drawable.msg_msgbubble3
+            
+            open_chat_item = ActionBarMenuSubItem(fragment.getParentActivity(), False, False)
+            open_chat_item.setTextAndIcon(item_text, item_icon)
+            open_chat_item.setMinimumWidth(160)
+            
+            click_listener = OnClickListener(lambda *args: self._open_chat(fragment))
+            open_chat_item.setOnClickListener(click_listener)
+            
+            preview_menu.addView(open_chat_item)
+        except:
+            pass
+    
+    def _open_chat(self, fragment):
+        try:
+            parent_layout = fragment.getParentLayout()
+            if parent_layout:
+                parent_layout.expandPreviewFragment()
+        except:
+            pass
+    
+    def _open_profile(self, fragment, dialog_id):
+        try:
+            fragment.finishPreviewFragment()
+            
+            Bundle = jclass("android.os.Bundle")
+            args = Bundle()
+            args.putBoolean("expandPhoto", False)
+            
+            DialogObject = jclass("org.telegram.messenger.DialogObject")
+            if DialogObject.isUserDialog(dialog_id):
+                args.putLong("user_id", dialog_id)
+            else:
+                chat_id_for_bundle = -dialog_id
+                args.putLong("chat_id", chat_id_for_bundle)
+            
+            ProfileActivity = jclass("org.telegram.ui.ProfileActivity")
+            present_fragment_method = fragment.getClass().getDeclaredMethod("presentFragment", jclass("org.telegram.ui.ActionBar.BaseFragment"))
+            present_fragment_method.setAccessible(True)
+            present_fragment_method.invoke(fragment, ProfileActivity(args))
+        except:
+            pass
+
+
+class EnableNonClickablePreviewPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self.hook_non_clickable_present_ref = None
+        self.hook_non_clickable_present_ref2 = None
+        self.hook_non_clickable_dispatch_ref = None
+    
+    def on_plugin_load(self):
+        self._hook_non_clickable_preview()
+    
+    def on_plugin_unload(self):
+        if self.hook_non_clickable_present_ref:
+            try:
+                self.unhook_method(self.hook_non_clickable_present_ref)
+            except:
+                pass
+            self.hook_non_clickable_present_ref = None
+        if self.hook_non_clickable_present_ref2:
+            try:
+                self.unhook_method(self.hook_non_clickable_present_ref2)
+            except:
+                pass
+            self.hook_non_clickable_present_ref2 = None
+        if self.hook_non_clickable_dispatch_ref:
+            try:
+                self.unhook_method(self.hook_non_clickable_dispatch_ref)
+            except:
+                pass
+            self.hook_non_clickable_dispatch_ref = None
+    
+    def _hook_non_clickable_preview(self):
+        try:
+            BaseFragmentClass = jclass("org.telegram.ui.ActionBar.BaseFragment")
+            methods = BaseFragmentClass.getClass().getDeclaredMethods()
+            present_method = None
+            for m in methods:
+                if m.getName() == "presentFragmentAsPreviewWithMenu":
+                    present_method = m
+                    break
+            if present_method is None:
+                raise Exception("presentFragmentAsPreviewWithMenu not found on BaseFragment")
+            present_method.setAccessible(True)
+            self.hook_non_clickable_present_ref = self.hook_method(present_method, NonClickablePreviewPresentFragmentHook())
+        except:
+            pass
+
+        try:
+            ActionBarLayout = jclass("org.telegram.ui.ActionBar.ActionBarLayout")
+            methods2 = ActionBarLayout.getClass().getDeclaredMethods()
+            present_method2 = None
+            for m in methods2:
+                if m.getName() == "presentFragmentAsPreviewWithMenu":
+                    present_method2 = m
+                    break
+            if present_method2 is None:
+                raise Exception("presentFragmentAsPreviewWithMenu not found on ActionBarLayout")
+            present_method2.setAccessible(True)
+            self.hook_non_clickable_present_ref2 = self.hook_method(present_method2, NonClickablePreviewPresentFragmentHook())
+        except:
+            pass
+
+        try:
+            ChatActivityClass = jclass("org.telegram.ui.ChatActivity")
+            inner_classes = ChatActivityClass.getClass().getDeclaredClasses()
+            fragment_view_class = None
+            for c in inner_classes:
+                if "ChatActivityFragmentView" in c.getSimpleName():
+                    fragment_view_class = c
+                    break
+            if fragment_view_class is None:
+                raise Exception("ChatActivityFragmentView not found")
+            
+            dispatch_method = fragment_view_class.getDeclaredMethod("dispatchTouchEvent", jclass("android.view.MotionEvent"))
+            dispatch_method.setAccessible(True)
+            self.hook_non_clickable_dispatch_ref = self.hook_method(dispatch_method, NonClickablePreviewDispatchTouchHook())
+        except:
+            pass
