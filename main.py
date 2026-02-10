@@ -9,6 +9,16 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
+class Colors:
+    RESET = '\033[0m'
+    RED = '\033[91m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    BLUE = '\033[94m'
+    CYAN = '\033[96m'
+    BOLD = '\033[1m'
+    DIM = '\033[2m'
+
 
 def readPluginIdFromFile(filePath: str) -> Optional[str]:
     try:
@@ -100,34 +110,34 @@ def resolveConflicts(oldPlugin: Dict, newPlugin: Dict, filename: str) -> Dict:
     if not conflicts:
         return resolvedPlugin
     
-    print(f"\nconflicts found in {filename}:")
+    print(f"\n{Colors.RED}{Colors.BOLD}conflicts found in {filename}:{Colors.RESET}")
     print()
     
     for key, oldValue, newValue in conflicts:
-        print(f"conflict in field: {key}")
-        print(f"  old: {oldValue}")
-        print(f"  new: {newValue}")
-        print("1. apply old")
-        print("2. apply new")
-        print("3. enter a value")
+        print(f"{Colors.YELLOW}conflict in field: {Colors.BOLD}{key}{Colors.RESET}")
+        print(f"  {Colors.DIM}old:{Colors.RESET} {oldValue}")
+        print(f"  {Colors.DIM}new:{Colors.RESET} {newValue}")
+        print(f"{Colors.GREEN}1{Colors.RESET}. apply old")
+        print(f"{Colors.GREEN}2{Colors.RESET}. apply new")
+        print(f"{Colors.GREEN}3{Colors.RESET}. enter a value")
         
         while True:
-            choice = input("choose option: ").strip()
+            choice = input(f"{Colors.CYAN}choose option: {Colors.RESET}").strip()
             if choice == "1":
                 resolvedPlugin[key] = oldValue
-                print(f"keeping old value for {key}")
+                print(f"{Colors.GREEN}keeping old value for {key}{Colors.RESET}")
                 break
             elif choice == "2":
                 resolvedPlugin[key] = newValue
-                print(f"applying new value for {key}")
+                print(f"{Colors.GREEN}applying new value for {key}{Colors.RESET}")
                 break
             elif choice == "3":
                 customValue = input(f"enter custom value for {key}: ").strip()
                 resolvedPlugin[key] = customValue
-                print(f"applied custom value for {key}")
+                print(f"{Colors.GREEN}applied custom value for {key}{Colors.RESET}")
                 break
             else:
-                print("invalid option, choose 1, 2 or 3")
+                print(f"{Colors.RED}invalid option, choose 1, 2 or 3{Colors.RESET}")
         
         print()
     
@@ -153,7 +163,7 @@ def createBackup(configPath: str, backupDir: str, enabled: bool):
         with open(backupPath, 'w', encoding='utf-8') as dst:
             dst.write(src.read())
     
-    print(f"backup created: {backupFilename}")
+    print(f"{Colors.BLUE}backup created: {backupFilename}{Colors.RESET}")
 
 
 def loadConfig(configFile: str = "cfg.yml") -> Dict:
@@ -401,8 +411,14 @@ def extractMetadata(filePath: str, filename: str) -> Dict[str, any]:
             if match:
                 value = match.group(1)
                 if value and '\n' in value:
-                    value = ' '.join(line.strip() for line in value.split('\n') if line.strip())
-                metadata[key] = value
+                    if key == "description":
+                        metadata[key] = "MULTILINE_DETECTED"
+                        metadata["_original_description"] = value
+                    else:
+                        value = ' '.join(line.strip() for line in value.split('\n') if line.strip())
+                        metadata[key] = value
+                else:
+                    metadata[key] = value
             else:
                 missingFields.append(key)
         
@@ -413,10 +429,10 @@ def extractMetadata(filePath: str, filename: str) -> Dict[str, any]:
             metadata["dependencies"] = deps
             
         if missingFields:
-            print(f"{filename} missing {', '.join(missingFields)}")
+            print(f"{Colors.YELLOW}{filename}{Colors.RESET} missing {Colors.RED}{', '.join(missingFields)}{Colors.RESET}")
             
     except Exception as e:
-        print(f"{filename} failed {e}")
+        print(f"{Colors.RED}{filename} failed {e}{Colors.RESET}")
         raise
     
     return metadata
@@ -443,10 +459,10 @@ def createPluginEntry(filePath: str, filename: str, config: Dict) -> Dict[str, a
     }
     
     if config.get("manualInputAbout", False):
-        print(f"\nEnter about for plugin {filename}:")
+        print(f"\n{Colors.CYAN}Enter about for plugin {filename}:{Colors.RESET}")
         aboutEn = input("Enter description on English: ").strip()
         while not aboutEn:
-            print("English description is required")
+            print(f"{Colors.RED}English description is required{Colors.RESET}")
             aboutEn = input("Enter description on English: ").strip()
         
         aboutRu = input("Enter description on Russian (or type 'skip'): ").strip()
@@ -459,13 +475,38 @@ def createPluginEntry(filePath: str, filename: str, config: Dict) -> Dict[str, a
         pluginEntry["about"] = metadata["name"]
     
     if config.get("manualInputDescriptions", False):
-        description = input(f"Enter a description for the plugin {filename}: ").strip()
-        if description:
-            pluginEntry["description"] = description
+        if metadata["description"] == "MULTILINE_DETECTED":
+            print(f"\n{Colors.YELLOW}⚠ multiline description detected in {filename}{Colors.RESET}")
+            print(f"{Colors.DIM}original description:{Colors.RESET}")
+            originalDesc = metadata.get("_original_description", "")
+            print(f"{Colors.DIM}{originalDesc}{Colors.RESET}")
+            print()
+            print(f"{Colors.CYAN}choose action:{Colors.RESET}")
+            print(f"  {Colors.GREEN}1{Colors.RESET}. skip (use original)")
+            print(f"  {Colors.GREEN}2{Colors.RESET}. enter custom description")
+            
+            choice = input("option: ").strip()
+            
+            if choice == "1":
+                pluginEntry["description"] = originalDesc
+            elif choice == "2":
+                customDesc = input("enter custom description: ").strip()
+                pluginEntry["description"] = customDesc if customDesc else originalDesc
+            else:
+                print(f"{Colors.YELLOW}invalid option, using original{Colors.RESET}")
+                pluginEntry["description"] = originalDesc
+        else:
+            description = input(f"enter description for {filename}: ").strip()
+            pluginEntry["description"] = description if description else metadata["description"]
+    elif config.get("addDescription", True):
+        if metadata["description"] == "MULTILINE_DETECTED":
+            originalDesc = metadata.get("_original_description", "")
+            print(f"{Colors.YELLOW}⚠ multiline description detected in {filename}{Colors.RESET}")
+            print(f"{Colors.DIM}original: {originalDesc}{Colors.RESET}")
+            print(f"{Colors.CYAN}using original description{Colors.RESET}")
+            pluginEntry["description"] = originalDesc
         else:
             pluginEntry["description"] = metadata["description"]
-    elif config.get("addDescription", True):
-        pluginEntry["description"] = metadata["description"]
     
     if config.get("addHash", True):
         pluginEntry["hash"] = calculateSha256(filePath)
@@ -517,9 +558,9 @@ def writeLatestLog(newPlugins: List[Dict], updatedPlugins: List[Dict], deletedPl
                 for plugin in deletedPlugins:
                     f.write(f"  - {plugin['name']} (id: {plugin['id']}, version: {plugin['version']})\n")
         
-        print(f"log written: {latestLogPath}")
+        print(f"{Colors.BLUE}log written: {latestLogPath}{Colors.RESET}")
     except Exception as e:
-        print(f"log write failed {e}")
+        print(f"{Colors.RED}log write failed {e}{Colors.RESET}")
 
 
 def writeForPost(newPlugins: List[Dict], updatedPlugins: List[Dict], deletedPlugins: List[Dict], totalCount: int):
@@ -547,9 +588,9 @@ def writeForPost(newPlugins: List[Dict], updatedPlugins: List[Dict], deletedPlug
             
             f.write(f"Total plugins: {totalCount}")
         
-        print(f"post file written: {forPostPath}")
+        print(f"{Colors.BLUE}post file written: {forPostPath}{Colors.RESET}")
     except Exception as e:
-        print(f"post file write failed {e}")
+        print(f"{Colors.RED}post file write failed {e}{Colors.RESET}")
 
 
 def updateConfigJson(config: Dict):
@@ -586,7 +627,7 @@ def updateConfigJson(config: Dict):
             fileHash = calculateSha256(filePath)
             
             if fileHash in hashMap:
-                print(f"{filename} skipped (hash already exists)")
+                print(f"{Colors.DIM}{filename} skipped (hash already exists){Colors.RESET}")
                 continue
             
             pluginEntry = createPluginEntry(filePath, filename, config)
@@ -605,28 +646,28 @@ def updateConfigJson(config: Dict):
                     allowDowngrade = config.get("allowDowngrade", False)
                     
                     if not allowDowngrade:
-                        print(f"{filename} WARNING: downgrade detected!")
-                        print(f"  current: {oldVersion}, new: {newVersion}")
-                        confirm = input("  continue anyway? (y/n): ").lower()
+                        print(f"{Colors.RED}{Colors.BOLD}{filename} WARNING: downgrade detected!{Colors.RESET}")
+                        print(f"  {Colors.YELLOW}current: {oldVersion}, new: {newVersion}{Colors.RESET}")
+                        confirm = input(f"  {Colors.CYAN}continue anyway? (y/n): {Colors.RESET}").lower()
                         if confirm != 'y':
-                            print(f"{filename} skipped")
+                            print(f"{Colors.DIM}{filename} skipped{Colors.RESET}")
                             continue
                     else:
-                        print(f"{filename} downgrade: {oldVersion} -> {newVersion}")
+                        print(f"{Colors.YELLOW}{filename} downgrade: {oldVersion} -> {newVersion}{Colors.RESET}")
                 
                 resolvedPlugin = resolveConflicts(oldPlugin, pluginEntry, filename)
                 
                 repoConfig["plugins"][pluginIndex] = resolvedPlugin
                 updatedPlugins.append(resolvedPlugin)
                 filesProcessed += 1
-                print(f"{filename} updated (id: {pluginId}, old hash: {oldHash[:8]}..., new hash: {fileHash[:8]}...)")
+                print(f"{Colors.GREEN}{filename} updated{Colors.RESET} (id: {Colors.CYAN}{pluginId}{Colors.RESET}, old hash: {oldHash[:8]}..., new hash: {fileHash[:8]}...)")
             else:
                 newPlugins.append(pluginEntry)
                 filesProcessed += 1
-                print(f"{filename} added as new plugin (id: {pluginId})")
+                print(f"{Colors.GREEN}{filename} added as new plugin{Colors.RESET} (id: {Colors.CYAN}{pluginId}{Colors.RESET})")
             
         except Exception as e:
-            print(f"{filename} failed {e}")
+            print(f"{Colors.RED}{filename} failed {e}{Colors.RESET}")
     
     if newPlugins:
         repoConfig["plugins"].extend(newPlugins)
@@ -638,8 +679,8 @@ def updateConfigJson(config: Dict):
             json.dump(repoConfig, f, indent=2, ensure_ascii=False)
         
         print()
-        print(f"processed {filesProcessed} plugin(s)")
-        print(f"added: {len(newPlugins)}, updated: {len(updatedPlugins)}")
+        print(f"{Colors.BOLD}processed {filesProcessed} plugin(s){Colors.RESET}")
+        print(f"{Colors.GREEN}added: {len(newPlugins)}{Colors.RESET}, {Colors.BLUE}updated: {len(updatedPlugins)}{Colors.RESET}")
         
         if config.get("writeLastLog", False):
             writeLatestLog(newPlugins, updatedPlugins, [], len(repoConfig["plugins"]))
@@ -695,10 +736,10 @@ def changeFile(config: Dict):
         with open(configPath, 'w', encoding='utf-8') as f:
             json.dump(repoConfig, f, indent=2, ensure_ascii=False)
         
-        print(f"{pluginId} updated with {filename}")
+        print(f"{Colors.GREEN}{pluginId} updated with {filename}{Colors.RESET}")
         
     except Exception as e:
-        print(f"{filename} failed {e}")
+        print(f"{Colors.RED}{filename} failed {e}{Colors.RESET}")
 
 
 def deleteFiles(config: Dict):
@@ -744,7 +785,7 @@ def deleteFiles(config: Dict):
     with open(configPath, 'w', encoding='utf-8') as f:
         json.dump(repoConfig, f, indent=2, ensure_ascii=False)
     
-    print(f"{pluginId} deleted from config")
+    print(f"{Colors.RED}{pluginId} deleted from config{Colors.RESET}")
     
     if os.path.exists(filePath):
         os.remove(filePath)
@@ -1104,19 +1145,20 @@ def createGitignore():
 
 def showMenu():
     print()
-    print("1. add files")
-    print("2. change file")
-    print("3. delete files")
-    print("4. clear missing plugins")
-    print("5. dir status")
-    print("6. edit plugin value")
-    print("7. add item to json")
-    print("8. edit config values")
-    print("9. rewrite script cfg")
-    print("10. create .gitignore for cfg.yml")
-    print("11. exit")
+    print(f"{Colors.BOLD}{Colors.CYAN}    Menu    {Colors.RESET}")
+    print(f"{Colors.GREEN}1{Colors.RESET}. add files")
+    print(f"{Colors.GREEN}2{Colors.RESET}. change file")
+    print(f"{Colors.GREEN}3{Colors.RESET}. delete files")
+    print(f"{Colors.GREEN}4{Colors.RESET}. clear missing plugins")
+    print(f"{Colors.GREEN}5{Colors.RESET}. dir status")
+    print(f"{Colors.GREEN}6{Colors.RESET}. edit plugin value")
+    print(f"{Colors.GREEN}7{Colors.RESET}. add item to json")
+    print(f"{Colors.GREEN}8{Colors.RESET}. edit config values")
+    print(f"{Colors.GREEN}9{Colors.RESET}. rewrite script cfg")
+    print(f"{Colors.GREEN}10{Colors.RESET}. create .gitignore for cfg.yml")
+    print(f"{Colors.RED}11{Colors.RESET}. exit")
     print()
-    choice = input("choose option: ").strip()
+    choice = input(f"{Colors.CYAN}choose option: {Colors.RESET}").strip()
     return choice
 
 
