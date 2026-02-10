@@ -227,7 +227,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/ban_deleted_users.plugin",
-      "description": "Плагин для управления участниками чатов/каналов с быстрым доступом через меню чата и команду .bandel.\\n\\nДоступные действия:\\n• Удалить удалённые аккаунты\\n• Удалить ботов\\n• Удалить неактивных пользователей\\n• Удалить онлайн пользователей\\n• Удалить оффлайн пользователей\\n• Удалить новых пользователей (рейды)\\n\\nИспользуйте меню (3 точки) в чате для быстрого доступа или команду .bandel.",
+      "description": "Плагин для управления участниками чатов/каналов с быстрым доступом через меню чата и команду .bandel.\n\nДоступные действия:\n• Удалить удалённые аккаунты\n• Удалить ботов\n• Удалить неактивных пользователей\n• Удалить онлайн пользователей\n• Удалить оффлайн пользователей\n• Удалить новых пользователей (рейды)\n\nИспользуйте меню (3 точки) в чате для быстрого доступа или команду .bandel.",
       "hash": "ec138451f2e83f1114698bbde440fd67dd927a26e34a742c27b906dbaf73fd62"
     },
     {
@@ -253,7 +253,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/bot_login.plugin",
-      "description": "Log into Telegram as a bot using its API token.\\nUse the button on the login screen or in the plugin settings.",
+      "description": "Log into Telegram as a bot using its API token.\nUse the button on the login screen or in the plugin settings.",
       "hash": "6c8a1a7acdb7a53028e8ca6b60add40a2deda99587f7d7c61ef8f4b415c00d38"
     },
     {
@@ -318,7 +318,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Converter.plugin",
-      "description": "Конвертирует фиатные и криптовалюты с актуальными курсами\\n\\nИспользование: .conv <из> to <в> <сумма>\\n\\nПримеры:\\n• .conv usd to rub 100\\n• .conv btc to usd 1\\n• .conv eth to rub 5\\n\\nПоддержка фиата и 20 криптовалют (BTC, ETH, USDT, BNB, SOL, XRP, USDC, ADA, DOGE, TRX, TON, LINK, MATIC, DOT, DAI, LTC, SHIB, BCH, AVAX, UNI)",
+      "description": "Конвертирует фиатные и криптовалюты с актуальными курсами\n\nИспользование: .conv <из> to <в> <сумма>\n\nПримеры:\n• .conv usd to rub 100\n• .conv btc to usd 1\n• .conv eth to rub 5\n\nПоддержка фиата и 20 криптовалют (BTC, ETH, USDT, BNB, SOL, XRP, USDC, ADA, DOGE, TRX, TON, LINK, MATIC, DOT, DAI, LTC, SHIB, BCH, AVAX, UNI)",
       "hash": "8735b1d35b5004669de0efd674b995744291c61606669e28bdde4533de6db320"
     },
     {
@@ -383,7 +383,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/dotastats.plugin",
-      "description": "Информация о твоих последних матчах или о конкретном матче. Гайд в настройках\\nProvides information about your last dota matches or about specific match. Guide in settings",
+      "description": "Информация о твоих последних матчах или о конкретном матче. Гайд в настройках\nProvides information about your last dota matches or about specific match. Guide in settings",
       "hash": "af903ca73e4b368e475de381db8d4c4607c904118d160718e962d9c0ded80cb8"
     },
     {
@@ -409,7 +409,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Epic_Games.plugin",
-      "description": "🎮 Shows current game on Epic Games\\n\\n📋 Commands:\\n• [.nowepic/.enp] — current game\\n• [.elibrary] — games library\\n• [.eflibrary] — full library\\n\\n🎨 Design - @reNightly, @qmrrchh THANKS",
+      "description": "🎮 Shows current game on Epic Games\n\n📋 Commands:\n• [.nowepic/.enp] — current game\n• [.elibrary] — games library\n• [.eflibrary] — full library\n\n🎨 Design - @reNightly, @qmrrchh THANKS",
       "hash": "7ba633a8e8a7f73de8e4011bb3fe46c72e79862389be3714f5edc68f21cd5ee2"
     },
     {
@@ -552,7 +552,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/imitator.plugin",
-      "description": "Имитирует активность в чате\\n\\nКоманды:\\n.im - открыть меню\\n.im <режим> - быстрый запуск\\n.imstop - остановить в чате\\n.imstopall - остановить везде\\n\\nРежимы: typing, voice, video, game, photo, round, audio, document, location, contact, sticker, mixed",
+      "description": "Имитирует активность в чате\n\nКоманды:\n.im - открыть меню\n.im <режим> - быстрый запуск\n.imstop - остановить в чате\n.imstopall - остановить везде\n\nРежимы: typing, voice, video, game, photo, round, audio, document, location, contact, sticker, mixed",
       "hash": "6be16c6fbe4ccfc36d2ca63705b61bfb2d34772a386b802fa453138d78da9373"
     },
     {
@@ -669,7 +669,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/lyrics.plugin",
-      "description": "Displays lyrics for your music directly in Telegram.\\nAdds a ",
+      "description": "Displays lyrics for your music directly in Telegram.\nAdds a ",
       "hash": "134faa2db4c11abf3af396ac110a9c178000d8781118a55cd76c32dd08960632"
     },
     {
@@ -734,7 +734,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/MessageForwarder_V1.1.0.plugin",
-      "description": "Пересылает все сообщения из одного чата в другой, с сохранением авторства или без, частями и с задержками.\\n\\n*Примечание:\\nНе работает в каналах где запрещена пересылка.\\n\\nЧто добавили в 1.1.0?\\n1. Совместимость с новой версией\\n2. Пофикшена нерабочий переключатель для скрытия имя отправителя\\n3. Исправление множества прочих багов\\n\\n\\n⛔️ВНИМАНИЕ!!!⛔️\\n⚠️ При пересылке большого количества сообщений возможен бан аккаунта!",
+      "description": "Пересылает все сообщения из одного чата в другой, с сохранением авторства или без, частями и с задержками.\n\n*Примечание:\nНе работает в каналах где запрещена пересылка.\n\nЧто добавили в 1.1.0?\n1. Совместимость с новой версией\n2. Пофикшена нерабочий переключатель для скрытия имя отправителя\n3. Исправление множества прочих багов\n\n\n⛔️ВНИМАНИЕ!!!⛔️\n⚠️ При пересылке большого количества сообщений возможен бан аккаунта!",
       "hash": "597eb2324034be0d9b87dc49952855c01f9cfcd4a2ecb0cbfcac1eef1b3c337c"
     },
     {
@@ -760,7 +760,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/music_stats_v2.plugin",
-      "description": "Detailed music statistics: time tracking, top tracks and artists. Customizable daily goal.\\n\\nПодробная статистика прослушивания музыки, плеер: время, топ треков и исполнителей. \\nНастраиваемая ежедневная цель.",
+      "description": "Detailed music statistics: time tracking, top tracks and artists. Customizable daily goal.\n\nПодробная статистика прослушивания музыки, плеер: время, топ треков и исполнителей. \nНастраиваемая ежедневная цель.",
       "hash": "fddabb45ea52c1d13b2140f40cf580393dcb562512a8fda9ad8f8bb66ef737e3"
     },
     {
@@ -799,7 +799,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/no_more_blur.plugin",
-      "description": "Убирает весь блюр на%¥1. \\nFully removes blur from the app.",
+      "description": "Убирает весь блюр на%¥1. \nFully removes blur from the app.",
       "hash": "934d77fd51ce5cccb166192b0443bdecee8b2be820ac2f24d873124806e01be0"
     },
     {
@@ -825,7 +825,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/nyashnosti.plugin",
-      "description": "18+ плагин Няшности \\nдля @fergntye\\n[ .nsfw .sfw .femboy .loli ]",
+      "description": "18+ плагин Няшности \nдля @fergntye\n[ .nsfw .sfw .femboy .loli ]",
       "hash": "d263e0a3975d1fc77b20f0ae4d1e57be16963ae014afa57e009783644edde52d"
     },
     {
@@ -942,7 +942,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/quotecreate.plugin",
-      "description": "Создает пиксельно-точные цитаты из выбранных сообщений, используя нативный рендеринг.\\nCreate pixel-perfect quotes from selected messages using native rendering.",
+      "description": "Создает пиксельно-точные цитаты из выбранных сообщений, используя нативный рендеринг.\nCreate pixel-perfect quotes from selected messages using native rendering.",
       "hash": "d0d21c942272d91cd463e7e16d1f272bbbbc9fe91feafe718f70ffa5a6eef58f"
     },
     {
@@ -968,13 +968,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Random.plugin",
-      "description": "Генерирует случайное число.\\n\\n**Команды:**\\n• `.random <число1> <число2>` - выбор из диапазона.\\n• `.trandom <числа через пробел>` - выбор из списка.\\n\\n\\nКанал разработчика\\nhttps://t.me/Plugin20345",
+      "description": "Генерирует случайное число.\n\n**Команды:**\n• `.random <число1> <число2>` - выбор из диапазона.\n• `.trandom <числа через пробел>` - выбор из списка.\n\n\nКанал разработчика\nhttps://t.me/Plugin20345",
       "hash": "b7846424f8b28d3cd50ca59143b02dda6d85bc6453d6b3e141de742989521a1b"
     },
     {
       "id": "re_extera_dex",
       "name": "re:extera v2",
-      "author": "@shikaatux | @shikaatuxplugins \\noriginal author: @bleizixPlugins",
+      "author": "@shikaatux | @shikaatuxplugins \noriginal author: @bleizixPlugins",
       "version": "2.3",
       "state": "release",
       "icon": "myadestes_1_amashiro_natsuki_plus_nacho_neko/30",
@@ -1007,7 +1007,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/reminder.plugin",
-      "description": "Draw a remind in chat\\nUsage: .dr {time} | {text} / .rdr",
+      "description": "Draw a remind in chat\nUsage: .dr {time} | {text} / .rdr",
       "hash": "30eb43a7c2e22bc61a4b77457a92b2454b782f73c5d3b798b4985a963bf7f81c"
     },
     {
@@ -1137,7 +1137,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/sender.plugin",
-      "description": "Re-send messages from **another devices** with **plugins**.\\n**Usage**: `.send [message]` | `.ping`\\n**Note**: Enable **Keep-Alive Service** and **Background Connection** for better experience.",
+      "description": "Re-send messages from **another devices** with **plugins**.\n**Usage**: `.send [message]` | `.ping`\n**Note**: Enable **Keep-Alive Service** and **Background Connection** for better experience.",
       "hash": "848667ae56b4594475745e0f4fb026b1960f430fe4b2ff08d2a57d204b31c0e6"
     },
     {
@@ -1371,7 +1371,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/voice_timing.plugin",
-      "description": "Автоматически добавляет тайминг при ответе на голосовые/видео/музыку.\\nAutomatically adds timing when replying to voice messages, video messages, and music.",
+      "description": "Автоматически добавляет тайминг при ответе на голосовые/видео/музыку.\nAutomatically adds timing when replying to voice messages, video messages, and music.",
       "hash": "19d27fa56cba0e39a3aa7bdfa5c919fa24a772e7242ac53333fb097f718935de"
     },
     {
@@ -1410,7 +1410,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/ArticleViewerFix.plugin",
-      "description": "Отключает надоедливый свайп закрытия (слева вправо) в браузере. \\n\\nDisables annoying browser",
+      "description": "Отключает надоедливый свайп закрытия (слева вправо) в браузере. \n\nDisables annoying browser",
       "hash": "5babeeaa2769ce66b9780aa0d9967f2a8e612cbcff09bcbbbd1e00e187bd95e7"
     },
     {
@@ -1709,7 +1709,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/plugins_manager.plugin",
-      "description": "Manager of locally installed plugins.\\nYou can find out all the commands by writing .phelp in any chat.",
+      "description": "Manager of locally installed plugins.\nYou can find out all the commands by writing .phelp in any chat.",
       "hash": "ff32359355132ae180e68ef0e1c734599a97f18c0d4af69791cff20d5ad10aa2"
     },
     {
@@ -1761,7 +1761,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/reSpotify.plugin",
-      "description": "Now play plugin for Spotify.\\n\\nUse:\\n   .now — send now play card\\n   .nowt — send now play track\\n\\nThanks @itsv1eds, @zwylair & @exteradev for the help",
+      "description": "Now play plugin for Spotify.\n\nUse:\n   .now — send now play card\n   .nowt — send now play track\n\nThanks @itsv1eds, @zwylair & @exteradev for the help",
       "hash": "2f8896d1f2e09d058b668a023863d036d1166afb62a25add8235b06a7dbf7bf4"
     },
     {
@@ -1774,7 +1774,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/smarttextenhancer.plugin",
-      "description": "Умное улучшение текста с помощью ИИ\\n\\nКоманды:\\n   .emojify - добавить эмодзи\\n   .rewrite - переписать текст\\n   .fix - исправить ошибки\\n\\nАвтор: Oniel",
+      "description": "Умное улучшение текста с помощью ИИ\n\nКоманды:\n   .emojify - добавить эмодзи\n   .rewrite - переписать текст\n   .fix - исправить ошибки\n\nАвтор: Oniel",
       "hash": "0a5abd7783606c8b98b242b774c2b99c70923387117ecb21673ac3a33b54da7c"
     },
     {
@@ -1787,7 +1787,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/steam_plugin.plugin",
-      "description": "🎮 Shows the current game on Steam\\n\\n📋 Commands:\\n• [.nowsteam/.snp] — current game\\n• [.slibrary] — games library\\n• [.sflibrary] — full library\\n\\n🎨 Design by @reNightly, @qmrrchh",
+      "description": "🎮 Shows the current game on Steam\n\n📋 Commands:\n• [.nowsteam/.snp] — current game\n• [.slibrary] — games library\n• [.sflibrary] — full library\n\n🎨 Design by @reNightly, @qmrrchh",
       "hash": "b8c745c293bbeb54c057a187959c9807dab382aced46edc3e911278d8f50b51e"
     },
     {
@@ -2047,7 +2047,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/NoCallConfimation.plugin",
-      "description": "Убирает надоедливое окно подтверждение звонка \\n\\nRemoves annoying call confirmation popup.",
+      "description": "Убирает надоедливое окно подтверждение звонка \n\nRemoves annoying call confirmation popup.",
       "hash": "d8ad54a8dc2a61af04ec67a6bb3dee3d0a0b26bbd1f0087f68f78ee280db0ba4"
     },
     {
@@ -2060,7 +2060,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/OwnMsgsDeleter.plugin",
-      "description": "Удаляет все собственные сообщения в чате/группе.\\n\\nDeletes all your own message in chat/group.",
+      "description": "Удаляет все собственные сообщения в чате/группе.\n\nDeletes all your own message in chat/group.",
       "hash": "036e62e74e4afa08ec57d10b70e01008601c20e1b268c38c860dbf64666a2a14"
     },
     {
@@ -2112,7 +2112,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/copyprofile.plugin",
-      "description": "Копирует профиль пользователя по команде .copy реплаем или через кнопку в меню профиля.\\n\\nКоманды: .backup - сохранить свой профиль, .restore - восстановить профиль\\n\\nКнопка ",
+      "description": "Копирует профиль пользователя по команде .copy реплаем или через кнопку в меню профиля.\n\nКоманды: .backup - сохранить свой профиль, .restore - восстановить профиль\n\nКнопка ",
       "hash": "f23ac187f964bcf35e91779158114118111756b30b4d98483958bd679548a093"
     },
     {
@@ -2138,7 +2138,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/emoji_parser.plugin",
-      "description": "Парсит document ID премиум эмодзи и отправляет в чат.\\n\\nКоманды: .emoji, .eid, .estatus, .emd, .esend [markdown]",
+      "description": "Парсит document ID премиум эмодзи и отправляет в чат.\n\nКоманды: .emoji, .eid, .estatus, .emd, .esend [markdown]",
       "hash": "d823098e07099f537165e967096cf86dbabb6d5b26845bec2890ffb0ffab2c59"
     },
     {
@@ -2203,7 +2203,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/quotify (1).plugin",
-      "description": "Quote messages by replying with .q command and fake quotes with reply .fq <text> \\nRequired: exteraGram/Ayugram 12.0.1 or higher",
+      "description": "Quote messages by replying with .q command and fake quotes with reply .fq <text> \nRequired: exteraGram/Ayugram 12.0.1 or higher",
       "hash": "cda37e83e8b5d60c5f144a9d3ed09840fa8cf695132301906751184e89bf6f27"
     },
     {
@@ -2346,7 +2346,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/reMusic.plugin",
-      "description": "Now play plugin for Yandex Music.\\n\\nUse:\\n   .now — send now play card\\n   .nowt — send now play track\\n\\nThanks @mipohbopohih & @exteradev for the help",
+      "description": "Now play plugin for Yandex Music.\n\nUse:\n   .now — send now play card\n   .nowt — send now play track\n\nThanks @mipohbopohih & @exteradev for the help",
       "hash": "3ce58baee63544adb8f1b06877d9644afc7040a4021b85bfc7c5c4db9cdc8b40"
     },
     {

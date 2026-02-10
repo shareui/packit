@@ -512,6 +512,18 @@ def buildIdMap(plugins: List[Dict]) -> Dict[str, int]:
     return idMap
 
 
+def normalizeLoadedConfig(repoConfig: Dict):
+    """Normalizes descriptions in loaded config to fix double-escaped newlines."""
+    for plugin in repoConfig.get("plugins", []):
+        if "description" in plugin and isinstance(plugin["description"], str):
+            # If description contains literal \n (backslash + n), convert to actual newline
+            # This happens when old JSON had \\n which json.load() reads as two chars
+            desc = plugin["description"]
+            if '\\n' in desc:
+                plugin["description"] = desc.replace('\\n', '\n')
+
+
+
 def writeLatestLog(newPlugins: List[Dict], updatedPlugins: List[Dict], deletedPlugins: List[Dict], totalCount: int):
     latestLogPath = "latest.log"
     
@@ -587,6 +599,9 @@ def updateConfigJson(config: Dict):
     
     with open(configPath, 'r', encoding='utf-8') as f:
         repoConfig = json.load(f)
+    normalizeLoadedConfig(repoConfig)
+    
+    normalizeLoadedConfig(repoConfig)
     
     if not os.path.exists(workingDir):
         print(f"directory '{workingDir}/' not found")
@@ -685,6 +700,7 @@ def changeFile(config: Dict):
     
     with open(configPath, 'r', encoding='utf-8') as f:
         repoConfig = json.load(f)
+    normalizeLoadedConfig(repoConfig)
     
     filename = input("enter file name: ").strip()
     filePath = os.path.join(workingDir, filename)
@@ -736,6 +752,7 @@ def deleteFiles(config: Dict):
     
     with open(configPath, 'r', encoding='utf-8') as f:
         repoConfig = json.load(f)
+    normalizeLoadedConfig(repoConfig)
     
     filename = input("enter filename: ").strip()
     filePath = os.path.join(workingDir, filename)
@@ -797,6 +814,7 @@ def clearMissingPlugins(config: Dict):
     
     with open(configPath, 'r', encoding='utf-8') as f:
         repoConfig = json.load(f)
+    normalizeLoadedConfig(repoConfig)
     
     existingFiles = set()
     for filename in os.listdir(workingDir):
@@ -854,6 +872,7 @@ def dirStatus(config: Dict):
     
     with open(configPath, 'r', encoding='utf-8') as f:
         repoConfig = json.load(f)
+    normalizeLoadedConfig(repoConfig)
     
     hashMap = buildHashMap(repoConfig.get("plugins", []))
     idMap = buildIdMap(repoConfig.get("plugins", []))
@@ -916,6 +935,7 @@ def editPluginValue(config: Dict):
     
     with open(configPath, 'r', encoding='utf-8') as f:
         repoConfig = json.load(f)
+    normalizeLoadedConfig(repoConfig)
     
     pluginId = input("enter plugin id: ").strip()
     
@@ -967,6 +987,7 @@ def addItemToJson(config: Dict):
     
     with open(configPath, 'r', encoding='utf-8') as f:
         repoConfig = json.load(f)
+    normalizeLoadedConfig(repoConfig)
     
     pluginId = input("enter plugin id: ").strip()
     
@@ -1107,6 +1128,7 @@ def resetAllPlugins(config: Dict):
     
     with open(configPath, 'r', encoding='utf-8') as f:
         repoConfig = json.load(f)
+    normalizeLoadedConfig(repoConfig)
     
     repometa = repoConfig.get("repometa", {})
     
