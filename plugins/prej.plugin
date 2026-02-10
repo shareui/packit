@@ -1,0 +1,121 @@
+
+
+__id__ = "premium_emojib"
+__name__ = "Synced premium emoji"
+__description__ = "Sync premium emoji, even if you dont have premium!"
+__author__ = "@shikkatux | @shikaatuxplugins"
+__version__ = "1.0.1"
+__icon__ = "shextera_by_fStikBot/1"
+__min_version__ = "11.12.0"
+"""
+Ох блять, как же я заебался, вот кажется, 100 строк кода, хуйня, но ебал я это делать.
+Надеюсь люди читают блятское описание, и смотрят, что для работы, надо включить свич в настройках
+"""
+from inspect import Traceback
+
+from base_plugin import MethodHook, BasePlugin, MethodReplacement
+from org.telegram.messenger import UserConfig
+from org.telegram.messenger import MessageObject
+from org.telegram.tgnet import TLRPC
+from org.telegram.ui.Cells import ChatMessageCell
+from java.lang import Boolean, CharSequence, Integer, Long
+from java import jarray, jclass
+from org.telegram.messenger import MessagesController
+from ui.settings import *
+
+from java.util import ArrayList, Arrays, AbstractMap
+from androidx.collection import LongSparseArray
+
+class isPremiumTrue(MethodReplacement):
+    def __init__(self, plugin):
+        self.plugin = plugin
+
+    def replace_hooked_method(self, param):
+        return True
+
+class CheckEmoji(MethodHook):
+    def __init__(self, plugin):
+        self.plugin = plugin
+    def before_hooked_method(self, param):
+        new_entities = []
+        try:
+            for entity in param.args[1].entities.toArray():
+                if isinstance(entity, TLRPC.TL_messageEntityTextUrl):
+                    if entity.url.startswith("tg://ce/"):
+                        n_entity = TLRPC.TL_messageEntityCustomEmoji()
+                        n_entity.document_id = int(entity.url.split("tg://ce/")[1])
+                        n_entity.offset = entity.offset
+                        n_entity.length = entity.length
+                        new_entities.append(n_entity)
+                        if self.plugin.get_setting("no_big_emoji", False):
+                            new_entities.append(entity)
+                    else:
+                        new_entities.append(entity)   
+                else:
+                    new_entities.append(entity) 
+            param.args[1].entities = ArrayList(Arrays.asList(jarray(TLRPC.MessageEntity)(new_entities)))                     
+        except Exception as e:
+            self.plugin.log(f'Fail: {e}')
+
+
+class MainPlugin(BasePlugin):
+
+    def on_plugin_load(self) -> None:
+        self.add_on_send_message_hook()
+        try:
+            isPremium = UserConfig.getClass().getDeclaredMethod("isPremium")
+            self.isPremiumHook = self.hook_method(isPremium, isPremiumTrue(self), priority=10)
+
+
+            mtd = MessageObject.getClass().getDeclaredConstructor(Integer.TYPE,
+                                                                  TLRPC.Message,
+                                                                  MessageObject,
+                                                                  AbstractMap,
+                                                                  AbstractMap,
+                                                                  LongSparseArray,
+                                                                  LongSparseArray,
+                                                                  Boolean.TYPE,
+                                                                  Boolean.TYPE,
+                                                                  Long.TYPE,
+                                                                  Boolean.TYPE,
+                                                                  Boolean.TYPE,
+                                                                  Boolean.TYPE,
+                                                                  Integer.TYPE)
+            
+            self.hook = self.hook_method(mtd, CheckEmoji(plugin=self), priority=10)
+        except Exception as e:
+            self.log(f'Fail: {e}')
+
+    def create_settings(self):
+        return [
+            Switch(
+                key = "local_premium_emoji",
+                text = "Format emoji in your messages",
+                subtext = "Don't use if you have premium \nНе используйте с премиумом",
+                default=False
+            ),
+            Switch(
+                key= "no_big_emoji",
+                text = "Disable big emoji",
+                subtext="Disables the big emoji ONLY WITH SYNCED EMOJIS \nВыключает большие эмодзи в сообщениях С СИНХРОНИЗИРОВАННЫМИ ЭМОДЗИ",
+                default=False
+            )
+        ]
+
+    def on_send_message_hook(self, account, params):
+        try:
+            if self.get_setting("local_premium_emoji", False):
+                new_entites = []
+                for entity in params.entities.toArray():
+                    if isinstance(entity, TLRPC.TL_messageEntityCustomEmoji):
+                        new = TLRPC.TL_messageEntityTextUrl()
+                        new.offset = entity.offset
+                        new.length = entity.length
+                        new.url = f"tg://ce/{entity.document_id}"
+                        new_entites.append(new)
+                    else:
+                        new_entites.append(entity)
+                params.entities = ArrayList(Arrays.asList(jarray(TLRPC.MessageEntity)(new_entites))) 
+                return HookResult(strategy=HookStrategy.MODIFY)
+        except Exception as e:
+            self.log(f'Fail: {e}')

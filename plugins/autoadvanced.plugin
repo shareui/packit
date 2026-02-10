@@ -1,0 +1,382 @@
+from base_plugin import BasePlugin, HookResult, HookStrategy
+from ui.settings import Header, Input, Divider, Switch, Selector
+from typing import Any, Dict, List, Tuple
+from client_utils import get_messages_controller
+from markdown_utils import parse_markdown
+from java.util import ArrayList
+from org.telegram.tgnet import TLRPC
+
+__id__ = "auto_advanced"
+__name__ = "Автоматическая подпись к сообщению"
+__description__ = "Добавляет настраиваемую подпись к каждому отправляемому сообщению с возможностью форматирования."
+__author__ = "@aprux"
+__version__ = "1.3.4"
+__icon__ = "Emojis/1"
+__min_version__ = "11.12.0"
+
+class AutoSignaturePlugin(BasePlugin):
+    def on_plugin_load(self):
+        self.add_on_send_message_hook()
+        self.log("Плагин 'Автоматическая подпись (Расширенная)' загружен.")
+
+    def create_settings(self):
+        return [
+            Header(text="Основные настройки подписи"),
+            Switch(
+                key="enable_signature",
+                text="Включить автоматическую подпись",
+                default=False,
+                subtext="Добавлять подпись ко всем исходящим сообщениям",
+                icon="msg_emoji_edit"
+            ),
+            Input(
+                key="signature_text",
+                text="Текст подписи",
+                default="",
+                subtext="Поддерживается Markdown: [subscribe](t.me/coprux)",
+                icon="msg_pen"
+            ),
+            Selector(
+                key="signature_placement",
+                text="Положение подписи",
+                default=1,
+                items=["В начале сообщения", "В конце сообщения", "В начале и в конце"],
+                icon="msg_arrow_down"
+            ),
+            Divider(text="Применять глобальную подпись в:"),
+            Switch(
+                key="enable_for_private",
+                text="Личных сообщениях",
+                default=True,
+                subtext="Добавлять подпись в личных чатах",
+                icon="msg_chat"
+            ),
+            Switch(
+                key="enable_for_groups",
+                text="Группах",
+                default=True,
+                subtext="Добавлять подпись в обычных и супергруппах",
+                icon="msg_group"
+            ),
+            Switch(
+                key="enable_for_channels",
+                text="Каналах",
+                default=True,
+                subtext="Добавлять подпись при отправке от имени канала",
+                icon="msg_channel"
+            ),
+            Divider(text="Настройки для конкретных чатов (для глобальной подписи)"),
+            Switch(
+                key="restrict_to_selected_chats",
+                text="Применять только в выбранных чатах",
+                default=False,
+                subtext="Глобальная подпись будет добавляться только в указанных чатах",
+                icon="msg_contact_check"
+            ),
+            Input(
+                key="allowed_chat_ids",
+                text="ID разрешенных чатов",
+                default="",
+                subtext="Введите ID чатов через запятую (например, 12345, -1001234567890)",
+                icon="msg_add_contact"
+            ),
+            Divider(text="Настройки для отдельных чатов (переопределяют глобальные)"),
+            Switch(
+                key="enable_per_chat_signatures",
+                text="Включить подписи для отдельных чатов",
+                default=False,
+                subtext="Использовать индивидуальные подписи для указанных чатов",
+                icon="msg_contacts"
+            ),
+            Input(
+                key="per_chat_signatures_data",
+                text="Настройка подписей для чатов",
+                default="",
+                subtext="Формат: ID_чата:Текст подписи;ID_чата2:Текст подписи2",
+                icon="msg_settings"
+            ),
+            Divider()
+        ]
+
+    def _parse_per_chat_signatures(self, data_string: str) -> Dict[int, str]:
+        signatures: Dict[int, str] = {}
+        if not data_string:
+            return signatures
+        
+        entries = data_string.split(';')
+        for entry in entries:
+            entry = entry.strip()
+            if not entry:
+                continue
+            parts = entry.split(':', 1)
+            if len(parts) == 2:
+                chat_id_str, signature_text = parts[0].strip(), parts[1].strip()
+                try:
+                    chat_id = int(chat_id_str)
+                    signatures[chat_id] = signature_text
+                except ValueError:
+                    self.log(f"AutoSignature: Некорректный ID чата в '{entry}'. Пропускаем.")
+            else:
+                self.log(f"AutoSignature: Некорректный формат записи '{entry}'. Ожидается 'ID:Текст'. Пропускаем.")
+        return signatures
+
+    def _safe_get_setting(self, key: str, default: Any = None) -> Any:
+        value = self.get_setting(key, default)
+        return value if value is not None else default
+
+    def _safe_strip(self, text: str) -> str:
+        return text.strip() if text is not None else ""
+
+    def _normalize_peer_id(self, params_peer: Any) -> int:
+        # Множественные попытки получить корректный peer_id
+        candidates = []
+        
+        try:
+            # Попытка 1: Прямое преобразование
+            if isinstance(params_peer, int):
+                candidates.append(params_peer)
+            else:
+                candidates.append(int(params_peer))
+        except:
+            pass
+            
+        try:
+            # Попытка 2: Через MessagesController
+            mc = get_messages_controller()
+            methods = ["getPeerId", "getDialogId", "getChatId"]
+            for method_name in methods:
+                if hasattr(mc, method_name):
+                    try:
+                        result = getattr(mc, method_name)(params_peer)
+                        if isinstance(result, int):
+                            candidates.append(result)
+                    except:
+                        pass
+        except:
+            pass
+            
+        try:
+            # Попытка 3: Разбор TLRPC объектов
+            if hasattr(params_peer, '__class__'):
+                class_name = str(params_peer.__class__)
+                
+                # Для Peer объектов
+                if 'Peer' in class_name:
+                    if hasattr(params_peer, "user_id") and params_peer.user_id:
+                        candidates.append(int(params_peer.user_id))
+                    if hasattr(params_peer, "chat_id") and params_peer.chat_id:
+                        candidates.append(-int(abs(params_peer.chat_id)))
+                    if hasattr(params_peer, "channel_id") and params_peer.channel_id:
+                        # Добавляем оба варианта для каналов
+                        channel_id = int(params_peer.channel_id)
+                        candidates.append(int(f"-100{channel_id}"))
+                        candidates.append(-channel_id)
+                
+                # Для InputPeer объектов  
+                if 'InputPeer' in class_name:
+                    if hasattr(params_peer, "user_id") and params_peer.user_id:
+                        candidates.append(int(params_peer.user_id))
+                    if hasattr(params_peer, "chat_id") and params_peer.chat_id:
+                        candidates.append(-int(abs(params_peer.chat_id)))
+                    if hasattr(params_peer, "channel_id") and params_peer.channel_id:
+                        channel_id = int(params_peer.channel_id)
+                        candidates.append(int(f"-100{channel_id}"))
+                        candidates.append(-channel_id)
+        except Exception as e:
+            self.log(f"AutoSignature: Ошибка при разборе TLRPC объекта: {e}")
+            
+        # Возвращаем первый валидный кандидат (не равный 0)
+        for candidate in candidates:
+            if candidate != 0:
+                return candidate
+                
+        self.log("AutoSignature: Не удалось определить peer_id")
+        return 0
+
+    def _find_signature_for_peer(self, peer_id: int, per_chat_map: Dict[int, str]) -> str:
+        """Поиск подписи с учетом различных форматов ID каналов"""
+        
+        # Прямой поиск
+        if peer_id in per_chat_map:
+            return self._safe_strip(per_chat_map[peer_id])
+            
+        # Для каналов пробуем различные форматы
+        peer_str = str(peer_id)
+        
+        # Если это канал в формате -100xxxxx
+        if peer_str.startswith("-100") and len(peer_str) > 4:
+            try:
+                channel_id = int(peer_str[4:])
+                alternatives = [
+                    -channel_id,  # Простой отрицательный ID
+                    channel_id,   # Положительный ID
+                    int(f"-{channel_id}"),  # С одним минусом
+                ]
+                for alt_id in alternatives:
+                    if alt_id in per_chat_map:
+                        return self._safe_strip(per_chat_map[alt_id])
+            except:
+                pass
+                
+        # Если это отрицательный ID, пробуем добавить префикс -100
+        elif peer_id < 0:
+            try:
+                positive_id = abs(peer_id)
+                alternatives = [
+                    int(f"-100{positive_id}"),  # Добавляем префикс -100
+                    positive_id,  # Положительный вариант
+                ]
+                for alt_id in alternatives:
+                    if alt_id in per_chat_map:
+                        return self._safe_strip(per_chat_map[alt_id])
+            except:
+                pass
+                
+        return ""
+
+    def _classify_dialog(self, peer_id: int, messages_controller) -> Tuple[bool, bool, bool]:
+        if peer_id > 0:
+            return True, False, False
+        
+        try:
+            chat = messages_controller.getChat(abs(peer_id))
+            if chat:
+                if isinstance(chat, TLRPC.TL_channel):
+                    if getattr(chat, "megagroup", False):
+                        return False, True, False
+                    else:
+                        return False, False, True
+                if isinstance(chat, TLRPC.TL_chat):
+                    return False, True, False
+        except Exception as e:
+            self.log(f"AutoSignature: Ошибка при получении чата: {e}")
+        
+        return False, False, False
+
+    def on_send_message_hook(self, account: int, params: Any) -> HookResult:
+        has_text = isinstance(getattr(params, "message", None), str)
+        has_caption = isinstance(getattr(params, "caption", None), str)
+        
+        if not (has_text or has_caption):
+            return HookResult()
+
+        enable_for_private = self._safe_get_setting("enable_for_private", True)
+        enable_for_groups = self._safe_get_setting("enable_for_groups", True)
+        enable_for_channels = self._safe_get_setting("enable_for_channels", True)
+        restrict_to_selected_chats = self._safe_get_setting("restrict_to_selected_chats", False)
+        allowed_chat_ids_str = self._safe_strip(self._safe_get_setting("allowed_chat_ids", ""))
+        enable_per_chat_signatures = self._safe_get_setting("enable_per_chat_signatures", False)
+        per_chat_signatures_data = self._safe_strip(self._safe_get_setting("per_chat_signatures_data", ""))
+
+        messages_controller = get_messages_controller()
+        normalized_peer_id = self._normalize_peer_id(params.peer)
+
+        effective_signature_text_markdown = None
+
+        # Индивидуальная подпись (приоритет)
+        if enable_per_chat_signatures and per_chat_signatures_data:
+            per_chat_map = self._parse_per_chat_signatures(per_chat_signatures_data)
+            signature = self._find_signature_for_peer(normalized_peer_id, per_chat_map)
+            if signature:
+                effective_signature_text_markdown = signature
+
+        # Глобальная подпись
+        if effective_signature_text_markdown is None:
+            enable_global_signature = self._safe_get_setting("enable_signature", False)
+            global_signature_text = self._safe_strip(self._safe_get_setting("signature_text", ""))
+            
+            if not enable_global_signature or not global_signature_text:
+                return HookResult()
+
+            is_private, is_group, is_channel = self._classify_dialog(normalized_peer_id, messages_controller)
+            
+            if (is_private and not enable_for_private) or \
+               (is_group and not enable_for_groups) or \
+               (is_channel and not enable_for_channels):
+                return HookResult()
+
+            if restrict_to_selected_chats and allowed_chat_ids_str:
+                try:
+                    allowed_ids = {int(s.strip()) for s in allowed_chat_ids_str.split(",") if s.strip()}
+                    if normalized_peer_id not in allowed_ids:
+                        return HookResult()
+                except ValueError as e:
+                    self.log(f"AutoSignature: Ошибка парсинга ID чатов: {e}")
+                    return HookResult()
+
+            effective_signature_text_markdown = global_signature_text
+
+        if not effective_signature_text_markdown:
+            return HookResult()
+
+        original_text = params.message if has_text else params.caption
+        original_entities = params.entities if has_text else getattr(params, "caption_entities", None)
+
+        try:
+            parsed = parse_markdown(effective_signature_text_markdown)
+            signature_plain_text = parsed.text
+            signature_raw_entities = parsed.entities
+        except SyntaxError:
+            self.log("AutoSignature: Ошибка синтаксиса Markdown в подписи. Используется как обычный текст.")
+            signature_plain_text = effective_signature_text_markdown
+            signature_raw_entities = []
+
+        if not signature_plain_text:
+            return HookResult()
+
+        new_text = ""
+        new_entities = ArrayList()
+        signature_placement_index = self._safe_get_setting("signature_placement", 1)
+
+        def add_entities_with_offset(entities_list, source_entities, offset):
+            if not source_entities:
+                return
+            for i in range(source_entities.size()):
+                entity = source_entities.get(i)
+                new_entity = entity.getClass().getConstructor().newInstance()
+                new_entity.offset = entity.offset + offset
+                new_entity.length = entity.length
+                if hasattr(entity, "url"):
+                    new_entity.url = entity.url
+                if hasattr(entity, "language"):
+                    new_entity.language = entity.language
+                if hasattr(entity, "user_id"):
+                    new_entity.user_id = entity.user_id
+                entities_list.add(new_entity)
+
+        def add_raw_entities_with_offset(entities_list, raw_entities, offset):
+            for raw_entity in raw_entities:
+                entity = raw_entity.to_tlrpc_object()
+                entity.offset += offset
+                entities_list.add(entity)
+
+        if signature_placement_index == 0:
+            new_text = f"{signature_plain_text}\n\n{original_text}"
+            add_raw_entities_with_offset(new_entities, signature_raw_entities, 0)
+            if original_entities:
+                add_entities_with_offset(new_entities, original_entities, len(signature_plain_text) + 2)
+        elif signature_placement_index == 2:
+            new_text = f"{signature_plain_text}\n\n{original_text}\n\n{signature_plain_text}"
+            add_raw_entities_with_offset(new_entities, signature_raw_entities, 0)
+            if original_entities:
+                add_entities_with_offset(new_entities, original_entities, len(signature_plain_text) + 2)
+            add_raw_entities_with_offset(
+                new_entities,
+                signature_raw_entities,
+                len(signature_plain_text) + 2 + len(original_text) + 2
+            )
+        else:
+            new_text = f"{original_text}\n\n{signature_plain_text}"
+            if original_entities:
+                for i in range(original_entities.size()):
+                    new_entities.add(original_entities.get(i))
+            add_raw_entities_with_offset(new_entities, signature_raw_entities, len(original_text) + 2)
+
+        if has_text:
+            params.message = new_text
+            params.entities = new_entities
+        else:
+            params.caption = new_text
+            params.caption_entities = new_entities
+
+        return HookResult(strategy=HookStrategy.MODIFY, params=params)

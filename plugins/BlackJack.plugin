@@ -1,0 +1,1024 @@
+__id__ = "blackjack_REAL"
+__name__ = "♠️ Blackjack ♥️"
+__description__ = """🇷🇺[RU]\nЛучшая игра BlackJack(21) в телеграм на данный момент, разработчик: @SaturnFake, канал разработчика: @DevPluginsEUG\n\n🇬🇧[EN]\nThe best BlackJack(21) game in Telegram at the moment, developer: @SaturnFake, developer channel: @DevPluginsEUG"""
+__author__ = "@SaturnFake"
+__icon__ = "Plugins_Test/8"
+__min_version__ = "11.12.1"
+__version__ = "1.0.0"
+
+from base_plugin import BasePlugin, MenuItemData, MenuItemType
+from hook_utils import find_class
+from java import dynamic_proxy
+from android_utils import run_on_ui_thread, log
+from client_utils import get_last_fragment
+from ui.alert import AlertDialogBuilder
+from ui.bulletin import BulletinHelper
+from android.view import View, MotionEvent, Gravity
+from android.text import TextUtils
+from android.graphics import Color, Typeface
+from android.graphics.drawable import GradientDrawable
+from android.widget import TextView, Button, LinearLayout, Space
+import random
+import traceback
+import functools
+import json
+
+def ui_thread(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        run_on_ui_thread(lambda: func(*args, **kwargs))
+    return wrapper
+
+def safe_call(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            log(f"Error in {func.__name__}: {str(e)}")
+            traceback.print_exc()
+    return wrapper
+
+class DpConverter:
+    @staticmethod
+    def dp(value):
+        return int(value * 3)
+
+try:
+    AndroidUtilities = find_class("org.telegram.messenger.AndroidUtilities")
+except:
+    AndroidUtilities = DpConverter
+
+HIT, STAND, DOUBLE, SPLIT, NEW_GAME, INSURANCE = 0, 1, 2, 3, 4, 5
+CARD_WIDTH, CARD_HEIGHT = 45, 70
+CARD_SPACING, CARD_CORNER_RADIUS = -15, 8
+
+DARK_BACKGROUND = Color.rgb(28, 32, 38)
+CARD_BACKGROUND = Color.rgb(245, 245, 245)
+HIDDEN_CARD_BG = Color.rgb(65, 75, 85)
+PRIMARY_COLOR = Color.rgb(44, 49, 60)
+ACCENT_COLOR = Color.rgb(65, 105, 225)
+SECONDARY_COLOR = Color.rgb(70, 130, 180)
+TEXT_COLOR = Color.rgb(240, 240, 240)
+BUTTON_COLOR = Color.rgb(55, 60, 70)
+BUTTON_PRESSED_COLOR = Color.rgb(75, 80, 90)
+BUTTON_TEXT_COLOR = Color.rgb(220, 220, 220)
+GOLD_COLOR = Color.rgb(255, 193, 7)
+RED_COLOR = Color.rgb(244, 67, 54)
+GREEN_COLOR = Color.rgb(76, 175, 80)
+DARK_RED_BG = Color.rgb(80, 30, 30)
+
+def t(key, **kwargs):
+    translations = {
+        "dealer": "🎩 ДИЛЕР", "player": "👤 ИГРОК",
+        "score": "Счет: {score}", "result": "{result}", 
+        "blackjack": "БЛЭКДЖЕК! 🏆", "win": "ПОБЕДА! 🎉", 
+        "lose": "ПОРАЖЕНИЕ 💔", "push": "НИЧЬЯ 🤝", 
+        "bust": "ПЕРЕБОР! 💥", "balance": "💰 ${balance}",
+        "wl_stats": "W/L: {wins}/{losses}", "prize": "🎁: ${prize}",
+        "bet": "💎 ${bet}", "insufficient_funds": "Недостаточно средств",
+        "version_info": "v{version}", "reset_balance": "СБРОСИТЬ", 
+        "exit_game": "ВЫХОД", "reset_success": "Баланс сброшен!",
+        "place_bet": "Сделайте ставку!", "your_turn": "Ваш ход!",
+        "dealer_turn": "Ход дилера", "place_bet_title": "Ставка",
+        "custom_bet": "Выберите ставку:", "set_bet": "ПОДТВЕРДИТЬ",
+        "min_bet": "Мин: $5, Макс: $500", "stats": "Победы/Поражения: {wins}/{losses}",
+        "hit": "ВЗЯТЬ", "stand": "СТОП", "double": "УДВОИТЬ",
+        "split": "РАЗДЕЛИТЬ", "insurance": "СТРАХОВКА", "new_game": "НОВАЯ ИГРА",
+        "data_corrupted": "Данные повреждены, восстановлен баланс по умолчанию"
+    }
+    return translations.get(key, key).format(**kwargs)
+
+class Card:
+    def __init__(self, suit, rank):
+        self.suit = suit
+        self.rank = rank
+        self.hidden = False
+        self.is_ace = rank == 'A'
+        
+    def get_value(self):
+        if self.rank in ['J', 'Q', 'K']: return 10
+        if self.rank == 'A': return 11
+        return int(self.rank)
+        
+    def __str__(self):
+        return f"{self.rank}{self.suit[0]}" if not self.hidden else "🂠"
+
+SUIT_SYMBOLS = {'Hearts': '♥️', 'Diamonds': '♦️', 'Clubs': '♣️', 'Spades': '♠️'}
+SUIT_COLORS = {'Hearts': Color.RED, 'Diamonds': Color.RED, 'Clubs': Color.BLACK, 'Spades': Color.BLACK}
+
+class BlackjackGame:
+    def __init__(self):
+        self.reset()
+        
+    def reset(self):
+        self.initialize_deck()
+        self.player_hand = []
+        self.dealer_hand = []
+        self.player_score = 0
+        self.dealer_score = 0
+        self.game_over = False
+        self.player_turn = True
+        self.result = ""
+        self.bet = 0
+        self.can_split = False
+        self.can_insure = False
+        self.player_has_blackjack = False
+        self.dealer_has_blackjack = False
+        self.status_message = ""
+        
+    def initialize_deck(self, decks=6):
+        self.deck = []
+        suits = ['Hearts', 'Diamonds', 'Clubs', 'Spades']
+        ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
+        for _ in range(decks):
+            for suit in suits:
+                for rank in ranks:
+                    self.deck.append(Card(suit, rank))
+        random.shuffle(self.deck)
+        
+    def deal_card(self, hand, hidden=False):
+        if len(self.deck) < 20: 
+            self.initialize_deck()
+        card = self.deck.pop()
+        card.hidden = hidden
+        hand.append(card)
+        return card
+        
+    def calculate_score(self, hand):
+        score, aces = 0, 0
+        for card in hand:
+            if not card.hidden:
+                score += card.get_value()
+                if card.is_ace: 
+                    aces += 1
+        while score > 21 and aces: 
+            score -= 10
+            aces -= 1
+        return score
+        
+    def start_game(self, bet):
+        self.bet = bet
+        self.player_hand = []
+        self.dealer_hand = []
+        self.player_score = 0
+        self.dealer_score = 0
+        self.game_over = False
+        self.player_turn = True
+        self.result = ""
+        self.status_message = t("your_turn")
+        self.deal_card(self.player_hand)
+        self.deal_card(self.dealer_hand, hidden=True)
+        self.deal_card(self.player_hand)
+        self.deal_card(self.dealer_hand)
+        self.player_score = self.calculate_score(self.player_hand)
+        self.dealer_score = self.calculate_score(self.dealer_hand)
+        self.player_has_blackjack = self.player_score == 21 and len(self.player_hand) == 2
+        self.dealer_has_blackjack = self.dealer_score == 21 and len(self.dealer_hand) == 2
+        self.can_split = (len(self.player_hand) == 2 and 
+                         self.player_hand[0].rank == self.player_hand[1].rank)
+        self.can_insure = (not self.player_has_blackjack and 
+                          self.dealer_hand[1].rank == 'A')
+        if self.player_has_blackjack or self.dealer_has_blackjack:
+            self.end_game()
+        return True
+        
+    def player_hit(self):
+        if not self.player_turn or self.game_over: 
+            return False
+        self.deal_card(self.player_hand)
+        self.player_score = self.calculate_score(self.player_hand)
+        self.can_split = False
+        self.can_insure = False
+        if self.player_score > 21:
+            self.end_game()
+            return True
+        return False
+        
+    def player_stand(self):
+        if not self.player_turn or self.game_over: 
+            return
+        self.player_turn = False
+        self.status_message = t("dealer_turn")
+        self.dealer_play()
+        
+    def player_double(self):
+        if not self.player_turn or self.game_over or len(self.player_hand) != 2: 
+            return False
+        self.deal_card(self.player_hand)
+        self.player_score = self.calculate_score(self.player_hand)
+        self.bet *= 2
+        self.can_split = False
+        self.can_insure = False
+        if self.player_score > 21:
+            self.end_game()
+            return True
+        self.player_stand()
+        return False
+        
+    def player_split(self):
+        if not self.player_turn or self.game_over or not self.can_split: 
+            return False
+        self.can_split = False
+        self.can_insure = False
+        return True
+        
+    def player_insurance(self):
+        if not self.player_turn or self.game_over or not self.can_insure:
+            return False
+        self.can_insure = False
+        return True
+        
+    def dealer_play(self):
+        if self.dealer_hand:
+            self.dealer_hand[0].hidden = False
+            self.dealer_score = self.calculate_score(self.dealer_hand)
+        if self.dealer_score == 21 and len(self.dealer_hand) == 2:
+            self.dealer_has_blackjack = True
+            self.end_game()
+            return
+        while self.dealer_score < 17:
+            self.deal_card(self.dealer_hand)
+            self.dealer_score = self.calculate_score(self.dealer_hand)
+        self.end_game()
+        
+    def end_game(self):
+        self.game_over = True
+        self.player_turn = False
+        self.status_message = ""
+        if self.player_has_blackjack and not self.dealer_has_blackjack:
+            self.result = t("blackjack")
+            win_amount = int(self.bet * 2.5)
+            return win_amount
+        elif self.dealer_has_blackjack and not self.player_has_blackjack:
+            self.result = t("lose")
+            return 0
+        elif self.player_has_blackjack and self.dealer_has_blackjack:
+            self.result = t("push")
+            return self.bet
+        elif self.player_score > 21:
+            self.result = t("bust")
+            return 0
+        elif self.dealer_score > 21:
+            self.result = t("win")
+            win_amount = self.bet * 2
+            return win_amount
+        elif self.player_score > self.dealer_score:
+            self.result = t("win")
+            win_amount = self.bet * 2
+            return win_amount
+        elif self.player_score < self.dealer_score:
+            self.result = t("lose")
+            return 0
+        else:
+            self.result = t("push")
+            return self.bet
+
+class ClickListenerProxy(dynamic_proxy(View.OnClickListener)):
+    def __init__(self, callback):
+        super().__init__()
+        self.callback = callback
+        
+    @safe_call
+    def onClick(self, view):
+        self.callback(view)
+
+class OnTouchListenerProxy(dynamic_proxy(View.OnTouchListener)):
+    def __init__(self, callback):
+        super().__init__()
+        self.callback = callback
+        
+    @safe_call
+    def onTouch(self, view, event):
+        return self.callback(view, event)
+
+class BlackjackPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self.game = BlackjackGame()
+        self.dialog = None
+        self.activity = None
+        self.action_buttons = []
+        self.balance_text_view = None
+        self.wl_text_view = None
+        self.bet_text_view = None
+        self.dealer_cards_container = None
+        self.player_cards_container = None
+        self.dealer_score_view = None
+        self.player_score_view = None
+        self.result_view = None
+        self.last_result = ""
+        self.button_actions = {}
+        self.bet_dialog = None
+        self.last_balance_change = 0
+        self.data = {
+            "balance": 1000,
+            "wins": 0,
+            "losses": 0
+        }
+
+    @ui_thread
+    @safe_call
+    def on_plugin_load(self):
+        self.add_menu_item(MenuItemData(
+            menu_type=MenuItemType.CHAT_ACTION_MENU,
+            text="♠️ BLACKJACK",
+            icon="msg_media",
+            on_click=self.start_game
+        ))
+        self.load_game_data()
+
+    @safe_call
+    def load_game_data(self):
+        try:
+            data_json = self.get_setting("bj_data", None)
+            if data_json:
+                loaded_data = json.loads(data_json)
+                if all(key in loaded_data for key in ["balance", "wins", "losses"]):
+                    self.data = loaded_data
+                else:
+                    log("Invalid game data structure, using defaults")
+                    BulletinHelper.show_error(t("data_corrupted"), get_last_fragment())
+        except Exception as e:
+            log(f"Error loading game data: {str(e)}")
+            BulletinHelper.show_error(t("data_corrupted"), get_last_fragment())
+
+    @safe_call
+    def save_game_data(self):
+        try:
+            self.set_setting("bj_data", json.dumps(self.data))
+        except Exception as e:
+            log(f"Error saving game data: {str(e)}")
+
+    @safe_call
+    def start_game(self, context=None):
+        self.exit_game()
+        current_fragment = get_last_fragment()
+        if current_fragment:
+            self.activity = current_fragment.getParentActivity()
+        
+        if self.activity:
+            self.create_game_dialog()
+        else:
+            log("Cannot start game: no activity available")
+
+    @ui_thread
+    @safe_call
+    def create_game_dialog(self):
+        if not self.activity:
+            log("Cannot create dialog: no activity")
+            return
+            
+        builder = AlertDialogBuilder(self.activity)
+        
+        main_container = LinearLayout(self.activity)
+        main_container.setOrientation(LinearLayout.VERTICAL)
+        main_container.setPadding(0, 0, 0, 0)
+        
+        border_bg = GradientDrawable()
+        border_bg.setShape(GradientDrawable.RECTANGLE)
+        border_bg.setCornerRadius(AndroidUtilities.dp(12))
+        border_bg.setColor(DARK_BACKGROUND)
+        border_bg.setStroke(AndroidUtilities.dp(2), Color.rgb(60, 65, 75))
+        main_container.setBackground(border_bg)
+        
+        main_container.addView(self.create_custom_header())
+        main_container.addView(self.create_header())
+        main_container.addView(self.create_separator())
+        main_container.addView(self.create_dealer_section())
+        main_container.addView(self.create_player_section())
+        main_container.addView(self.create_result_view())
+        main_container.addView(self.create_actions_container())
+        main_container.addView(self.create_footer())
+        
+        builder.set_view(main_container)
+        builder.set_cancelable(False)
+        
+        self.dialog = builder.create()
+        self.dialog.show()
+        self.update_game_view()
+
+    def create_custom_header(self):
+        header_container = LinearLayout(self.activity)
+        header_container.setOrientation(LinearLayout.VERTICAL)
+        header_container.setBackgroundColor(Color.rgb(40, 45, 55))
+        
+        title_container = LinearLayout(self.activity)
+        title_container.setOrientation(LinearLayout.VERTICAL)
+        title_container.setGravity(Gravity.CENTER)
+        title_container.setPadding(0, AndroidUtilities.dp(12), 0, AndroidUtilities.dp(8))
+        
+        title_view = TextView(self.activity)
+        title_view.setText("♠️ BLACKJACK ♥️")
+        title_view.setTextSize(20)
+        title_view.setTextColor(GOLD_COLOR)
+        title_view.setTypeface(None, Typeface.BOLD)
+        title_view.setGravity(Gravity.CENTER)
+        title_container.addView(title_view)
+        
+        header_container.addView(title_container)
+        
+        gold_line = View(self.activity)
+        gold_line.setBackgroundColor(Color.rgb(70, 75, 85))
+        gold_line.setLayoutParams(LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, AndroidUtilities.dp(1)))
+        header_container.addView(gold_line)
+        
+        return header_container
+
+    def create_header(self):
+        header = LinearLayout(self.activity)
+        header.setOrientation(LinearLayout.VERTICAL)
+        header.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(10), AndroidUtilities.dp(16), AndroidUtilities.dp(10))
+        
+        top_row = LinearLayout(self.activity)
+        top_row.setOrientation(LinearLayout.HORIZONTAL)
+        top_row.setLayoutParams(LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, 
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        ))
+        
+        balance_container = LinearLayout(self.activity)
+        balance_container.setOrientation(LinearLayout.VERTICAL)
+        balance_container.setGravity(Gravity.LEFT)
+        balance_container.setLayoutParams(LinearLayout.LayoutParams(
+            0, 
+            LinearLayout.LayoutParams.WRAP_CONTENT, 
+            1
+        ))
+        
+        self.balance_text_view = TextView(self.activity)
+        self.balance_text_view.setText(t("balance", balance=self.data["balance"]))
+        self.balance_text_view.setTextSize(18)
+        self.balance_text_view.setTextColor(GOLD_COLOR)
+        self.balance_text_view.setTypeface(None, Typeface.BOLD)
+        self.balance_text_view.setGravity(Gravity.LEFT)
+        
+        self.balance_text_view.setOnClickListener(ClickListenerProxy(
+            lambda v: self.show_bet_dialog()
+        ))
+        balance_container.addView(self.balance_text_view)
+        top_row.addView(balance_container)
+        
+        bet_container = LinearLayout(self.activity)
+        bet_container.setOrientation(LinearLayout.VERTICAL)
+        bet_container.setGravity(Gravity.RIGHT)
+        bet_container.setLayoutParams(LinearLayout.LayoutParams(
+            0, 
+            LinearLayout.LayoutParams.WRAP_CONTENT, 
+            1
+        ))
+        
+        self.bet_text_view = TextView(self.activity)
+        self.bet_text_view.setText(t("bet", bet=self.game.bet))
+        self.bet_text_view.setTextSize(18)
+        self.bet_text_view.setTextColor(GOLD_COLOR)
+        self.bet_text_view.setTypeface(None, Typeface.BOLD)
+        self.bet_text_view.setGravity(Gravity.RIGHT)
+        
+        self.bet_text_view.setOnClickListener(ClickListenerProxy(
+            lambda v: self.show_bet_dialog()
+        ))
+        bet_container.addView(self.bet_text_view)
+        top_row.addView(bet_container)
+        
+        header.addView(top_row)
+        
+        center_row = LinearLayout(self.activity)
+        center_row.setOrientation(LinearLayout.HORIZONTAL)
+        center_row.setGravity(Gravity.CENTER_HORIZONTAL)
+        center_row.setLayoutParams(LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, 
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        ))
+        center_row.setPadding(0, AndroidUtilities.dp(8), 0, 0)
+        
+        self.wl_text_view = TextView(self.activity)
+        self.wl_text_view.setText(t("wl_stats", wins=self.data["wins"], losses=self.data["losses"]))
+        self.wl_text_view.setTextSize(16)
+        self.wl_text_view.setTextColor(SECONDARY_COLOR)
+        center_row.addView(self.wl_text_view)
+        
+        header.addView(center_row)
+        
+        return header
+
+    def create_separator(self):
+        separator = View(self.activity)
+        separator.setBackgroundColor(Color.argb(60, 100, 100, 120))
+        separator.setLayoutParams(LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, AndroidUtilities.dp(1)))
+        return separator
+
+    def create_dealer_section(self):
+        dealer_container = LinearLayout(self.activity)
+        dealer_container.setOrientation(LinearLayout.VERTICAL)
+        dealer_container.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(10), AndroidUtilities.dp(16), AndroidUtilities.dp(8))
+        
+        dealer_label = TextView(self.activity)
+        dealer_label.setText(t("dealer"))
+        dealer_label.setTextSize(16)
+        dealer_label.setTextColor(TEXT_COLOR)
+        dealer_label.setTypeface(None, Typeface.BOLD)
+        dealer_label.setGravity(Gravity.CENTER)
+        dealer_container.addView(dealer_label)
+        
+        self.dealer_cards_container = LinearLayout(self.activity)
+        self.dealer_cards_container.setOrientation(LinearLayout.HORIZONTAL)
+        self.dealer_cards_container.setGravity(Gravity.CENTER_HORIZONTAL)
+        self.dealer_cards_container.setPadding(0, AndroidUtilities.dp(4), 0, 0)
+        dealer_container.addView(self.dealer_cards_container)
+        
+        self.dealer_score_view = TextView(self.activity)
+        self.dealer_score_view.setText(t("score", score=self.game.dealer_score))
+        self.dealer_score_view.setTextSize(14)
+        self.dealer_score_view.setTextColor(Color.argb(200, 200, 200, 200))
+        self.dealer_score_view.setGravity(Gravity.CENTER)
+        dealer_container.addView(self.dealer_score_view)
+        
+        return dealer_container
+
+    def create_player_section(self):
+        player_container = LinearLayout(self.activity)
+        player_container.setOrientation(LinearLayout.VERTICAL)
+        player_container.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(8), AndroidUtilities.dp(16), AndroidUtilities.dp(8))
+        
+        player_label = TextView(self.activity)
+        player_label.setText(t("player"))
+        player_label.setTextSize(16)
+        player_label.setTextColor(TEXT_COLOR)
+        player_label.setTypeface(None, Typeface.BOLD)
+        player_label.setGravity(Gravity.CENTER)
+        player_container.addView(player_label)
+        
+        self.player_cards_container = LinearLayout(self.activity)
+        self.player_cards_container.setOrientation(LinearLayout.HORIZONTAL)
+        self.player_cards_container.setGravity(Gravity.CENTER_HORIZONTAL)
+        self.player_cards_container.setPadding(0, AndroidUtilities.dp(4), 0, 0)
+        player_container.addView(self.player_cards_container)
+        
+        self.player_score_view = TextView(self.activity)
+        self.player_score_view.setText(t("score", score=self.game.player_score))
+        self.player_score_view.setTextSize(14)
+        self.player_score_view.setTextColor(Color.argb(200, 200, 200, 200))
+        self.player_score_view.setGravity(Gravity.CENTER)
+        player_container.addView(self.player_score_view)
+        
+        return player_container
+
+    def create_result_view(self):
+        self.result_view = TextView(self.activity)
+        self.result_view.setTextSize(18)
+        self.result_view.setGravity(Gravity.CENTER)
+        self.result_view.setTypeface(None, Typeface.BOLD)
+        self.result_view.setPadding(0, AndroidUtilities.dp(8), 0, AndroidUtilities.dp(8))
+        self.result_view.setTextColor(GOLD_COLOR)
+        return self.result_view
+
+    def create_action_button(self, text, action):
+        button = Button(self.activity)
+        button.setText(text)
+        button.setTextSize(8)
+        button.setTextColor(BUTTON_TEXT_COLOR)
+        button.setTypeface(None, Typeface.BOLD)
+        button.setGravity(Gravity.CENTER)
+        button.setLines(2)
+        button.setMaxLines(2)
+        button.setSingleLine(False)
+        
+        width = AndroidUtilities.dp(80)
+        height = AndroidUtilities.dp(50)
+        
+        bg = GradientDrawable()
+        bg.setShape(GradientDrawable.RECTANGLE)
+        bg.setCornerRadius(AndroidUtilities.dp(8))
+        bg.setColor(BUTTON_COLOR)
+        bg.setStroke(AndroidUtilities.dp(1), Color.rgb(80, 85, 95))
+        
+        button.setBackground(bg)
+        
+        params = LinearLayout.LayoutParams(width, height)
+        params.setMargins(AndroidUtilities.dp(4), AndroidUtilities.dp(4), AndroidUtilities.dp(4), AndroidUtilities.dp(4))
+        button.setLayoutParams(params)
+        
+        self.button_actions[id(button)] = action
+        button.setOnClickListener(ClickListenerProxy(lambda v: self.game_action(self.button_actions[id(v)])))
+        
+        touch_listener = OnTouchListenerProxy(lambda v, e: self.handle_button_touch(v, e))
+        button.setOnTouchListener(touch_listener)
+        
+        self.action_buttons.append(button)
+        return button
+
+    @safe_call
+    def handle_button_touch(self, view, event):
+        action = event.getAction()
+        if action == MotionEvent.ACTION_DOWN:
+            view.animate().scaleX(0.95).scaleY(0.95).setDuration(80).start()
+            view.setAlpha(0.9)
+        elif action in [MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL]:
+            view.animate().scaleX(1.0).scaleY(1.0).setDuration(120).start()
+            view.setAlpha(1.0)
+        return False
+
+    def create_actions_container(self):
+        container = LinearLayout(self.activity)
+        container.setOrientation(LinearLayout.VERTICAL)
+        container.setGravity(Gravity.CENTER)
+        container.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(8), AndroidUtilities.dp(16), AndroidUtilities.dp(8))
+        
+        row1 = LinearLayout(self.activity)
+        row1.setOrientation(LinearLayout.HORIZONTAL)
+        row1.setGravity(Gravity.CENTER)
+        row1.setLayoutParams(LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+        row1.addView(self.create_action_button(t("hit"), HIT))
+        row1.addView(self.create_action_button(t("stand"), STAND))
+        row1.addView(self.create_action_button(t("double"), DOUBLE))
+        
+        row2 = LinearLayout(self.activity)
+        row2.setOrientation(LinearLayout.HORIZONTAL)
+        row2.setGravity(Gravity.CENTER)
+        row2.setLayoutParams(LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+        row2.addView(self.create_action_button(t("split"), SPLIT))
+        row2.addView(self.create_action_button(t("insurance"), INSURANCE))
+        row2.addView(self.create_action_button(t("new_game"), NEW_GAME))
+        
+        container.addView(row1)
+        container.addView(row2)
+        return container
+
+    def create_footer(self):
+        footer = LinearLayout(self.activity)
+        footer.setOrientation(LinearLayout.HORIZONTAL)
+        footer.setGravity(Gravity.CENTER_HORIZONTAL)
+        footer.setLayoutParams(LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+        footer.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(12), AndroidUtilities.dp(16), AndroidUtilities.dp(12))
+        footer.setBackgroundColor(DARK_BACKGROUND)
+        
+        buttons_container = LinearLayout(self.activity)
+        buttons_container.setOrientation(LinearLayout.HORIZONTAL)
+        buttons_container.setGravity(Gravity.CENTER_HORIZONTAL)
+        buttons_container.setLayoutParams(LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+        
+        reset_btn = Button(self.activity)
+        reset_btn.setText(t("reset_balance"))
+        reset_btn.setTextSize(14)
+        reset_btn.setTextColor(TEXT_COLOR)
+        reset_btn.setTypeface(None, Typeface.BOLD)
+        reset_btn.setGravity(Gravity.CENTER)
+        
+        bg_reset = GradientDrawable()
+        bg_reset.setShape(GradientDrawable.RECTANGLE)
+        bg_reset.setCornerRadius(AndroidUtilities.dp(8))
+        bg_reset.setStroke(AndroidUtilities.dp(1), RED_COLOR)
+        bg_reset.setColor(DARK_RED_BG)
+        reset_btn.setBackground(bg_reset)
+        
+        params_reset = LinearLayout.LayoutParams(AndroidUtilities.dp(120), AndroidUtilities.dp(40))
+        reset_btn.setLayoutParams(params_reset)
+        reset_btn.setOnClickListener(ClickListenerProxy(lambda v: self.reset_balance()))
+        buttons_container.addView(reset_btn)
+        
+        space = Space(self.activity)
+        space.setLayoutParams(LinearLayout.LayoutParams(0, 0, 1.0))
+        buttons_container.addView(space)
+        
+        version_view = TextView(self.activity)
+        version_view.setText(t("version_info", version=__version__))
+        version_view.setTextSize(12)
+        version_view.setTextColor(Color.argb(150, 180, 180, 200))
+        version_view.setGravity(Gravity.CENTER)
+        buttons_container.addView(version_view)
+        
+        space2 = Space(self.activity)
+        space2.setLayoutParams(LinearLayout.LayoutParams(0, 0, 1.0))
+        buttons_container.addView(space2)
+        
+        exit_btn = Button(self.activity)
+        exit_btn.setText(t("exit_game"))
+        exit_btn.setTextSize(14)
+        exit_btn.setTextColor(TEXT_COLOR)
+        exit_btn.setTypeface(None, Typeface.BOLD)
+        exit_btn.setGravity(Gravity.CENTER)
+        
+        bg_exit = GradientDrawable()
+        bg_exit.setShape(GradientDrawable.RECTANGLE)
+        bg_exit.setCornerRadius(AndroidUtilities.dp(8))
+        bg_exit.setStroke(AndroidUtilities.dp(1), RED_COLOR)
+        bg_exit.setColor(DARK_RED_BG)
+        exit_btn.setBackground(bg_exit)
+        
+        params_exit = LinearLayout.LayoutParams(AndroidUtilities.dp(120), AndroidUtilities.dp(40))
+        exit_btn.setLayoutParams(params_exit)
+        exit_btn.setOnClickListener(ClickListenerProxy(lambda v: self.exit_game()))
+        buttons_container.addView(exit_btn)
+        
+        footer.addView(buttons_container)
+        return footer
+
+    def create_card_view(self, card):
+        card_view = TextView(self.activity)
+        card_view.setGravity(Gravity.CENTER)
+        card_view.setTextSize(18)
+        card_view.setTypeface(None, Typeface.BOLD)
+        
+        width_dp = AndroidUtilities.dp(CARD_WIDTH)
+        height_dp = AndroidUtilities.dp(CARD_HEIGHT)
+        corner_radius = AndroidUtilities.dp(CARD_CORNER_RADIUS)
+        
+        bg = GradientDrawable()
+        if card and not card.hidden:
+            bg.setColor(CARD_BACKGROUND)
+            border_color = Color.rgb(180, 180, 190)
+        else:
+            bg.setColor(HIDDEN_CARD_BG)
+            border_color = ACCENT_COLOR
+            
+        bg.setCornerRadius(corner_radius)
+        bg.setStroke(AndroidUtilities.dp(1.5), border_color)
+        card_view.setBackground(bg)
+        card_view.setElevation(AndroidUtilities.dp(3))
+        
+        if card:
+            if card.hidden:
+                card_view.setText("🂠")
+                card_view.setTextColor(ACCENT_COLOR)
+            else:
+                card_view.setText(f"{card.rank}{SUIT_SYMBOLS[card.suit]}")
+                card_view.setTextColor(SUIT_COLORS[card.suit])
+                
+        params = LinearLayout.LayoutParams(width_dp, height_dp)
+        params.setMargins(AndroidUtilities.dp(CARD_SPACING), 0, 0, 0)
+        card_view.setLayoutParams(params)
+        
+        return card_view
+
+    @ui_thread
+    @safe_call
+    def show_bet_dialog(self):
+        if self.game.bet > 0 and not self.game.game_over:
+            run_on_ui_thread(lambda: BulletinHelper.show_info("Ставка уже сделана", get_last_fragment()))
+            return
+            
+        builder = AlertDialogBuilder(self.activity)
+        builder.set_title(t("place_bet_title"))
+        
+        container = LinearLayout(self.activity)
+        container.setOrientation(LinearLayout.VERTICAL)
+        container.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(16), AndroidUtilities.dp(16), AndroidUtilities.dp(16))
+        
+        label = TextView(self.activity)
+        label.setText(t("custom_bet"))
+        label.setTextSize(16)
+        label.setTextColor(TEXT_COLOR)
+        label.setGravity(Gravity.CENTER)
+        container.addView(label)
+        
+        bet_values = [5, 10, 25, 50, 100, 500]
+        buttons_container = LinearLayout(self.activity)
+        buttons_container.setOrientation(LinearLayout.VERTICAL)
+        
+        for value in bet_values:
+            btn = Button(self.activity)
+            btn.setText(f"${value}")
+            btn.setTextSize(16)
+            btn.setTextColor(TEXT_COLOR)
+            btn.setTypeface(None, Typeface.BOLD)
+            
+            bg = GradientDrawable()
+            bg.setShape(GradientDrawable.RECTANGLE)
+            bg.setCornerRadius(AndroidUtilities.dp(8))
+            bg.setColor(BUTTON_COLOR)
+            bg.setStroke(AndroidUtilities.dp(1), Color.rgb(80, 85, 95))
+            btn.setBackground(bg)
+            
+            btn.setLayoutParams(LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 
+                AndroidUtilities.dp(45)
+            ))
+            btn.setOnClickListener(ClickListenerProxy(
+                lambda v, val=value: self.place_bet(val)
+            ))
+            
+            params = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            params.setMargins(0, AndroidUtilities.dp(8), 0, 0)
+            btn.setLayoutParams(params)
+            
+            buttons_container.addView(btn)
+        
+        container.addView(buttons_container)
+        
+        min_bet = TextView(self.activity)
+        min_bet.setText(t("min_bet"))
+        min_bet.setTextSize(12)
+        min_bet.setTextColor(Color.argb(150, 180, 180, 200))
+        min_bet.setGravity(Gravity.CENTER)
+        min_bet.setPadding(0, AndroidUtilities.dp(8), 0, AndroidUtilities.dp(16))
+        container.addView(min_bet)
+        
+        builder.set_view(container)
+        self.bet_dialog = builder.create()
+        self.bet_dialog.show()
+
+    @ui_thread
+    @safe_call
+    def update_game_view(self):
+        if not self.dialog: 
+            return
+            
+        self.dealer_cards_container.removeAllViews()
+        for card in self.game.dealer_hand:
+            card_view = self.create_card_view(card)
+            self.dealer_cards_container.addView(card_view)
+            
+        self.player_cards_container.removeAllViews()
+        for card in self.game.player_hand:
+            card_view = self.create_card_view(card)
+            self.player_cards_container.addView(card_view)
+            
+        dealer_score = self.game.dealer_score if not self.game.player_turn or self.game.game_over else "?"
+        self.dealer_score_view.setText(t("score", score=dealer_score))
+        self.player_score_view.setText(t("score", score=self.game.player_score))
+        
+        if self.result_view:
+            self.result_view.setText(t("result", result=self.game.result))
+            if "ПОБЕДА" in self.game.result or "БЛЭКДЖЕК" in self.game.result:
+                self.result_view.setTextColor(GREEN_COLOR)
+            elif "ПОРАЖЕНИЕ" in self.game.result or "ПЕРЕБОР" in self.game.result:
+                self.result_view.setTextColor(RED_COLOR)
+            else:
+                self.result_view.setTextColor(GOLD_COLOR)
+                
+            if self.game.result and self.last_result != self.game.result:
+                self.result_view.setScaleX(0.5)
+                self.result_view.setScaleY(0.5)
+                self.result_view.animate().scaleX(1).scaleY(1).setDuration(300).start()
+                self.last_result = self.game.result
+                
+        if self.balance_text_view:
+            self.balance_text_view.setText(t("balance", balance=self.data["balance"]))
+            if self.last_balance_change != self.data["balance"]:
+                self.animate_balance_change()
+                self.last_balance_change = self.data["balance"]
+                
+        if self.wl_text_view:
+            self.wl_text_view.setText(t("wl_stats", wins=self.data["wins"], losses=self.data["losses"]))
+            
+        if self.bet_text_view:
+            self.bet_text_view.setText(t("bet", bet=self.game.bet))
+            
+        self.update_buttons_state()
+
+    @ui_thread
+    def animate_balance_change(self):
+        if not self.balance_text_view: 
+            return
+            
+        target_color = GREEN_COLOR if self.data["balance"] > self.last_balance_change else RED_COLOR
+        self.balance_text_view.setTextColor(target_color)
+        
+        def reset_animation():
+            self.balance_text_view.setTextColor(GOLD_COLOR)
+            
+        run_on_ui_thread(reset_animation, delay=1000)
+
+    @safe_call
+    def update_buttons_state(self):
+        if not self.dialog: 
+            return
+            
+        can_bet = not self.game.game_over and self.game.bet == 0
+        actions_enabled = not self.game.game_over and self.game.bet > 0
+        hit_enabled = actions_enabled and self.game.player_turn
+        stand_enabled = actions_enabled and self.game.player_turn
+        double_enabled = actions_enabled and self.game.player_turn and len(self.game.player_hand) == 2
+        insurance_enabled = actions_enabled and self.game.can_insure
+        new_game_enabled = True
+        
+        for button in self.action_buttons:
+            action = self.button_actions.get(id(button))
+            if action == HIT:
+                button.setEnabled(hit_enabled)
+            elif action == STAND:
+                button.setEnabled(stand_enabled)
+            elif action == DOUBLE:
+                button.setEnabled(double_enabled)
+            elif action == INSURANCE:
+                button.setEnabled(insurance_enabled)
+            elif action == NEW_GAME:
+                button.setEnabled(new_game_enabled)
+                
+            button.setAlpha(1.0 if button.isEnabled() else 0.5)
+
+    @safe_call
+    def place_bet(self, amount):
+        if self.data["balance"] < amount:
+            run_on_ui_thread(lambda: BulletinHelper.show_error(t("insufficient_funds"), get_last_fragment()))
+            return
+            
+        self.game.start_game(amount)
+        self.data["balance"] -= amount
+        self.save_game_data()
+        if self.bet_dialog:
+            self.bet_dialog.dismiss()
+        self.update_game_view()
+
+    @safe_call
+    def game_action(self, action):
+        game_ended = False
+        action_performed = False
+        
+        if action == HIT:
+            game_ended = self.game.player_hit()
+            action_performed = True
+        elif action == STAND:
+            self.game.player_stand()
+            game_ended = True
+            action_performed = True
+        elif action == DOUBLE:
+            if self.data["balance"] >= self.game.bet:
+                self.data["balance"] -= self.game.bet
+                game_ended = self.game.player_double()
+                action_performed = True
+            else:
+                run_on_ui_thread(lambda: BulletinHelper.show_error(t("insufficient_funds"), get_last_fragment()))
+        elif action == SPLIT:
+            if self.data["balance"] >= self.game.bet:
+                self.data["balance"] -= self.game.bet
+                game_ended = self.game.player_split()
+                action_performed = True
+            else:
+                run_on_ui_thread(lambda: BulletinHelper.show_error(t("insufficient_funds"), get_last_fragment()))
+        elif action == INSURANCE:
+            insurance_cost = self.game.bet / 2
+            if self.data["balance"] >= insurance_cost:
+                self.data["balance"] -= insurance_cost
+                game_ended = self.game.player_insurance()
+                action_performed = True
+            else:
+                run_on_ui_thread(lambda: BulletinHelper.show_error(t("insufficient_funds"), get_last_fragment()))
+        elif action == NEW_GAME:
+            self.game.reset()
+            self.game.status_message = t("place_bet")
+            self.update_game_view()
+            return
+            
+        if action_performed and (game_ended or self.game.game_over):
+            payout = self.game.end_game()
+            self.data["balance"] += payout
+            
+            if payout > self.game.bet * 2:
+                self.data["wins"] += 1
+            elif payout == self.game.bet * 2:
+                self.data["wins"] += 1
+            elif payout == 0:
+                self.data["losses"] += 1
+                
+            self.save_game_data()
+            
+        if action_performed:
+            self.update_game_view()
+
+    @safe_call
+    def reset_balance(self):
+        self.data = {
+            "balance": 1000,
+            "wins": 0,
+            "losses": 0
+        }
+        self.game.reset()
+        self.game.status_message = t("place_bet")
+        self.save_game_data()
+        
+        if self.balance_text_view:
+            self.balance_text_view.setText(t("balance", balance=self.data["balance"]))
+        if self.wl_text_view:
+            self.wl_text_view.setText(t("wl_stats", wins=0, losses=0))
+        if self.bet_text_view:
+            self.bet_text_view.setText(t("bet", bet=0))
+            
+        self.update_game_view()
+        run_on_ui_thread(lambda: BulletinHelper.show_info(t("reset_success"), get_last_fragment()))
+            
+    @safe_call
+    def exit_game(self):
+        if self.dialog:
+            self.dialog.dismiss()
+            self.dialog = None
+        self.game.reset()
+        self.activity = None
+        self.action_buttons = []
+        self.button_actions = {}
+        self.dealer_cards_container = None
+        self.player_cards_container = None
+        self.dealer_score_view = None
+        self.player_score_view = None
+        self.result_view = None
+        self.balance_text_view = None
+        self.wl_text_view = None
+        self.bet_text_view = None
+        
+    @safe_call
+    def on_plugin_unload(self):
+        self.exit_game()

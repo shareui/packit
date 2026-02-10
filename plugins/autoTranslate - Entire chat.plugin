@@ -1,0 +1,583 @@
+import traceback
+import requests
+import json
+import os
+from typing import Any, Optional
+import random
+import concurrent.futures
+
+from base_plugin import BasePlugin, MethodReplacement, HookResult, HookStrategy
+from hook_utils import find_class
+
+from client_utils import run_on_queue, get_messages_controller
+from android_utils import run_on_ui_thread, log
+from ui.bulletin import BulletinHelper
+from ui.settings import Header, Input, Selector, Divider, Text, Switch
+from org.telegram.messenger import UserConfig
+
+DEBUG_TRANSLATION_LOGS = False
+
+try:
+    from java import jclass
+    from java.lang import Integer as JInteger
+    from java.util import ArrayList
+    MessagesController = jclass("org.telegram.messenger.MessagesController")
+    TranslateController = jclass("org.telegram.messenger.TranslateController")
+    MessageObject = jclass("org.telegram.messenger.MessageObject")
+    String = jclass("java.lang.String")
+    Utilities = jclass("org.telegram.messenger.Utilities")
+    Callback3 = Utilities.Callback3
+    TLRPC = jclass("org.telegram.tgnet.TLRPC")
+    JAVA_CLASSES_FOUND = True
+except Exception as e:
+    log(f"Translator [FATAL]: Failed to import core Java classes: {e}")
+    JAVA_CLASSES_FOUND = False
+
+__name__ = "autoTranslate - Entire chat"
+__description__ = "Because you deserve premium-grade mistranslations, not the factory default!"
+__icon__ = "luvztroyicons/0"
+__id__ = "Translator"
+__version__ = "1.0.0"
+__author__ = "@luvztroy"
+__min_version__ = "11.12.0"
+
+
+class JsonCache:
+    """A simple JSON-based file cache."""
+    def __init__(self, plugin_id: str):
+        plugin_dir = os.path.dirname(os.path.realpath(__file__))
+        self.cache_path = os.path.join(plugin_dir, f"{plugin_id}_cache.json")
+        self.data = self._read()
+
+    def _read(self):
+        try:
+            with open(self.cache_path, 'r', encoding='utf-8') as f: return json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError): return {}
+
+    def _write(self):
+        with open(self.cache_path, 'w', encoding='utf-8') as f: json.dump(self.data, f, ensure_ascii=False, indent=4)
+
+    def get(self, key: str): return self.data.get(key)
+    def set(self, key: str, value: str): self.data[key] = value; self._write()
+    def clear(self): self.data = {}; self._write()
+    def get_size_bytes(self) -> int:
+        try: return os.path.getsize(self.cache_path)
+        except FileNotFoundError: return 0
+
+cache = JsonCache(__id__)
+
+USER_AGENTS = [
+    "Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Mobile Safari/537.36",
+    "Mozilla/5.0 (Linux; Android 10; SM-G973F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.210 Mobile Safari/537.36",
+    "Mozilla/5.0 (Linux; Android 9; Mi 9T Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.105 Mobile Safari/537.36",
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1",
+    "Mozilla/5.0 (iPad; CPU OS 13_6_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1.2 Mobile/15E148 Safari/604.1",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Safari/605.1.15",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36",
+    "ru.yandex.translate/21.15.4.21402814 (Xiaomi Redmi K20 Pro; Android 11)",
+]
+
+def get_random_user_agent():
+    return random.choice(USER_AGENTS)
+
+def split_text_into_chunks(text, max_length=4000):
+    import re
+    sentences = re.split(r'(?<=[.!?]) +', text)
+    chunks = []
+    current = ''
+    for sentence in sentences:
+        if len(current) + len(sentence) + 1 <= max_length:
+            current += (' ' if current else '') + sentence
+        else:
+            if current:
+                chunks.append(current)
+            current = sentence
+    if current:
+        chunks.append(current)
+    final_chunks = []
+    for chunk in chunks:
+        while len(chunk) > max_length:
+            final_chunks.append(chunk[:max_length])
+            chunk = chunk[max_length:]
+        if chunk:
+            final_chunks.append(chunk)
+    return final_chunks
+
+def translate_texts_parallel(texts, translate_func, max_workers=4):
+    results = [None] * len(texts)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_idx = {executor.submit(translate_func, text): idx for idx, text in enumerate(texts)}
+        for future in concurrent.futures.as_completed(future_to_idx):
+            idx = future_to_idx[future]
+            try:
+                results[idx] = future.result()
+            except Exception as e:
+                results[idx] = None
+    return results
+
+from java import jclass
+
+class BeforeHookedTrue:
+    def before_hooked_method(self, param):
+        param.setResult(True)
+
+class BeforeHookedFalse:
+    def before_hooked_method(self, param):
+        param.setResult(False)
+
+class LocalPremiumHook:
+    def __init__(self):
+        self._premium_unhooks = []
+
+    def premium_hooking(self):
+        clazz = jclass("org.telegram.messenger.UserConfig")
+        unhook1 = self.hook_method(clazz.getClass().getDeclaredMethod("isPremium"), BeforeHookedTrue())
+        unhook2 = self.hook_method(clazz.getClass().getDeclaredMethod("hasPremiumOnAccounts"), BeforeHookedTrue())
+        clazz2 = jclass("org.telegram.messenger.MessagesController")
+        unhook3 = self.hook_method(clazz2.getClass().getDeclaredMethod("premiumFeaturesBlocked"), BeforeHookedFalse())
+        self._premium_unhooks = [unhook1, unhook2, unhook3]
+
+    def premium_unhooking(self):
+        for unhook in getattr(self, '_premium_unhooks', []):
+            if unhook:
+                try:
+                    self.unhook_method(unhook)
+                except Exception:
+                    pass
+        self._premium_unhooks = []
+
+class AdvancedTranslatorPlugin(BasePlugin, LocalPremiumHook):
+    """
+    The main class for the Advanced Translator plugin.
+    """
+    _global_generation = 0
+
+    def on_plugin_load(self):
+        if not JAVA_CLASSES_FOUND:
+            BulletinHelper.show_error("Translator: Failed to load (core classes not found).")
+            return
+        if self.get_setting("enable_entire_chat_translation", False):
+            try:
+                self.premium_hooking()
+            except Exception as e:
+                log(str(e))
+        else:
+            try:
+                self.premium_unhooking()
+            except Exception as e:
+                log(str(e))
+        try:
+            target_method = None
+            translate_controller_class = TranslateController.getClass()
+            log("Translator: Attempting to hook 'pushToTranslate'...")
+            try:
+                target_method = translate_controller_class.getDeclaredMethod(
+                    "pushToTranslate", MessageObject, String, Callback3
+                )
+                log("Translator: Successfully found method 'pushToTranslate'.")
+            except Exception as e:
+                log(f"Translator [ERROR]: Failed to find 'pushToTranslate'. Error: {e}")
+                target_method = None
+            if target_method:
+                target_method.setAccessible(True)
+                AdvancedTranslatorPlugin._global_generation += 1
+                self.translate_hook_instance = TranslateHook(self, AdvancedTranslatorPlugin._global_generation)
+                self.hook_method(target_method, self.translate_hook_instance)
+            else:
+                BulletinHelper.show_error("Translator: Failed to find the target translation method to hook.")
+        except Exception:
+            log(f"Translator [FATAL]: An exception occurred during hooking: {traceback.format_exc()}")
+            BulletinHelper.show_error("Translator: An error occurred while hooking.")
+        self.add_on_send_message_hook()
+
+    def on_send_message_hook(self, account, params):
+        global DEBUG_TRANSLATION_LOGS
+        if not hasattr(params, 'message') or not isinstance(params.message, str):
+            return None
+        msg = params.message.strip()
+        if msg.lower() == '!debug':
+            DEBUG_TRANSLATION_LOGS = not DEBUG_TRANSLATION_LOGS
+            state = 'ENABLED' if DEBUG_TRANSLATION_LOGS else 'DISABLED'
+            BulletinHelper.show_info(f"Translation debug logs {state}")
+            return HookResult(strategy=HookStrategy.CANCEL)
+        return None
+
+    def on_plugin_unload(self):
+        log("Unloaded")
+
+    def _on_clear_cache_click(self, view):
+        cache.clear()
+        self.reload_settings()
+        try:
+            BulletinHelper.show_info("Translation cache cleared. Size on disk: 0 KB")
+        except Exception:
+            pass
+
+    def _get_formatted_cache_size(self) -> str:
+        size_bytes = cache.get_size_bytes()
+        if size_bytes == 0: return "Cache is empty"
+        kb = size_bytes / 1024
+        return f"{kb:.1f} KB" if kb < 1024 else f"{kb / 1024:.1f} MB"
+
+    def _on_premium_toggle(self, value):
+
+        try:
+            get_messages_controller().getTranslateController().setChatTranslateEnabled(value)
+        except Exception as e:
+            log(f"[TranslateToggle] Failed to sync with Telegram native toggle: {e}")
+        if value:
+            try:
+                self.premium_hooking()
+            except Exception as e:
+                log(str(e))
+        else:
+            try:
+                self.premium_unhooking()
+            except Exception as e:
+                log(str(e))
+        self.reload_settings()
+
+    def create_settings(self):
+        provider_index = self.get_setting("api_provider", 0)
+        settings_list = [
+            Divider(text="Provider"),
+            Selector(key="api_provider", text="Translation Provider", default=0, items=["Google Translate", "Yandex", "DeepL"], icon="msg_translate_solar"),
+        ]
+        settings_list.insert(0, Switch(
+            key="enable_entire_chat_translation",
+            text="Translate entire chat",
+            default=False,
+            icon="menu_feature_premium",
+            on_change=self._on_premium_toggle,
+            subtext="Automatically translate all messages in your chat."
+        ))
+        settings_list.insert(0, Divider())
+        settings_list.insert(0, Divider(text="Translation"))
+        if provider_index == 2:
+            settings_list.append(Input(
+                key="deepl_api_key",
+                text="DeepL API Key",
+                default=self.get_setting("deepl_api_key", ""),
+                icon="msg_pin_code",
+                subtext="Enter your DeepL API Key",
+            ))
+        settings_list.append(Divider(text="Language"))
+        settings_list.append(Divider())
+        settings_list.append(Selector(
+            key="target_lang",
+            text="Target language",
+            default=0,
+            items=[
+                "Bulgarian", "Czech", "Danish", "German", "Greek", "English", "Spanish", "Estonian", "Finnish", "French",
+                "Hungarian", "Indonesian", "Italian", "Japanese", "Korean", "Lithuanian", "Latvian", "Norwegian (Bokmål)",
+                "Dutch", "Polish", "Portuguese", "Romanian", "Russian", "Slovak", "Slovenian", "Swedish", "Turkish",
+                "Ukrainian", "Chinese (simplified)"
+            ],
+            icon="msg_language"
+        ))
+        settings_list.extend([
+            Divider(text="Cache Management"),
+            Text(text="Clear Translation Cache", red=True, on_click=self._on_clear_cache_click, icon="msg_delete"),
+            Divider(text=f"Deletes all saved translations.\nSize on disk: {self._get_formatted_cache_size()}")
+        ])
+        return [item for item in settings_list if item is not None]
+
+    def _encode_emojis_as_html(self, text):
+        import re
+        emoji_pattern = re.compile(
+            r'(<emoji[^>]*?>.*?</emoji>)|'
+            r'([\U0001F1E6-\U0001F1FF]|'
+            r'[\U0001F300-\U0001F5FF]|'
+            r'[\U0001F600-\U0001F64F]|'
+            r'[\U0001F680-\U0001F6FF]|'
+            r'[\U0001F700-\U0001F77F]|'
+            r'[\U0001F780-\U0001F7FF]|'
+            r'[\U0001F800-\U0001F8FF]|'
+            r'[\U0001F900-\U0001F9FF]|'
+            r'[\U0001FA70-\U0001FAFF]|'
+            r'[\u2600-\u26FF]|'
+            r'[\u2700-\u27BF]|'
+            r'[\u200d\ufe0f])',
+            re.UNICODE | re.IGNORECASE
+        )
+        emoji_map = {}
+        def replace_emoji(match):
+            emoji = match.group(0)
+            placeholder = f'<tg-emoji-{len(emoji_map)}>'
+            emoji_map[placeholder] = emoji
+            return placeholder
+        encoded_text = emoji_pattern.sub(replace_emoji, text)
+        return encoded_text, emoji_map
+
+    def _decode_emojis_from_html(self, text, emoji_map):
+        if not emoji_map:
+            return text
+        placeholders = sorted(emoji_map.keys(), key=len, reverse=True)
+        for placeholder in placeholders:
+            if placeholder in text:
+                text = text.replace(placeholder, emoji_map[placeholder])
+        return text
+
+
+class TranslateHook(MethodReplacement):
+    """
+    This class replaces the original translation method in TranslateController.
+    """
+    def __init__(self, plugin_instance: AdvancedTranslatorPlugin, generation: int):
+        super().__init__()
+        self.plugin = plugin_instance
+        self._generation = generation
+
+    def cleanup(self):
+        log(f"[PLUGIN] TranslateHook.cleanup: (no queue to clear, gen {self._generation}).")
+
+    def replace_hooked_method(self, param: Any) -> Any:
+        try:
+            message_object = param.args[0]
+            if not message_object or not isinstance(message_object, MessageObject):
+                return None
+            mo = getattr(message_object, 'messageOwner', None)
+            if mo:
+                translated_text = getattr(mo, 'translatedText', None)
+                translated_to_language = getattr(mo, 'translatedToLanguage', None)
+                lang_index = self.plugin.get_setting("target_lang", 0)
+                language_names = [
+                    "Bulgarian", "Czech", "Danish", "German", "Greek", "English", "Spanish", "Estonian", "Finnish", "French",
+                    "Hungarian", "Indonesian", "Italian", "Japanese", "Korean", "Lithuanian", "Latvian", "Norwegian (Bokmål)",
+                    "Dutch", "Polish", "Portuguese", "Romanian", "Russian", "Slovak", "Slovenian", "Swedish", "Turkish",
+                    "Ukrainian", "Chinese (simplified)"
+                ]
+                lang_code_map = {
+                    "Bulgarian": "bg", "Czech": "cs", "Danish": "da", "German": "de", "Greek": "el", "English": "en", "Spanish": "es", "Estonian": "et", "Finnish": "fi", "French": "fr",
+                    "Hungarian": "hu", "Indonesian": "id", "Italian": "it", "Japanese": "ja", "Korean": "ko", "Lithuanian": "lt", "Latvian": "lv", "Norwegian (Bokmål)": "nb",
+                    "Dutch": "nl", "Polish": "pl", "Portuguese": "pt", "Romanian": "ro", "Russian": "ru", "Slovak": "sk", "Slovenian": "sl", "Swedish": "sv", "Turkish": "tr",
+                    "Ukrainian": "uk", "Chinese (simplified)": "zh"
+                }
+                target_language_name = language_names[lang_index]
+                target_lang_code = lang_code_map.get(target_language_name, "en")
+            original_text = message_object.messageText
+            used_message_owner = False
+            if (not original_text or not isinstance(original_text, str) or not original_text.strip()) and mo and hasattr(mo, 'message') and mo.message:
+                original_text = mo.message
+                used_message_owner = True
+            if not original_text or not isinstance(original_text, str) or not original_text.strip():
+                return None
+
+            message_key = f"{message_object.currentAccount}_{message_object.getDialogId()}_{message_object.getId()}"
+            cached_text = cache.get(message_key)
+
+            if cached_text:
+                if DEBUG_TRANSLATION_LOGS:
+                    log(f"[QUEUE] Message {message_key} already cached, skipping queue.")
+                run_on_ui_thread(lambda: self._invoke_original_callback_and_notify(param, cached_text, used_message_owner=used_message_owner))
+                return None
+
+            run_on_queue(lambda: self._process_translation(original_text, param, used_message_owner))
+        except Exception:
+            if DEBUG_TRANSLATION_LOGS:
+                log(f"Translator: Error in replace_hooked_method: {traceback.format_exc()}")
+            run_on_ui_thread(lambda: BulletinHelper.show_error("Translation failed due to an internal error."))
+        return None
+
+    def _invoke_original_callback_and_notify(self, param: Any, translated_text: str, used_message_owner=False, provider_id=None, target_lang_code=None):
+        """
+        Invokes the original callback and then tells the app to update its translation state.
+        """
+        try:
+            message_object = param.args[0]
+            callback = param.args[2]
+
+            def ui_update_task():
+                if callback:
+                    status_code = JInteger(0)
+                    text_with_entities = TLRPC.TL_textWithEntities()
+                    text_with_entities.text = translated_text
+                    text_with_entities.entities = ArrayList()
+                    callback.run(status_code, text_with_entities, None)
+
+                try:
+                    translate_controller = get_messages_controller().getTranslateController()
+                    dialog_id = message_object.getDialogId()
+                    translate_controller.toggleTranslatingDialog(dialog_id, True)
+                except Exception:
+                    pass
+
+                try:
+                    message_object.forceUpdate = True
+                    text_with_entities = TLRPC.TL_textWithEntities()
+                    text_with_entities.text = translated_text
+                    text_with_entities.entities = ArrayList()
+                    message_object.messageOwner.translatedText = text_with_entities
+                    if target_lang_code is not None:
+                        try:
+                            setattr(message_object.messageOwner, 'translatedToLanguage', target_lang_code)
+                        except Exception as e:
+                            log(f"[ERROR] Failed to set translatedToLanguage: {e}")
+                except Exception:
+                    pass
+
+                try:
+                    NotificationCenter = jclass("org.telegram.messenger.NotificationCenter")
+                    current_account = UserConfig.selectedAccount if hasattr(UserConfig, 'selectedAccount') else None
+                    NotificationCenter.getInstance(current_account).postNotificationName(NotificationCenter.messageTranslated, message_object)
+                    NotificationCenter.getInstance(current_account).postNotificationName(NotificationCenter.updateInterfaces, JInteger(0))
+                except Exception:
+                    pass
+
+            run_on_ui_thread(ui_update_task)
+
+        except Exception:
+            log(f"Translator: Failed to invoke callback or notify UI: {traceback.format_exc()}")
+
+    def _process_translation(self, original_text: str, param: Any, used_message_owner=False):
+        try:
+            try:
+                primary_provider_index = int(self.plugin.get_setting("api_provider", 0))
+            except Exception:
+                primary_provider_index = 0
+            if DEBUG_TRANSLATION_LOGS:
+                log(f"[DEBUG] primary_provider_index = {primary_provider_index}")
+            lang_index = self.plugin.get_setting("target_lang", 0)
+            language_names = [
+                "Bulgarian", "Czech", "Danish", "German", "Greek", "English", "Spanish", "Estonian", "Finnish", "French",
+                "Hungarian", "Indonesian", "Italian", "Japanese", "Korean", "Lithuanian", "Latvian", "Norwegian (Bokmål)",
+                "Dutch", "Polish", "Portuguese", "Romanian", "Russian", "Slovak", "Slovenian", "Swedish", "Turkish",
+                "Ukrainian", "Chinese (simplified)"
+            ]
+            lang_code_map = {
+                "Bulgarian": "bg", "Czech": "cs", "Danish": "da", "German": "de", "Greek": "el", "English": "en", "Spanish": "es", "Estonian": "et", "Finnish": "fi", "French": "fr",
+                "Hungarian": "hu", "Indonesian": "id", "Italian": "it", "Japanese": "ja", "Korean": "ko", "Lithuanian": "lt", "Latvian": "lv", "Norwegian (Bokmål)": "nb",
+                "Dutch": "nl", "Polish": "pl", "Portuguese": "pt", "Romanian": "ro", "Russian": "ru", "Slovak": "sk", "Slovenian": "sl", "Swedish": "sv", "Turkish": "tr",
+                "Ukrainian": "uk", "Chinese (simplified)": "zh"
+            }
+            target_language_name = language_names[lang_index]
+            target_lang_code = lang_code_map.get(target_language_name, "en")
+            provider_functions = [
+                lambda text: self._translate_with_google(text, target_lang_code),
+                lambda text: self._translate_with_yandex(text, target_lang_code),
+                lambda text: self._translate_with_deepl(text, target_lang_code)
+            ]
+            provider_names = ["Google", "Yandex", "DeepL"]
+            if 0 <= primary_provider_index < len(provider_functions):
+                if DEBUG_TRANSLATION_LOGS:
+                    log(f"[PROVIDER] Using {provider_names[primary_provider_index]} for translation.")
+                translate_func = provider_functions[primary_provider_index]
+            else:
+                if DEBUG_TRANSLATION_LOGS:
+                    log("[PROVIDER] Invalid provider index, defaulting to Google.")
+                translate_func = provider_functions[0]
+
+            chunks = split_text_into_chunks(original_text)
+            try:
+                translated_chunks = translate_texts_parallel(chunks, translate_func)
+            except Exception as e:
+                if DEBUG_TRANSLATION_LOGS:
+                    log(f"Translation error: {e}")
+                run_on_ui_thread(lambda: BulletinHelper.show_error(f"Translation error: {e}"))
+                return
+            successful_chunks = [chunk for chunk in translated_chunks if chunk]
+            if not successful_chunks:
+                if DEBUG_TRANSLATION_LOGS:
+                    log(f"[ERROR] Translation failed for provider {provider_names[primary_provider_index] if 0 <= primary_provider_index < len(provider_names) else 'Unknown'}; showing bulletin.")
+                return
+            translated_text = ' '.join(successful_chunks)
+            message_object = param.args[0]
+            message_key = f"{message_object.currentAccount}_{message_object.getDialogId()}_{message_object.getId()}"
+            cache.set(message_key, translated_text)
+            provider_id = primary_provider_index + 1
+            self._invoke_original_callback_and_notify(param, translated_text, used_message_owner=used_message_owner, provider_id=provider_id, target_lang_code=target_lang_code)
+        except Exception as e:
+            if DEBUG_TRANSLATION_LOGS:
+                log(f"Translation error: {e}")
+            run_on_ui_thread(lambda: BulletinHelper.show_error(f"Translation error: {e}"))
+
+    def _translate_with_google(self, text: str, target_lang: str) -> Optional[str]:
+        params = {'client': 'gtx', 'sl': 'auto', 'tl': target_lang, 'dt': 't', 'q': text}
+        headers = {
+            'User-Agent': get_random_user_agent()
+        }
+        import time
+        for attempt in range(3):
+            try:
+                response = requests.get(
+                    "https://clients5.google.com/translate_a/t",
+                    params=params,
+                    headers=headers,
+                    timeout=15
+                )
+                response.raise_for_status()
+                result = response.json()
+                if result and isinstance(result, list) and result[0] and isinstance(result[0], list):
+                    translation = result[0][0]
+                    if DEBUG_TRANSLATION_LOGS:
+                        log("Translator (Google API): Success.")
+                    return translation
+                return None
+            except Exception as e:
+                if DEBUG_TRANSLATION_LOGS:
+                    log(f"Translator (Google API): Request failed (attempt {attempt+1}): {e}")
+                time.sleep(1)
+        return None
+
+    def _translate_with_yandex(self, text: str, target_lang: str) -> Optional[str]:
+        import uuid
+        import urllib.parse
+        log("Translator: Attempting translation with Yandex...")
+        YA_URL = "https://translate.yandex.net/api/v1/tr.json/translate"
+        session_uuid = str(uuid.uuid4()).replace("-", "")
+        to_lang = target_lang.lower()
+        sanitized_text, emojis = self.plugin._encode_emojis_as_html(text)
+        data = f"lang={to_lang}&text={urllib.parse.quote(sanitized_text)}"
+        headers = {
+            "User-Agent": get_random_user_agent(),
+            "Content-Type": "application/x-www-form-urlencoded"
+        }
+        url = f"{YA_URL}?id={session_uuid}-0-0&srv=android"
+        try:
+            response = requests.post(url, data=data, headers=headers, timeout=5)
+            if response.status_code == 200:
+                obj = response.json()
+                if "text" in obj:
+                    translated = "".join(obj["text"])
+                    translated = self.plugin._decode_emojis_from_html(translated, emojis)
+                    log("Translator (Yandex API): Success.")
+                    return translated
+            return None
+        except Exception as e:
+            log(f"Translator (Yandex API): Request failed: {e}")
+            return None
+
+    def _translate_with_deepl(self, text: str, target_lang: str) -> Optional[str]:
+        api_key = self.plugin.get_setting("deepl_api_key", "").strip()
+        if not api_key:
+            log("[DeepL] API key not set!")
+            return None
+        deepl_lang_map = {
+            'en': 'EN', 'de': 'DE', 'fr': 'FR', 'es': 'ES', 'it': 'IT', 'nl': 'NL', 'pl': 'PL', 'ru': 'RU',
+            'ja': 'JA', 'zh': 'ZH', 'bg': 'BG', 'cs': 'CS', 'da': 'DA', 'el': 'EL', 'et': 'ET', 'fi': 'FI',
+            'hu': 'HU', 'lt': 'LT', 'lv': 'LV', 'pt': 'PT', 'ro': 'RO', 'sk': 'SK', 'sl': 'SL', 'sv': 'SV',
+            'tr': 'TR', 'uk': 'UK', 'ko': 'KO', 'nb': 'NB'
+        }
+        deepl_target = deepl_lang_map.get(target_lang.lower(), target_lang.upper())
+        url = "https://api-free.deepl.com/v2/translate"
+        headers = {
+            "Authorization": f"DeepL-Auth-Key {api_key}",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "User-Agent": get_random_user_agent()
+        }
+        data = {
+            "text": text,
+            "target_lang": deepl_target
+        }
+        try:
+            response = requests.post(url, headers=headers, data=data, timeout=5)
+            if response.status_code == 200:
+                resp_json = response.json()
+                if resp_json.get("translations"):
+                    return resp_json["translations"][0]["text"]
+            else:
+                log(f"[DeepL] Error: {response.status_code} {response.text}")
+        except Exception as e:
+            log(f"[DeepL] Exception: {e}")
+        return None

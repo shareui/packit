@@ -1,0 +1,120 @@
+__id__ = "quick_reply"
+__name__ = "Quick Reply"
+__description__ = "Send predefined messages by typing a command (e.g., /address) in chat. Configure multiple quick replies in settings."
+__author__ = "@luvztroy"
+__version__ = "1.0.0"
+__min_version__ = "11.12.0"
+__icon__ = "luvztroyIcons/7"
+
+from base_plugin import BasePlugin, HookResult, HookStrategy
+from base_plugin import MenuItemData, MenuItemType
+from android_utils import run_on_ui_thread
+from ui.settings import Header, Input, Divider, Text
+from ui.bulletin import BulletinHelper
+from client_utils import send_message, run_on_queue
+
+class QuickReplyPlugin(BasePlugin):
+    def on_plugin_load(self):
+        self.add_on_send_message_hook()
+        self.add_menu_item(MenuItemData(
+            menu_type=MenuItemType.CHAT_ACTION_MENU,
+            text="Quick Reply Settings",
+            icon="msg_saved_14_solar",
+            priority=5,
+            on_click=lambda ctx: run_on_ui_thread(lambda: self._open_plugin_settings())
+        ))
+
+    def _open_plugin_settings(self):
+        try:
+            from com.exteragram.messenger.plugins import PluginsController
+            from com.exteragram.messenger.plugins.ui import PluginSettingsActivity
+            from client_utils import get_last_fragment
+            java_plugin = PluginsController.getInstance().plugins.get(self.id)
+            fragment = get_last_fragment()
+            if java_plugin and fragment:
+                fragment.presentFragment(PluginSettingsActivity(java_plugin))
+        except Exception:
+            pass
+
+    def create_settings(self):
+        settings = [Header(text="Quick Replies")]
+        for i in range(1, 101):
+            if i == 1 or (self.get_setting(f"cmd{i-1}", "").strip() and self.get_setting(f"msg{i-1}", "").strip()):
+                settings.append(Divider(text=f"Quick Reply {i}"))
+                settings.append(Input(
+                    key=f"cmd{i}",
+                    text=f"Command {i}",
+                    default="",
+                    icon="msg_emoji_objects_solar",
+                    on_change=lambda v, idx=i: self.reload_settings()
+                ))
+                settings.append(Input(
+                    key=f"msg{i}",
+                    text=f"Message {i}",
+                    default="",
+                    icon="msg_discussion_solar",
+                    on_change=lambda v, idx=i: self.reload_settings()
+                ))
+            else:
+                break
+        settings.append(Divider())
+        settings.append(Divider(text="Note: If you clear a middle quick reply, all following quick replies will be hidden until you fill the previous ones again. Leave unused fields empty. Add more pairs in code if needed."))
+        return settings
+
+    def on_send_message_hook(self, account, params):
+        if not hasattr(params, "message") or not isinstance(params.message, str):
+            return HookResult()
+        message_text = params.message.strip()
+        is_cmd = message_text.lower().startswith('.cmd')
+        is_msg = message_text.lower().startswith('.msg')
+        if is_cmd or is_msg:
+            value = None
+            if hasattr(params, "replyToMsg") and params.replyToMsg:
+                reply_msg = getattr(params.replyToMsg, "messageOwner", None)
+                if reply_msg and hasattr(reply_msg, "message") and reply_msg.message:
+                    value = reply_msg.message.strip()
+            if not value:
+                value = message_text[4:].strip()
+            if not value:
+                BulletinHelper.show_error("No text provided for command/message.")
+                return HookResult(strategy=HookStrategy.CANCEL)
+            for i in range(1, 101):
+                key = f"cmd{i}" if is_cmd else f"msg{i}"
+                if not self.get_setting(key, "").strip():
+                    self.set_setting(key, value)
+                    BulletinHelper.show_success(f"{'Command' if is_cmd else 'Message'} saved to Quick Reply {i}.")
+                    break
+            else:
+                BulletinHelper.show_error("No empty quick reply slot available.")
+            return HookResult(strategy=HookStrategy.CANCEL)
+        quick_replies = []
+        for i in range(1, 101):
+            cmd = self.get_setting(f"cmd{i}", "").strip()
+            msg = self.get_setting(f"msg{i}", "")
+            if cmd:
+                quick_replies.append({"command": cmd, "message": msg})
+        for entry in quick_replies:
+            command = entry.get("command", "").strip()
+            reply_message = entry.get("message", "")
+            if command and message_text.lower() == command.lower():
+                peer = getattr(params, "peer", None)
+                if not peer:
+                    return HookResult()
+                send_params = {"peer": peer, "message": reply_message}
+                if hasattr(params, "entities") and params.entities:
+                    try:
+                        send_params["entities"] = params.entities.toArray()
+                    except Exception:
+                        send_params["entities"] = params.entities
+                if hasattr(params, "replyToMsg") and params.replyToMsg:
+                    send_params["replyToMsg"] = params.replyToMsg
+                if hasattr(params, "replyToTopMsg") and params.replyToTopMsg:
+                    send_params["replyToTopMsg"] = params.replyToTopMsg
+                def send():
+                    try:
+                        send_message(send_params)
+                    except Exception as e:
+                        pass
+                run_on_queue(send)
+                return HookResult(strategy=HookStrategy.CANCEL)
+        return HookResult() 

@@ -1,0 +1,614 @@
+"""
+
+
+
+                            ДИСКЛЕЙМЕР
+
+Если при создании своего плагина вы решили использовать готовые кодовые решения
+нашего плагина у себя, то не забудьте упомянуть в описании своего плагина
+канал @MeeowPlugins в качестве кредитов за помощь в разработке плагина. Спасибо
+
+
+                  ⣾⡇⣿⣿⡇⣾⣿⣿⣿⣿⣿⣿⣿⣿⣄⢻⣦⡀⠁⢸⡌⠻⣿⣿⣿⡽⣿⣿
+                  ⡇⣿⠹⣿⡇⡟⠛⣉⠁⠉⠉⠻⡿⣿⣿⣿⣿⣿⣦⣄⡉⠂⠈⠙⢿⣿⣝⣿
+                  ⠤⢿⡄⠹⣧⣷⣸⡇⠄⠄⠲⢰⣌⣾⣿⣿⣿⣿⣿⣿⣶⣤⣤⡀⠄⠈⠻⢮
+                  ⠄⢸⣧⠄⢘⢻⣿⡇⢀⣀⠄⣸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣧⡀⠄⢀
+                  ⠄⠈⣿⡆⢸⣿⣿⣿⣬⣭⣴⣿⣿⣿⣿⣿⣿⣿⣯⠝⠛⠛⠙⢿⡿⠃⠄⢸
+                  ⠄⠄⢿⣿⡀⣿⣿⣿⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣿⣿⣿⣿⡾⠁⢠⡇⢀
+                  ⠄⠄⢸⣿⡇⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣏⣫⣻⡟⢀⠄⣿⣷⣾
+                  ⠄⠄⢸⣿⡇⠄⠈⠙⠿⣿⣿⣿⣮⣿⣿⣿⣿⣿⣿⣿⣿⡿⢠⠊⢀⡇⣿⣿
+                  ⠒⠤⠄⣿⡇⢀⡲⠄⠄⠈⠙⠻⢿⣿⣿⠿⠿⠟⠛⠋⠁⣰⠇⠄⢸⣿⣿⣿
+
+
+
+                            DISCLAIMER
+
+If, when creating your plugin, you decided to use the ready-made code solutions
+of our plugin, then do not forget to mention the @MeeowPlugins channel in the description
+of your plugin as credits for help in developing your plugin. Thanks
+
+
+
+"""
+
+import ast
+import os
+import shutil
+import traceback
+import zipfile
+from pathlib import Path
+from typing import Callable, Any, Optional, List
+
+from com.exteragram.messenger.plugins import PluginsController, Plugin
+from java import dynamic_proxy, cast
+from java.io import File
+from java.util import ArrayList
+from org.telegram.messenger import Utilities, FileLoader, MessageObject, AndroidUtilities, R, ApplicationLoader
+from org.telegram.tgnet import TLRPC
+from org.telegram.ui.ActionBar import AlertDialog
+
+from android_utils import log
+from base_plugin import BasePlugin, HookResult, HookStrategy, MenuItemData, MenuItemType
+from client_utils import get_file_loader, run_on_ui_thread, get_last_fragment
+from ui.alert import AlertDialogBuilder
+from ui.bulletin import BulletinHelper
+from ui.settings import Selector, Text, Switch, Header
+
+__id__ = "qmrrchh_plugins_manager"
+__name__ = "Plugins Manager"
+__author__ = "@qmrrchh"
+__icon__ = "remusic/4"
+__version__ = "1.4.2"
+__min_version__ = "11.12.0"
+__description__ = "Manager of locally installed plugins.\nYou can find out all the commands by writing .phelp in any chat."
+
+# From zwyLib
+class Callback1(dynamic_proxy(Utilities.Callback)):
+    def __init__(self, fn: Callable[[Any], None]):
+        super().__init__()
+        self._fn = fn
+
+    def run(self, arg):
+        try:
+            self._fn(arg)
+        except Exception:
+            log(f"Error in Callback1: {traceback.format_exc().rstrip()}")
+
+temp_dir_name = "plugins_manager_exp"
+exported_plugins_name = "_exported_plugins.zip"
+
+def show_with_copy(message, submsg):
+    def copy():
+        if AndroidUtilities.addToClipboard(submsg):
+            BulletinHelper.show_copied_to_clipboard()
+
+    BulletinHelper.show_with_button(message, R.raw.error, "Copy", lambda : copy())
+
+# From zwyLib
+def download_and_install_plugin(document, enable: bool):
+    def plugin_install_callback(arg):
+        if arg is None:
+            BulletinHelper.show_two_line("Plugin installed.", "Now you can check him in settings!", R.raw.contact_check)
+            return
+        show_with_copy("An error has occurred", arg)
+
+    file_loader = get_file_loader()
+    plugins_controller = PluginsController.getInstance()
+    path = file_loader.getPathToAttach(document, True)
+
+    if not path.exists():
+        log("Started loading the file...")
+        file_loader.loadFile(document, "new_plugin", FileLoader.PRIORITY_NORMAL, 1)
+        download_and_install_plugin(document, enable)
+        return
+
+    log("Installing...")
+    plugins_controller.loadPluginFromFile(str(path), Callback1(plugin_install_callback))
+
+    if enable:
+        try:
+            plugin_id = get_id_from_file(path.getAbsolutePath())
+            plugins_controller.setPluginEnabled(plugin_id, True, Callback1(plugin_install_callback))
+        except Exception as e:
+            show_with_copy("An error has occurred", e)
+
+
+def get_id_from_file(file_path):
+    with open(file_path, "r", encoding="utf-8") as file:
+        tree = ast.parse(file.read(), filename=file_path)
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id == "__id__":
+                    return ast.literal_eval(node.value)
+
+    return None
+
+
+def get_local_plugins() -> List[Plugin]:
+    java_values = PluginsController.getInstance().plugins.values()
+    java_list = ArrayList(java_values)
+    py_list = list(java_list.toArray())
+    if py_list:
+        return py_list
+    else:
+        return []
+
+
+def get_max_plugins(max: int):
+    if max == 0:
+        return 5
+    elif max == 1:
+        return 10
+    elif max == 2:
+        return 15
+    elif max == 3:
+        return 20
+    elif max == 4:
+        return 30
+    elif max == 5:
+        return 40
+    elif max == 6:
+        return 50
+    else:
+        return 20
+
+
+def restart():
+    PluginsController.getInstance().shutdown()
+    PluginsController.getInstance().init()
+
+
+def search_plugin(prompt: str) -> Optional[Plugin]:
+    prompt = prompt.lower()
+    for p in get_local_plugins() or []:
+        if prompt == p.getName().lower() or prompt == p.getId().lower():
+            return p
+    return None
+
+
+def enable_plugin(plugin_id: str, enabled: bool, params) -> HookResult:
+    def plugin_enable_callback(arg):
+        if arg is None:
+            enabled_text = "enable" if enabled else "disable"
+            BulletinHelper.show_two_line(f"Plugin {enabled_text}d.", "Now you can check him in settings!", R.raw.contact_check)
+            restart()
+            return
+        show_with_copy("An error has occurred", arg)
+
+    if params:
+        if len(plugin_id) <= 0:
+            params.message = "Plugin name/id not found."
+            return HookResult(strategy=HookStrategy.MODIFY, params=params)
+
+    plugin = search_plugin(plugin_id)
+    if plugin:
+        PluginsController.getInstance().setPluginEnabled(plugin.getId(), enabled, Callback1(plugin_enable_callback))
+    else:
+        BulletinHelper.show_error(f"Plugin {plugin_id} not found!")
+
+    return HookResult(strategy=HookStrategy.CANCEL)
+
+
+def delete_plugin(plugin_id: str, with_restart: bool, bulletins: bool = True) -> bool:
+    def plugin_delete_callback(arg):
+        if arg is None:
+            if bulletins:
+                BulletinHelper.show_success(f"Plugin '{plugin_id}' deleted.")
+            if with_restart:
+                restart()
+            return
+        show_with_copy("An error has occurred", arg)
+
+    plugin = search_plugin(plugin_id)
+    if plugin:
+        PluginsController.getInstance().deletePlugin(plugin.getId(), Callback1(plugin_delete_callback))
+        return True
+    else:
+        if bulletins:
+            BulletinHelper.show_error(f"Plugin {plugin_id} not found!")
+        return False
+
+
+def _get_temp_dir():
+    fixed_dir = os.path.dirname(os.path.realpath(__file__))
+    temp_path = Path(fixed_dir, temp_dir_name)
+    if not temp_path.exists():
+        temp_path.mkdir()
+
+
+def copy(value):
+    if AndroidUtilities.addToClipboard(value):
+        BulletinHelper.show_copied_to_clipboard()
+
+
+class LoaderPlugin(BasePlugin):
+    class Progress:
+        def __init__(self):
+            fragment = get_last_fragment()
+            ctx = fragment.getContext() if fragment else ApplicationLoader.applicationContext
+            builder = AlertDialogBuilder(ctx, AlertDialogBuilder.ALERT_TYPE_SPINNER)
+            self.progress_dialog = builder
+
+        def show(self):
+            if self.progress_dialog is None:
+                self.__init__()
+            run_on_ui_thread(self.progress_dialog.show())
+
+        def dismiss(self):
+            if self.progress_dialog is not None:
+                try:
+                    dlg = self.progress_dialog.getDialog() if hasattr(self.progress_dialog, 'getDialog') else self.progress_dialog
+                    if dlg:
+                        run_on_ui_thread(dlg.dismiss())
+                except Exception as e:
+                    log(f"[{__id__}] progress dialog error: {e}")
+                finally:
+                    self.progress_dialog = None
+
+
+    def __init__(self):
+        super().__init__()
+        self.export_item = None
+        self.import_item = None
+        self.alert_builder_instance = None
+        self.progress = None
+
+
+    def on_plugin_load(self):
+        self.add_on_send_message_hook()
+        self.progress = self.Progress()
+        _get_temp_dir()
+
+        fixed_dir = os.path.dirname(os.path.realpath(__file__))
+        zip_path = Path(fixed_dir, exported_plugins_name)
+
+        self.create_export_button()
+
+        if os.path.exists(zip_path):
+            self.create_import_button(zip_path)
+
+
+    def create_settings(self):
+        return [
+            Header("Plugins list"),
+            Selector(
+                key="max_plugins_count",
+                text="Max plugin count",
+                items=["5", "10", "15", "20", "30", "40", "50"],
+                default=3
+            ),
+            Switch(
+                key="plist_plugin_id",
+                text="Show Plugin ID",
+                default=False
+            ),
+            Switch(
+                key="plist_plugin_state",
+                text="Show Plugin state",
+                subtext="Shows disabled or enabled plugin state",
+                default=False
+            ),
+            Header("Other"),
+            Text(
+                text="Support development",
+                icon="msg_ton",
+                accent=True,
+                on_click=lambda view: self.show_info_alert(
+                    title="Support development",
+                    message="Below you can copy the TON address of the Plugins Manager developers and support the development with your donation.",
+                    neutral_button="Donate",
+                    listener2=lambda dialog, i: copy("UQBVxjueXqAEpALX_b0yr-ytXN26LOTpSBn26b9VRHKrmm5F")
+                )
+            )
+        ]
+
+
+    def on_send_message_hook(self, account: int, params: Any):
+        text: str = params.message
+        try:
+
+            if text == ".pdl" and params.replyToMsg:
+                document = MessageObject.getDocument(params.replyToMsg)
+                if document and str(document.file_name_fixed).endswith(".plugin"):
+                    run_on_ui_thread(lambda: download_and_install_plugin(document, False))
+                    return HookResult(strategy=HookStrategy.CANCEL)
+                else:
+                    return HookResult(strategy=HookStrategy.DEFAULT)
+
+            elif text == ".pdle" and params.replyToMsg:
+                document = MessageObject.getDocument(params.replyToMsg)
+                if document and str(document.file_name_fixed).endswith(".plugin"):
+                    run_on_ui_thread(lambda: download_and_install_plugin(document, True))
+                    return HookResult(strategy=HookStrategy.CANCEL)
+                else:
+                    return HookResult(strategy=HookStrategy.DEFAULT)
+
+            elif text.strip().lower() == ".plist":
+                params.message = self._get_plugins_info(self.get_setting("max_plugins_count", 3))
+                return HookResult(strategy=HookStrategy.MODIFY, params=params)
+
+            elif text.startswith(".pdis "):
+                plugin_prompt = text.replace(".pdis ", "")
+                return enable_plugin(plugin_prompt, False, params)
+
+            elif text.startswith(".pen "):
+                plugin_prompt = text.replace(".pen ", "")
+                return enable_plugin(plugin_prompt, True, params)
+
+            elif text.startswith(".pdel "):
+                plugin_prompt = text.replace(".pdel ", "")
+                if len(plugin_prompt) <= 0:
+                    params.message = "Plugin name/id not found."
+                    return HookResult(strategy=HookStrategy.MODIFY, params=params)
+                delete_plugin(plugin_prompt, True)
+                return HookResult(strategy=HookStrategy.CANCEL)
+
+            elif text.strip().lower() == ".pdela":
+                run_on_ui_thread(lambda: self.show_info_alert(
+                    "Are you sure?",
+                    "Are you sure you want to delete ALL THE INSTALLED plugins?",
+                    "Yes",
+                    "No",
+                    lambda dialog, i: self._dismiss_dialog(self.alert_builder_instance),
+                    lambda dialog, i: self.delete_all_plugins()
+                ))
+                return HookResult(strategy=HookStrategy.CANCEL)
+
+            elif text.strip().lower() == ".phelp":
+                params.message = "Usage:\n   .plist - Shows your plugins\n   .pdl - Download and install replied plugin.\n   .pdle - Download, install and enable replied plugin.\n   .pdis {name/id} - Disables entered plugin.\n   .pen {name/id} - Enables entered plugin.\n   .pdel {name/id} - Deletes entered plugin.\n   .pdela - Deletes all installed plugin."
+                return HookResult(strategy=HookStrategy.MODIFY, params=params)
+
+            else:
+                return HookResult(strategy=HookStrategy.DEFAULT)
+
+        except Exception as e:
+            log(str(e))
+            return HookResult(strategy=HookStrategy.DEFAULT)
+
+
+    def create_export_button(self):
+        if self.export_item is not None: return
+
+        export_item = MenuItemData(
+            menu_type=MenuItemType.DRAWER_MENU,
+            text="Export plugins",
+            icon="msg_download",
+            priority=10,
+            on_click=lambda context: self.export_plugins()
+        )
+        self.export_item = self.add_menu_item(export_item)
+
+
+    def create_import_button(self, zip_path):
+        if self.import_item is not None: return
+
+        if os.path.exists(zip_path):
+            import_item = MenuItemData(
+                menu_type=MenuItemType.DRAWER_MENU,
+                text="Import plugins",
+                icon="gift_unpack",
+                priority=10,
+                on_click=lambda context: self.import_plugins()
+            )
+            self.import_item = self.add_menu_item(import_item)
+
+    # from debug plugin (@exteraDev)
+    def _get_plugins_info(self, max: int):
+        try:
+            active_plugins = get_local_plugins()
+            count = len(active_plugins)
+            if not active_plugins or count <= 0:
+                return "Plugins not found."
+            show_id = self.get_setting("plist_plugin_id", False)
+            show_state = self.get_setting("plist_plugin_state", False)
+            max_plugins = get_max_plugins(max)
+            shown = active_plugins[:max_plugins]
+            more = count - max_plugins
+            plugins_md = "\n".join(f"- {p.getName()}" + (f" (id: {p.getId()})" if show_id else "") + (" | " + ("Enabled" if p.isEnabled() else "Disabled") if show_state else "") for p in shown)
+            if more > 0:
+                plugins_md += f"\n- ...and {more} more plugins"
+            return f"🧩 All your Plugins ({count})\n{plugins_md}"
+        except Exception as e:
+            return f"Error getting plugins: {str(e)}"
+
+
+    def export_plugins(self):
+        fixed_dir = Path(os.path.dirname(os.path.realpath(__file__)))
+        plugins_path = fixed_dir
+        zip_path = fixed_dir / exported_plugins_name
+
+        try:
+            run_on_ui_thread(self.show_loading_alert("Exporting..."))
+
+            if not plugins_path.exists():
+                BulletinHelper.show_error(f"Plugins folder {plugins_path} does not exist!")
+                return
+
+            run_on_ui_thread(self.update_alert("Exporting...", 20))
+
+            if zip_path.exists():
+                if zip_path.is_file():
+                    os.remove(zip_path)
+                else:
+                    shutil.rmtree(zip_path)
+
+            run_on_ui_thread(self.update_alert("Exporting...", 40))
+
+            with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                for file in os.listdir(plugins_path):
+                    file_path = plugins_path / file
+                    if file_path.is_file() and file_path.suffix == ".py" and file != exported_plugins_name:
+                        zipf.write(file_path, arcname=file)
+
+            run_on_ui_thread(self.update_alert("...", 100))
+            BulletinHelper.show_success(f"All plugins exported!")
+        except Exception as e:
+            traceback.print_exc()
+            show_with_copy("Some plugins could not be exported.", str(e))
+        finally:
+            self.create_import_button(zip_path)
+            run_on_ui_thread(self._dismiss_dialog(self.alert_builder_instance))
+
+
+    def import_plugins(self):
+        fixed_dir = Path(os.path.dirname(os.path.realpath(__file__)))
+        plugins_path = fixed_dir
+        zip_path = fixed_dir / exported_plugins_name
+
+        try:
+            run_on_ui_thread(self.show_loading_alert("Importing..."))
+
+            if not zip_path.exists() or not zip_path.is_file():
+                BulletinHelper.show_error(f"Zip file with exported plugins not found!")
+                return
+
+            progress = 20
+            run_on_ui_thread(self.update_alert("Importing...", progress))
+
+            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                for member in zip_ref.namelist():
+                    member_path = plugins_path / member
+                    if not str(member_path.resolve()).startswith(str(plugins_path.resolve())):
+                        continue
+
+                    if member.endswith('/'):
+                        member_path.mkdir(parents=True, exist_ok=True)
+                    else:
+                        member_path.parent.mkdir(parents=True, exist_ok=True)
+
+                        if member_path.exists():
+                            member_path.unlink()
+
+                        with zip_ref.open(member) as source, open(member_path, 'wb') as target:
+                            shutil.copyfileobj(source, target)
+                            progress += 1
+                            run_on_ui_thread(self.update_alert("Importing...", progress))
+
+            BulletinHelper.show_success("Plugins imported successfully!")
+            run_on_ui_thread(self.update_alert("Import success...", 100))
+        except Exception as e:
+            traceback.print_exc()
+            show_with_copy("Some plugins could not be imported.", str(e))
+        finally:
+            restart()
+            run_on_ui_thread(self._dismiss_dialog(self.alert_builder_instance))
+
+
+    def delete_all_plugins(self):
+        try:
+            self.show_loading_alert("Deleting plugins...")
+            deleted_count = 0
+            local_plugins = get_local_plugins()
+            if not local_plugins or len(local_plugins) <= 0:
+                return None
+
+            for plugin in local_plugins:
+                if plugin.getId() == __id__: continue
+                if delete_plugin(plugin.getId(), False, False):
+                    deleted_count += 1
+                    run_on_ui_thread(self.update_alert(f"Deleting \"{plugin.getName()}\"...", deleted_count))
+
+            run_on_ui_thread(self.update_alert(f"Restarting plugin engine...", 99))
+            restart()
+            self._dismiss_dialog(self.alert_builder_instance)
+            BulletinHelper.show_success("All installed plugins deleted!")
+        except Exception as e:
+            run_on_ui_thread(self._dismiss_dialog(self.alert_builder_instance))
+            show_with_copy("Error deleting plugins.", str(e))
+
+
+    # from reSpotify
+    def show_info_alert(self, title="TITLE", message="MESSAGE", positive_button="OK", neutral_button=None,
+                           listener2: Optional[Callable[['AlertDialogBuilder', int], None]] = None, listener: Optional[Callable[['AlertDialogBuilder', int], None]] = None):
+        fragment = get_last_fragment()
+        ctx = fragment.getContext() if fragment else ApplicationLoader.applicationContext
+
+        builder = AlertDialogBuilder(ctx, AlertDialogBuilder.ALERT_TYPE_MESSAGE)
+        builder.set_title(title)
+        builder.set_message(message)
+
+        if listener:
+            builder.set_positive_button(positive_button, listener)
+        else:
+            builder.set_positive_button(positive_button, self._dismiss_dialog(self.alert_builder_instance))
+
+        if neutral_button:
+            builder.set_neutral_button(neutral_button, lambda builder, which: listener2)
+
+        self.alert_builder_instance = builder.show()
+
+
+    # from reSpotify
+    def show_loading_alert(self, title="Дайте денег пожалуйста"):
+        fragment = get_last_fragment()
+        ctx = fragment.getContext() if fragment else ApplicationLoader.applicationContext
+        builder = AlertDialog(ctx, AlertDialogBuilder.ALERT_TYPE_LOADING)
+        builder.setTitle(title)
+        builder.setCancelable(False)
+        builder.setCanceledOnTouchOutside(False)
+        self.alert_builder_instance = builder
+        self.alert_builder_instance.show()
+        self.alert_builder_instance.setProgress(0)
+
+
+    def update_alert(self, title: str, progress: int):
+        self.alert_builder_instance.setTitle(title)
+        self._update_dialog_progress(self.alert_builder_instance, progress)
+
+
+    # from reSpotify
+    def _update_dialog_progress(self, builder_instance: AlertDialogBuilder, progress: int):
+        if builder_instance and builder_instance.isShowing():
+            builder_instance.setProgress(progress)
+
+
+    # from reSpotify
+    def _dismiss_dialog(self, builder_instance: AlertDialogBuilder):
+        def action():
+            if builder_instance is not None:
+                try:
+                    dlg = builder_instance.getDialog() if hasattr(builder_instance, 'getDialog') else builder_instance
+                    if dlg and dlg.isShowing():
+                        dlg.dismiss()
+                except Exception:
+                    pass
+                finally:
+                    self.alert_builder_instance = None
+
+        run_on_ui_thread(action)
+
+
+"""
+
+
+
+                            ДИСКЛЕЙМЕР
+
+Если при создании своего плагина вы решили использовать готовые кодовые решения 
+нашего плагина у себя, то не забудьте упомянуть в описании своего плагина 
+канал @MeeowPlugins в качестве кредитов за помощь в разработке плагина. Спасибо 
+
+
+                  ⣾⡇⣿⣿⡇⣾⣿⣿⣿⣿⣿⣿⣿⣿⣄⢻⣦⡀⠁⢸⡌⠻⣿⣿⣿⡽⣿⣿ 
+                  ⡇⣿⠹⣿⡇⡟⠛⣉⠁⠉⠉⠻⡿⣿⣿⣿⣿⣿⣦⣄⡉⠂⠈⠙⢿⣿⣝⣿ 
+                  ⠤⢿⡄⠹⣧⣷⣸⡇⠄⠄⠲⢰⣌⣾⣿⣿⣿⣿⣿⣿⣶⣤⣤⡀⠄⠈⠻⢮ 
+                  ⠄⢸⣧⠄⢘⢻⣿⡇⢀⣀⠄⣸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣧⡀⠄⢀ 
+                  ⠄⠈⣿⡆⢸⣿⣿⣿⣬⣭⣴⣿⣿⣿⣿⣿⣿⣿⣯⠝⠛⠛⠙⢿⡿⠃⠄⢸ 
+                  ⠄⠄⢿⣿⡀⣿⣿⣿⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣿⣿⣿⣿⡾⠁⢠⡇⢀ 
+                  ⠄⠄⢸⣿⡇⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣏⣫⣻⡟⢀⠄⣿⣷⣾ 
+                  ⠄⠄⢸⣿⡇⠄⠈⠙⠿⣿⣿⣿⣮⣿⣿⣿⣿⣿⣿⣿⣿⡿⢠⠊⢀⡇⣿⣿ 
+                  ⠒⠤⠄⣿⡇⢀⡲⠄⠄⠈⠙⠻⢿⣿⣿⠿⠿⠟⠛⠋⠁⣰⠇⠄⢸⣿⣿⣿ 
+
+
+
+                            DISCLAIMER
+
+If, when creating your plugin, you decided to use the ready-made code solutions 
+of our plugin, then do not forget to mention the @MeeowPlugins channel in the description 
+of your plugin as credits for help in developing your plugin. Thanks
+
+
+
+"""

@@ -1,0 +1,99 @@
+from typing import Any
+
+from ui.bulletin import BulletinHelper
+from base_plugin import BasePlugin, XposedHook
+from android_utils import log as _log
+from hook_utils import get_private_field, find_class
+
+from java.util import Locale
+from java.lang import Boolean, Integer
+
+__name__ = "EndlessFoldersScroll"
+__description__ = "Swipe the folders until your fingers rub off! (requires zwylib)"
+__icon__ = "zwyPluginsIcons/5"
+__version__ = "1.0.4"
+__id__ = "endlessFoldersScroll"
+__author__ = "@zwylair"
+__min_version__ = "11.9.1"
+
+
+class EndlessScrollHook(XposedHook):
+    def replace_hooked_method(self, param):
+        forward: bool = param.args[0]
+        filter_tabs_view = param.thisObject
+        position_to_id = get_private_field(filter_tabs_view, "positionToId")
+
+        if position_to_id is None:
+            return
+
+        first_tab_id = filter_tabs_view.getFirstTabId()
+        last_tab_id = position_to_id.get(position_to_id.size() - 1)
+        current_pos = get_private_field(filter_tabs_view, "currentPosition")
+        new_pos = current_pos + (1 if forward else -1)
+        new_tab_id = position_to_id.get(new_pos, first_tab_id if forward else last_tab_id)
+        return Integer(new_tab_id)
+
+
+class Locales:
+    default = {"zwylib_was_not_found": "ZwyLib plugin required for this plugin is not found!"}
+    ru = {"zwylib_was_not_found": "Требуемый плагин ZwyLib не найден!"}
+    uk = {"zwylib_was_not_found": "Не знайдено обов’язковий плагін ZwyLib!"}
+    en = default
+
+
+def localise(key: str) -> str:
+    locale = Locale.getDefault().getLanguage()
+    locale_dict = getattr(Locales, locale, Locales.default)
+    return locale_dict.get(key, key)
+
+
+def import_zwylib(show_import_error_bulletin = True):
+    global zwylib
+
+    try:
+        import zwylib
+    except ImportError:
+        if show_import_error_bulletin:
+            show_error_bulletin(localise("zwylib_was_not_found"))
+
+
+def is_zwylib_present() -> bool:
+    return zwylib is not None
+
+
+def show_error_bulletin(message: str):
+    BulletinHelper.show_error(f"{__name__}: " + message)
+
+
+def log(obj):
+    _log(f"{__name__}: " + str(obj))
+
+
+AUTOUPDATE_CHANNEL_ID = 2521243181
+AUTOUPDATE_CHANNEL_USERNAME = "zwyPlugins"
+AUTOUPDATE_MESSAGE_ID = 52
+
+zwylib: Any = None
+
+
+class EndlessScrollPlugin(BasePlugin):
+    def on_plugin_load(self):
+        self._hook()
+
+        import_zwylib()
+        if is_zwylib_present():
+            zwylib.add_autoupdater_task(__id__, AUTOUPDATE_CHANNEL_ID, AUTOUPDATE_CHANNEL_USERNAME, AUTOUPDATE_MESSAGE_ID)
+
+        log("Loaded")
+
+    def on_plugin_unload(self):
+        if is_zwylib_present():
+            zwylib.remove_autoupdater_task(__id__)
+        log("Unloaded")
+
+    def _hook(self):
+        self.hook_method(
+            find_class("org.telegram.ui.Components.FilterTabsView").getClass().getDeclaredMethod("getNextPageId", Boolean.TYPE),
+            EndlessScrollHook()
+        )
+        log("Hooked")

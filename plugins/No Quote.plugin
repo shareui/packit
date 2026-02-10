@@ -1,0 +1,73 @@
+__id__ = "no_quote_forward"
+__name__ = "No-Quote Forward"
+__description__ = "Stops goofy-ahh Telegram from adding quotes when you forward messages"
+__author__ = "@luvztroy"
+__version__ = "1.0.0"
+__min_version__ = "11.9.0"
+__icon__ = "luvztroyIcons/8"
+
+from base_plugin import BasePlugin, HookResult, HookStrategy, MenuItemData, MenuItemType
+from ui.settings import Switch, Text
+from ui.bulletin import BulletinHelper
+from android_utils import log
+from typing import Any, Optional
+
+class NoQuoteForwardPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self.override_state: Optional[bool] = True 
+
+    def on_plugin_load(self):
+        try:
+            state = self.get_setting("no_quote_override", "true")
+            if state == "true":
+                self.override_state = True
+            else:
+                self.override_state = False
+            self.add_hook("TL_messages_forwardMessages")
+            self.add_menu_item(MenuItemData(
+                menu_type=MenuItemType.CHAT_ACTION_MENU,
+                text="No Quote Forward",
+                icon="msg_contacts_ny_solar",
+                priority=10,
+                on_click=lambda ctx: self._on_menu_item_click()
+            ))
+            log("NoQuoteForwardPlugin: Hooks and menu item registered.")
+        except Exception as e:
+            log(f"NoQuoteForwardPlugin: Failed to register hooks or menu item - {e}")
+
+    def _on_menu_item_click(self):
+        if self.override_state is True:
+            self.override_state = False
+            self.set_setting("no_quote_override", "false")
+            BulletinHelper.show_info("'With Quote' for forwards.")
+        else:
+            self.override_state = True
+            self.set_setting("no_quote_override", "true")
+            BulletinHelper.show_info("'No Quote' for forwards.")
+    
+    def pre_request_hook(self, request_name: str, account: int, request: Any) -> HookResult:
+        if request_name != "TL_messages_forwardMessages":
+            return HookResult()
+
+        should_drop_author = None
+
+        if self.override_state is not None:
+            should_drop_author = self.override_state
+            log(f"NoQuoteForwardPlugin: Using override state: drop_author = {should_drop_author}")
+        else:
+            should_drop_author = True
+            log(f"NoQuoteForwardPlugin: Using default: drop_author = {should_drop_author}")
+
+        if should_drop_author is not None:
+            try:
+                if hasattr(request, 'drop_author') and request.drop_author is not should_drop_author:
+                    request.drop_author = should_drop_author
+                    return HookResult(strategy=HookStrategy.MODIFY, request=request)
+            except Exception as e:
+                log(f"NoQuoteForwardPlugin: Error modifying request - {e}")
+
+        return HookResult()
+
+    def on_plugin_unload(self):
+        log("Unloaded")

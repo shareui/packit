@@ -1,0 +1,21 @@
+from hook_utils import find_class
+
+__id__ = "overlay_disabler"
+__name__ = "Overlay Disabler"
+__description__ = "Disables blurry overlay for Video Messages."
+__author__ = "@immat0x1"
+__version__ = "1.0"
+__min_version__ = "11.9.1"
+__icon__ = "exteraPlugins/0"
+
+class OverlayDisablerPlugin(BasePlugin):
+    class OverlayHook:
+        def replace_hooked_method(self, param):
+            return
+
+    def on_plugin_load(self):
+        overlay_helper = find_class("org.telegram.ui.Components.InstantCameraVideoEncoderOverlayHelper")
+
+        if overlay_helper is not None:
+            self.hook_method(overlay_helper.getClass().getDeclaredMethod("bind"), self.OverlayHook())
+            self.hook_method(overlay_helper.getClass().getDeclaredMethod("render"), self.OverlayHook())

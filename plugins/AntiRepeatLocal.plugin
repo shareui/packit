@@ -1,0 +1,436 @@
+# -*- coding: utf-8 -*-
+
+import traceback
+from base_plugin import BasePlugin, HookResult
+from android_utils import log, run_on_ui_thread
+from client_utils import (
+    get_user_config, get_messages_storage, get_notification_center,
+    get_connections_manager
+)
+from client_utils import get_messages_controller
+from hook_utils import find_class, get_private_field
+from java.util import ArrayList
+from java import jint
+from org.telegram.messenger import MessageObject, NotificationCenter, UserConfig
+from org.telegram.tgnet import TLRPC, NativeByteBuffer
+from org.telegram.ui import LaunchActivity, ChatActivity
+
+import traceback
+import re
+from android_utils import log
+from client_utils import get_last_fragment
+from hook_utils import find_class, get_private_field
+from ui.settings import Header, Input, Selector, Switch, Divider
+from ui.bulletin import BulletinHelper
+
+from android.view import View
+from androidx.recyclerview.widget import RecyclerView
+
+from java.lang import Integer, Boolean
+from java.util import ArrayList
+
+from android.text import TextUtils
+from com.exteragram.messenger.utils import ChatUtils
+
+__id__ = "AntiRepeatLocal"
+__name__ = "Anti-Spam"
+__description__ = "Удаляет повторяющиеся сообщения и ЛОКАЛЬНО редактирует исходное, добавляя счетчик."
+__author__ = "@bleizix & @lisurgut"
+__version__ = "1.0.1"
+__min_version__ = "11.12.0"
+__icon__ = "Miku_u/11"
+
+
+
+
+
+def update_message_locally(message):
+    if not message:
+        return
+
+    messages_list = ArrayList()
+    messages_list.add(message)
+
+    get_messages_storage().putMessages(messages_list, False, True, True, 0, 0, 0)
+
+    message_obj = MessageObject(get_user_config().selectedAccount, message, False, False)
+
+    ui_updated_messages = ArrayList()
+    ui_updated_messages.add(message_obj)
+    get_notification_center().postNotificationName(47, message_obj.getDialogId(),
+                                                   ui_updated_messages)
+
+
+class HideMessagesHook:
+    def __init__(self, plugin_instance):
+        self.plugin = plugin_instance
+        self.RecyclerViewViewHolderClass = None
+        try:
+            self.RecyclerViewViewHolderClass = find_class(
+                "androidx.recyclerview.widget.RecyclerView$ViewHolder").getClass()
+        except Exception as e:
+            self.plugin.log(f"Failed to find RecyclerView.ViewHolder class: {e}")
+
+    def after_hooked_method(self, param):
+        if not self.RecyclerViewViewHolderClass:
+            return
+
+        try:
+            holder = param.args[0]
+            if not (holder and self.RecyclerViewViewHolderClass.isInstance(holder)):
+                return
+
+            position = int(param.args[1])
+            adapter_instance = param.thisObject
+
+            messagesStartRow_obj = get_private_field(adapter_instance, "messagesStartRow")
+            if messagesStartRow_obj is None:
+                return
+            messagesStartRow = int(messagesStartRow_obj)
+
+            if position < messagesStartRow:
+                return
+
+            current_messages_list_obj = adapter_instance.getMessages()
+            if not isinstance(current_messages_list_obj, ArrayList):
+                return
+
+            current_messages_list = current_messages_list_obj
+            message_list_index = position - messagesStartRow
+
+            if 0 <= message_list_index < current_messages_list.size():
+                message_object = current_messages_list.get(message_list_index)
+                if message_object is None:
+                    return
+
+                grouped_messages = get_last_fragment().getValidGroupedMessage(message_object)
+                item_view = holder.itemView
+
+                if item_view is None:
+                    return
+
+                should_hide_flag = self.plugin._should_hide_message(message_object, grouped_messages)
+
+                target_visibility = View.GONE if should_hide_flag else View.VISIBLE
+
+                if item_view.getVisibility() != target_visibility:
+                    item_view.setVisibility(target_visibility)
+
+        except Exception as e:
+            self.plugin.log(f"Error in onBindViewHolder after hook: {e}\n{traceback.format_exc()}")
+
+
+class HideMessagesSetContentHook:
+    def __init__(self, plugin_instance):
+        self.plugin = plugin_instance
+
+    def after_hooked_method(self, param):
+        try:
+            message_object = param.args[0]
+            grouped_messages = param.args[1]
+
+            if message_object is None:
+                return
+
+            chat_message_cell_instance = param.thisObject
+
+            if self.plugin._should_hide_message(message_object, grouped_messages):
+                if hasattr(chat_message_cell_instance, 'totalHeight') and chat_message_cell_instance.totalHeight != 0:
+                    chat_message_cell_instance.totalHeight = 0
+
+        except Exception as e:
+            self.plugin.log(f"Error in setMessageContent after hook: {e}\n{traceback.format_exc()}")
+
+
+class AntiRepeatLocalPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self.last_messages = {}
+        self.duplicate_message_ids_to_hide = set()
+
+    def normalize_text_for_comparison(self, text: str):
+        if not isinstance(text, str):
+            return ""
+
+        normalization_map = {
+            'ё': 'е',
+            'e': 'е',
+            'y': 'у',
+        }
+        processed_text = text
+        if (self.get_setting("ignoreCase", True)):
+            processed_text = text.lower()
+
+        if (self.get_setting("ignoreSimilar", True)):
+            for original, replacement in normalization_map.items():
+                processed_text = processed_text.replace(original, replacement)
+
+        return processed_text
+
+    def _get_message_legit(self, dialog_id: int, msg_id: int):
+        found_msg = None
+        cursor = None
+
+        try:
+            db = get_messages_storage().getDatabase()
+
+            if dialog_id != 0:
+                sql_query = f"SELECT data FROM messages_v2 WHERE uid = {dialog_id} AND mid = {msg_id} LIMIT 1"
+            else:
+                sql_query = f"SELECT data FROM messages_v2 WHERE is_channel = 0 AND mid = {msg_id} LIMIT 1"
+
+            cursor = db.queryFinalized(sql_query)
+
+            if cursor.next():
+                data = cursor.byteBufferValue(0)
+                if data:
+                    try:
+                        message = TLRPC.Message.TLdeserialize(data, data.readInt32(False), False)
+                        if message:
+                            message.readAttachPath(data, get_user_config().clientUserId)
+                            found_msg = message
+                    finally:
+                        data.reuse()
+
+        except Exception as e:
+            log(f"[{__name__}] Exception in _get_message_legit: {e}")
+            traceback.print_exc()
+
+        finally:
+            if cursor:
+                cursor.dispose()
+        return found_msg
+
+    def on_plugin_load(self):
+        try:
+            for hook_name in ["NewMessage", "NewChannelMessage", "ShortMessage", "ShortChatMessage"]:
+                self.add_hook(hook_name, match_substring=True)
+            log(f"[{__name__}] Plugin loaded successfully.")
+        except Exception as e:
+            log(f"[{__name__}] Error loading plugin: {str(e)}")
+            traceback.print_exc()
+
+        class_paths = {
+            "ChatActivityAdapter": "org.telegram.ui.ChatActivity$ChatActivityAdapter",
+            "RecyclerViewViewHolder": "androidx.recyclerview.widget.RecyclerView$ViewHolder",
+            "ChatMessageCell": "org.telegram.ui.Cells.ChatMessageCell",
+            "MessageObject": "org.telegram.messenger.MessageObject",
+            "GroupedMessages": "org.telegram.messenger.MessageObject$GroupedMessages"
+        }
+
+        found_classes = {}
+        all_classes_found = True
+        for name, path in class_paths.items():
+            class_wrapper = find_class(path)
+            if not class_wrapper:
+                BulletinHelper.show_info(f"Could not find class {name} ({path})!")
+                all_classes_found = False
+                break
+            found_classes[name] = class_wrapper.getClass()
+
+        if not all_classes_found:
+            return
+
+        chat_activity_adapter_class = found_classes["ChatActivityAdapter"]
+        recycler_view_holder_class = found_classes["RecyclerViewViewHolder"]
+        chat_message_cell_class = found_classes["ChatMessageCell"]
+        message_object_class = found_classes["MessageObject"]
+        grouped_messages_class = found_classes["GroupedMessages"]
+
+        try:
+            on_bind_view_holder_method = chat_activity_adapter_class.getDeclaredMethod(
+                "onBindViewHolder",
+                recycler_view_holder_class,
+                Integer.TYPE
+            )
+            self.hook_method(on_bind_view_holder_method, HideMessagesHook(self))
+        except Exception as e:
+            BulletinHelper.show_info(f"Failed to hook onBindViewHolder: {e}")
+            log(str(e))
+
+        try:
+            set_message_content_method = chat_message_cell_class.getDeclaredMethod(
+                "setMessageContent",
+                message_object_class,
+                grouped_messages_class,
+                Boolean.TYPE,
+                Boolean.TYPE,
+                Boolean.TYPE
+            )
+            self.hook_method(set_message_content_method, HideMessagesSetContentHook(self))
+        except Exception as e:
+            BulletinHelper.show_info(f"Failed to hook setMessageContent: {e}")
+            log(str(e))
+
+    def _should_hide_message(self, message_object, grouped_messages):
+        if message_object and message_object.getId() in self.duplicate_message_ids_to_hide:
+            return True
+        return False
+
+    def on_plugin_unload(self):
+        self.last_messages.clear()
+        self.duplicate_message_ids_to_hide.clear()
+        log(f"[{__name__}] Plugin unloaded and caches cleared.")
+
+    def on_update_hook(self, update_name, account, update) -> HookResult:
+        run_on_ui_thread(lambda: self._process_update(update))
+        return HookResult()
+
+    def on_updates_hook(self, container_name, account, updates_container) -> HookResult:
+        run_on_ui_thread(lambda: self._process_update(updates_container))
+        return HookResult()
+
+    def _process_update(self, update_obj):
+        try:
+            msg_data = self._extract_message_data(update_obj)
+            if not msg_data:
+                return
+
+            msg_text, msg_id, chat_id, sender_id, topic_id = msg_data
+
+            if not msg_text or not msg_id or sender_id == get_user_config().getClientUserId():
+                return
+
+            key = (chat_id, sender_id)
+            last_message_data = self.last_messages.get(key)
+
+            normalized_msg_text = self.normalize_text_for_comparison(msg_text)
+
+            if last_message_data and self.normalize_text_for_comparison(last_message_data['text']) == normalized_msg_text:
+                count = last_message_data.get('count', 1) + 1
+                original_msg_id = last_message_data['id']
+                original_msg_text = last_message_data['text']
+                log(f"[{__name__}] Duplicate from {sender_id} in {chat_id}. Count: {count}")
+
+                original_message = self._get_message_legit(chat_id, original_msg_id)
+
+                self.duplicate_message_ids_to_hide.add(msg_id)
+                if original_message:
+                    original_message.message = f"[{count}] {original_msg_text}"
+                    update_message_locally(original_message)
+                    self.last_messages[key]['count'] = count
+                else:
+                    log(f"[{__name__}] Could not find original message {original_msg_id} in local storage.")
+            else:
+                self.last_messages[key] = {'text': msg_text, 'id': msg_id, 'count': 1}
+                if last_message_data:
+                    previous_id = last_message_data.get('id')
+                    if previous_id in self.duplicate_message_ids_to_hide:
+                        self.duplicate_message_ids_to_hide.remove(previous_id)
+
+        except Exception as e:
+            log(f"[{__name__}] Error processing update: {str(e)}")
+            traceback.print_exc()
+
+    def _extract_message_data(self, update_obj):
+        topic_id = 0
+        my_user_id = get_user_config().getClientUserId()
+        is_tlrpc = isinstance(update_obj, TLRPC.Update)
+
+        if is_tlrpc:
+            if not hasattr(update_obj, 'message'):
+                return None
+            if isinstance(update_obj.message, str):
+                msg_text = update_obj.message
+                msg_id = update_obj.id
+                if isinstance(update_obj, TLRPC.TL_updateShortMessage):
+                    chat_id = update_obj.user_id
+                    sender_id = my_user_id if update_obj.out else update_obj.user_id
+                elif isinstance(update_obj, TLRPC.TL_updateShortChatMessage):
+                    chat_id = -update_obj.chat_id
+                    sender_id = update_obj.from_id
+                else:
+                    return None
+            elif isinstance(update_obj.message, TLRPC.Message):
+                msg = update_obj.message
+                msg_text = msg.message
+                msg_id = msg.id
+                peer = msg.peer_id
+                if isinstance(peer, TLRPC.TL_peerUser):
+                    chat_id = peer.user_id
+                elif isinstance(peer, TLRPC.TL_peerChat):
+                    chat_id = -peer.chat_id
+                elif isinstance(peer, TLRPC.TL_peerChannel):
+                    chat_id = -peer.channel_id
+                else:
+                    return None
+                if hasattr(msg, 'out') and msg.out:
+                    sender_id = my_user_id
+                else:
+                    from_peer = msg.from_id
+                    if from_peer:
+                        if isinstance(from_peer, TLRPC.TL_peerUser):
+                            sender_id = from_peer.user_id
+                        elif isinstance(from_peer, TLRPC.TL_peerChannel):
+                            sender_id = from_peer.channel_id
+                        else:
+                            if isinstance(peer, TLRPC.TL_peerChannel):
+                                sender_id = peer.channel_id
+                            else:
+                                return None
+                    elif msg.post:
+                        if isinstance(peer, TLRPC.TL_peerChannel):
+                            sender_id = peer.channel_id
+                        else:
+                            return None
+                    else:
+                        if isinstance(peer, TLRPC.TL_peerChannel):
+                            sender_id = peer.channel_id
+                        else:
+                            return None
+                if msg.reply_to and hasattr(msg.reply_to, 'reply_to_top_id') and msg.reply_to.reply_to_top_id != 0:
+                    topic_id = msg.reply_to.reply_to_top_id
+                elif msg.reply_to and hasattr(msg.reply_to, 'reply_to_msg_id') and msg.reply_to.reply_to_msg_id != 0:
+                    topic_id = msg.reply_to.reply_to_msg_id
+                elif hasattr(msg, 'top_id') and msg.top_id != 0:
+                    topic_id = msg.top_id
+            else:
+                return None
+        else:
+            if not hasattr(update_obj, 'message') or not hasattr(update_obj, 'id'):
+                return None
+            msg_text = update_obj.message
+            msg_id = update_obj.id
+            if hasattr(update_obj, 'chat_id') and update_obj.chat_id != 0:
+                chat_id = -update_obj.chat_id
+                if hasattr(update_obj, 'out') and update_obj.out:
+                    sender_id = my_user_id
+                elif hasattr(update_obj, 'user_id') and update_obj.user_id != 0:
+                    sender_id = update_obj.user_id
+                elif hasattr(update_obj, 'from_id') and update_obj.from_id != 0:
+                    sender_id = update_obj.from_id
+                else:
+                    sender_id = -update_obj.chat_id
+            elif hasattr(update_obj, 'user_id') and update_obj.user_id != 0:
+                chat_id = update_obj.user_id
+                if hasattr(update_obj, 'out') and update_obj.out:
+                    sender_id = my_user_id
+                else:
+                    sender_id = update_obj.user_id
+            else:
+                return None
+            if hasattr(update_obj, 'reply_to') and update_obj.reply_to and hasattr(update_obj.reply_to,
+                                                                                   'reply_to_top_id') and update_obj.reply_to.reply_to_top_id != 0:
+                topic_id = update_obj.reply_to.reply_to_top_id
+        return msg_text, msg_id, chat_id, sender_id, topic_id
+
+    def create_settings(self):
+
+        return [
+            Header(text="Пояснение:"),
+            Divider("Анти-спам плагин для локального удаления повторяющихся сообщений с добавлением счётчика повторов."),
+            Divider("Авторы: @bleizix & @lisurgut."),
+            Header(text="Настройки модуля"),
+            Switch(
+                key=f"ignoreSimilar",
+                default=True,
+                text="Игнорировать похожие буквы"
+            ),
+            Divider("Сообщения вроде «Привет» и «Прivеt» будут считаться одинаковыми (e → е, y → у, ё → е)"),
+            Switch(
+                key="ignoreCase",
+                default=True,
+                text="ИгнОРироВать КаПс"
+            ),
+            Divider("Сообщения будут сравниваться без учёта заглавных и строчных букв (например, «ПрИвЕт» = «привет»)")
+        ]

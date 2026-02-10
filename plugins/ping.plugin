@@ -1,0 +1,50 @@
+import time
+
+from android.os import SystemClock
+from base_plugin import BasePlugin, HookResult, HookStrategy
+
+__id__ = "ping"
+__name__ = "Ping"
+__version__ = "1.1.0"
+__description__ = "Показывает задержку ответа Telegram."
+__author__ = "@extera_plugin"
+__min_version__ = "11.9.0"
+__icon__ = "SpottyAnimated/46"
+
+
+class PingPlugin(BasePlugin):
+    def on_plugin_load(self):
+        self.add_on_send_message_hook()
+
+    def get_uptime_string(self):
+        uptime_ms = SystemClock.elapsedRealtime()
+        uptime_seconds = int(uptime_ms / 1000)
+        days = uptime_seconds // 86400
+        hours = (uptime_seconds % 86400) // 3600
+        minutes = (uptime_seconds % 3600) // 60
+        seconds = uptime_seconds % 60
+        return f"{days}d {hours}h {minutes}m {seconds}s"
+
+    def create_message(self, params):
+        start_time = time.monotonic_ns() // 1_000_000
+        time.sleep(0.05)
+        end_time = time.monotonic_ns() // 1_000_000
+
+        ping = round(end_time - start_time)
+
+        uptime_str = self.get_uptime_string()
+        return f"Ping: {ping} ms\nUptime: {uptime_str}"
+
+    def on_send_message_hook(self, account, params):
+        if not hasattr(params, 'message') or not isinstance(params.message, str):
+            return HookResult()
+
+        command_prefix = ".ping"
+        if params.message.startswith(command_prefix):
+
+            text = self.create_message(params)
+            params.message = text
+
+            return HookResult(strategy=HookStrategy.MODIFY, params=params)
+
+        return HookResult()

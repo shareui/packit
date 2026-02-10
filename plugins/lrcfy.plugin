@@ -1,0 +1,2993 @@
+import requests
+import json
+import re
+import threading
+import time
+import base64
+import hashlib
+import logging
+import traceback
+from typing import Any, Dict, Callable, List, Optional
+from base_plugin import BasePlugin, HookResult, HookStrategy
+from android_utils import log
+from ui.settings import Header, Input, Switch, Text, Selector, Divider
+from java.util import Locale
+from client_utils import send_message, get_last_fragment, run_on_queue, run_on_ui_thread
+from markdown_utils import parse_markdown
+from bs4 import BeautifulSoup
+from org.telegram.ui.ActionBar import AlertDialog
+from org.telegram.messenger import ApplicationLoader, LocaleController, R
+from org.telegram.tgnet import TLRPC
+from org.telegram.ui import ChatActivity
+from ui.alert import AlertDialogBuilder
+from ui.bulletin import BulletinHelper as _BulletinHelper
+from com.exteragram.messenger.plugins import PluginsController
+from datetime import datetime, timezone, timedelta
+from java.util import ArrayList
+
+__id__ = "lrcfy"
+__name__ = "lrcfy"
+__description__ = 'Your music, your lyrics. Fetch any song\'s lyrics inside Telegram via !lyrics [song name] or [Spotify link].'
+__author__ = "@luvztroy"
+__min_version__ = "11.12.1"
+__version__ = "1.0.4"
+__icon__ = "luvztroyIcons/2"
+
+API_BASE_URL = "https://lrclib.net/api"
+LASTFM_API_KEY = ""  
+LASTFM_API_URL = "http://ws.audioscrobbler.com/2.0/"
+progress_dialog = None
+
+# lrcfy Auto update 
+
+AUTOUPDATE_CHANNEL_ID = 2534276584
+AUTOUPDATE_CHANNEL_USERNAME = "quantaupdate"
+AUTOUPDATE_MSG_ID = 2  
+LOG_PREFIX = __name__
+
+zwylib: Any = None
+logger: Optional[logging.Logger] = None
+BulletinHelper: Optional[_BulletinHelper] = None
+
+
+GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent"
+GEMINI_LIST_MODELS_URL = "https://generativelanguage.googleapis.com/v1/models"
+
+
+
+def import_zwylib():
+    global zwylib
+
+    try:
+        import zwylib
+    except ImportError:
+        from org.telegram.ui import ChatActivity
+        _BulletinHelper.show_with_button(
+            "ZwyLib required for auto update!",
+            R.raw.chats_infotip,
+            "Install",
+            lambda: get_last_fragment().presentFragment(ChatActivity.of(-2521243181, 48)),
+        )
+
+
+def is_zwylib_present() -> bool:
+    return zwylib is not None
+
+
+class StatsFMClient:
+    def __init__(self):
+        self.session = requests.Session()
+        self.session.headers.update({
+            'User-Agent': 'lrcfy-plugin/1.0 (https://github.com/yourusername/lrcfy)',
+            'Accept': 'application/json'
+        })
+        self.base_url = "https://api.stats.fm/api/v1"
+    
+    def _extract_username(self, username_or_url):
+        """Extract username from URL or return as is"""
+        if not username_or_url:
+            return None
+            
+        if 'stats.fm' in username_or_url:
+            clean_url = username_or_url.split('?')[0]
+            parts = [p for p in clean_url.split('/') if p]
+            if parts:
+                return parts[-1]
+        return username_or_url
+    
+    def get_now_playing(self, username_or_url):
+        """Get the currently playing track from Stats.fm
+        
+        Returns:
+            dict: Track info if playing, None otherwise
+            {
+                'title': str,
+                'artists': list[str],
+                'album_art': str,
+                'duration_ms': int,
+                'progress_ms': int,
+                'spotify_id': str,
+                'spotify_url': str,
+                'album_url': str,
+                'device_name': str
+            }
+        """
+        username = self._extract_username(username_or_url)
+        if not username:
+            return None
+            
+        try:
+            response = self.session.get(
+                f"{self.base_url}/users/{username}/streams/current",
+                timeout=10
+            )
+            
+            if response.status_code == 204:
+                return None
+                
+            if response.status_code != 200:
+                return None
+                
+            data = response.json()
+            if not data or 'item' not in data or 'track' not in data['item']:
+                log("[STATS.FM] Invalid response format")
+                return None
+                
+            track = data['item']['track']
+            progress_ms = data.get('progressMs', 0)
+            device_name = data.get('deviceName', 'Unknown Device')
+            
+            album_url = None
+            if 'albums' in track and track['albums']:
+                album = track['albums'][0]
+                album_id = album.get('externalIds', {}).get('spotify', [None])[0]
+                if album_id:
+                    album_url = f"https://open.spotify.com/album/{album_id}"
+            
+            spotify_id = None
+            if 'externalIds' in track and 'spotify' in track['externalIds'] and track['externalIds']['spotify']:
+                spotify_id = track['externalIds']['spotify'][0]
+            
+            track_info = {
+                'title': track.get('name', 'Unknown Track'),
+                'artists': [artist.get('name', 'Unknown Artist') for artist in track.get('artists', [])],
+                'album_art': track.get('albums', [{}])[0].get('image', '') if track.get('albums') else '',
+                'duration_ms': track.get('durationMs', 0),
+                'progress_ms': progress_ms,
+                'spotify_id': spotify_id,
+                'spotify_url': f"https://open.spotify.com/track/{spotify_id}" if spotify_id else None,
+                'album_url': album_url,
+                'device_name': device_name
+            }
+            
+            return track_info
+            
+        except (requests.exceptions.RequestException, Exception):
+            return None
+
+
+class LastFMClient:
+    def __init__(self, api_key):
+        self.api_key = api_key
+        self.session = requests.Session()
+        self.session.headers.update({
+            'User-Agent': 'lrcfy-plugin/1.0 (https://github.com/yourusername/lrcfy)'
+        })
+        
+    def _make_request(self, params, max_retries=3):
+        """Make a request to Last.fm API with retry logic"""
+        last_error = None
+        
+        for attempt in range(max_retries):
+            try:
+                response = self.session.get(
+                    LASTFM_API_URL,
+                    params=params,
+                    timeout=10,
+                    headers={'Cache-Control': 'no-cache'}
+                )
+                
+               
+                if 'X-Ratelimit-Remaining' in response.headers:
+                    remaining = response.headers['X-Ratelimit-Remaining']
+                    log(f"[LASTFM] Rate limit remaining: {remaining}")
+                
+                response.raise_for_status()
+                return response.json()
+                
+            except requests.exceptions.HTTPError as e:
+                status_code = e.response.status_code if hasattr(e, 'response') else 'unknown'
+                last_error = f"HTTP {status_code}: {str(e)}"
+                
+                if status_code == 429: 
+                    retry_after = int(e.response.headers.get('Retry-After', 5))
+                    log(f"[LASTFM] Rate limited. Waiting {retry_after} seconds...")
+                    time.sleep(retry_after)
+                    continue
+                    
+                if status_code >= 500: 
+                    wait_time = (attempt + 1) * 2 
+                    log(f"[LASTFM] Server error, retrying in {wait_time} seconds...")
+                    time.sleep(wait_time)
+                    continue
+                    
+                log(f"[LASTFM] HTTP Error: {last_error}")
+                return None
+                
+            except (requests.exceptions.RequestException, json.JSONDecodeError) as e:
+                last_error = str(e)
+                log(f"[LASTFM] Request failed (attempt {attempt + 1}/{max_retries}): {last_error}")
+                if attempt < max_retries - 1:
+                    time.sleep(1) 
+                
+        return None
+    
+    def get_track_info(self, artist, track):
+        """Get detailed track info including external URLs"""
+        if not self.api_key:
+            return None
+            
+        params = {
+            'method': 'track.getInfo',
+            'artist': artist,
+            'track': track,
+            'autocorrect': 1,
+            'api_key': self.api_key,
+            'format': 'json'
+        }
+        
+        data = self._make_request(params)
+        if not data or 'track' not in data:
+            return None
+            
+        track_info = data['track']
+        
+        if 'external_urls' in track_info and track_info['external_urls']:
+            for url in track_info['external_urls']:
+                if 'spotify' in url.lower():
+                    return url
+        
+        if 'external_ids' in track_info and track_info['external_ids']:
+            if 'isrc' in track_info['external_ids']:
+                isrc = track_info['external_ids']['isrc']
+                return f"https://open.spotify.com/search/isrc:{isrc}"
+        
+        if 'mbid' in track_info and track_info['mbid']:
+            mbid = track_info['mbid']
+            return f"https://open.spotify.com/search/upc:{mbid}"
+            
+        search_query = f"{track} {artist}".replace(' ', '+')
+        return f"https://open.spotify.com/search/{search_query}"
+        
+    def get_now_playing(self, username):
+        """Get the currently playing track from Last.fm"""
+        if not self.api_key:
+            log("[LASTFM] No API key provided")
+            return None
+            
+        if not username:
+            log("[LASTFM] No username provided")
+            return None
+            
+        log(f"[LASTFM] Fetching now playing for user: {username}")
+        
+        params = {
+            'method': 'user.getrecenttracks',
+            'user': username,
+            'limit': 1,
+            'api_key': self.api_key,
+            'format': 'json'
+        }
+        
+        data = self._make_request(params)
+        if not data or 'recenttracks' not in data:
+            return None
+            
+        try:
+            recent_tracks = data.get('recenttracks', {}).get('track', [])
+            if not recent_tracks:
+                return None
+                
+            current_track = recent_tracks[0]
+            if '@attr' not in current_track or current_track['@attr'].get('nowplaying') != 'true':
+                return None
+            
+            artist = current_track.get('artist', {}).get('#text', '').strip()
+            track_title = current_track.get('name', '').strip()
+            album = current_track.get('album', {}).get('#text', '').strip()
+            
+            track_info = {
+                'title': track_title,
+                'artist': artist,
+                'album': album,
+                'spotify_url': None
+            }
+            
+            if artist and track_title:
+                try:
+                    spotify_url = self.get_track_info(artist, track_title)
+                    if spotify_url:
+                        track_info['spotify_url'] = spotify_url
+                    elif ' - ' in track_title:
+                        base_title = track_title.split(' - ')[0].strip()
+                        spotify_url = self.get_track_info(artist, base_title)
+                        if spotify_url:
+                            track_info['spotify_url'] = spotify_url
+                except Exception:
+                    pass
+            
+            return track_info
+            
+        except Exception as e:
+            log(f"[LASTFM] Error processing track data: {str(e)}")
+            return None
+
+class GeniusClient:
+    def __init__(self, api_token=''):
+        self.base_url = "https://api.genius.com"
+        self.api_token = api_token
+        self._update_headers()
+        
+    def _update_headers(self):
+        """Update headers with current API token"""
+        self.headers = {
+            'Authorization': f'Bearer {self.api_token}' if self.api_token else '',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'application/json'
+        }
+        
+    def set_api_token(self, api_token):
+        """Update the API token and refresh headers"""
+        self.api_token = api_token
+        self._update_headers()
+        
+    def search_song(self, query, limit=20):
+        """Search for songs on Genius
+        
+        Args:
+            query: Search query
+            limit: Maximum number of results to return (default: 20)
+            
+        Returns:
+            list: List of song results (up to limit) or empty list if no results or error
+        """
+        if not self.api_token:
+            log("[GENIUS] No API token provided")
+            return []
+            
+        try:
+            search_url = f"{self.base_url}/search"
+            params = {'q': query}
+            log(f"[GENIUS] Searching: {search_url}?q={query}")
+            
+            response = requests.get(
+                search_url,
+                params=params,
+                headers=self.headers,
+                timeout=10
+            )
+            
+            log(f"[GENIUS] Response status: {response.status_code}")
+            
+            if response.status_code != 200:
+                log(f"[GENIUS] API error: {response.status_code}")
+                return []
+            
+            data = response.json()
+            
+            if not data or not data.get('response') or not data['response'].get('hits'):
+                log("[GENIUS] No search results found")
+                return []
+                
+            hits = data['response']['hits']
+            log(f"[GENIUS] Found {len(hits)} results")
+            
+            if not hits:
+                return []
+                
+            results = []
+            for hit in hits:
+                if not hit.get('result'):
+                    continue
+                    
+                result = hit['result']
+                title = result.get('title', '').lower()
+                artist = result.get('primary_artist', {}).get('name', '').lower()
+                
+                score = 0
+                
+                query_terms = query.lower().split()
+                title_terms = title.split()
+                artist_terms = artist.split()
+                
+                title_match = sum(1 for term in query_terms if term in title) / max(1, len(query_terms))
+                artist_match = sum(1 for term in query_terms if term in artist) / max(1, len(query_terms))
+                
+                score = (title_match * 0.7) + (artist_match * 0.3)
+                
+                results.append((result, score))
+            
+            results.sort(key=lambda x: x[1], reverse=True)
+            
+            top_results = [r[0] for r in results if r[1] > 0.3]  
+            top_results = top_results[:limit]  
+            
+            if top_results:
+                log(f"[GENIUS] Found {len(top_results)} good matches (best score: {results[0][1]:.2f})")
+                return top_results
+                
+            log("[GENIUS] No good matches found")
+            return []
+                
+        except Exception as e:
+            return []
+            
+    def get_lyrics(self, song_id):
+        """Get lyrics using the official Genius API
+        
+        Args:
+            song_id (int): The Genius song ID
+            
+        Returns:
+            str: The lyrics text or None if not found
+        """
+        if not self.api_token:
+            log("[GENIUS] No API token provided")
+            return None
+            
+        try:
+            song_url = f"{self.base_url}/songs/{song_id}"
+            response = requests.get(
+                song_url,
+                headers=self.headers,
+                timeout=10
+            )
+            
+            if response.status_code != 200:
+                log(f"[GENIUS] Failed to get song details: {response.status_code}")
+                return None
+                
+            song_data = response.json()
+            
+            if not song_data or not song_data.get('response') or not song_data['response'].get('song'):
+                log("[GENIUS] Invalid song data in response")
+                return None
+                
+            song = song_data['response']['song']
+            
+            return self.scrape_lyrics(song.get('url'))
+            
+        except Exception as e:
+            log(f"[GENIUS] Error in get_lyrics: {str(e)}")
+            return None
+            
+    def scrape_lyrics(self, song_url):
+        try:
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Referer': 'https://genius.com/',
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            }
+            
+            log(f"[GENIUS] Fetching lyrics from: {song_url}")
+            response = requests.get(song_url, headers=headers, timeout=20)
+            
+            if response.status_code != 200:
+                log(f"[GENIUS] Failed to fetch lyrics page: {response.status_code}")
+                return None
+                
+            from bs4 import BeautifulSoup
+            
+            html_content = response.text
+            
+            html_content = html_content.replace('<br>', '\n').replace('<br/>', '\n').replace('</div>', '\n</div>')
+            
+            soup = BeautifulSoup(html_content, 'html.parser')
+            
+            for script in soup(["script", "style", "iframe", "nav", "footer", "header"]):
+                script.decompose()
+            
+            lyrics_sections = []
+            
+            lyrics_containers = soup.select('div[class*="Lyrics__Container"], div[class*="lyrics"], div[data-lyrics-container]')
+            if lyrics_containers:
+                log(f"[GENIUS] Found {len(lyrics_containers)} standard lyrics containers")
+                for container in lyrics_containers:
+                    for br in container.find_all("br"):
+                        br.replace_with("\n")
+                    text = container.get_text(separator="\n", strip=True)
+                    if text and len(text) > 50:
+                        lyrics_sections.append(text)
+            
+            if not lyrics_sections:
+                log("[GENIUS] Trying to find lyrics in main content")
+                main_content = soup.select_one('main, article, div[role="main"], div[class*="content"], div[class*="lyrics"]')
+                if main_content:
+                    paragraphs = main_content.find_all(['p', 'div'], recursive=True)
+                    for p in paragraphs:
+                        text = p.get_text(separator="\n", strip=True)
+                        if (any(marker in text for marker in ['[', ']', 'Verse', 'Chorus', 'Bridge', 'Hook']) 
+                            and len(text) > 100 and '\n' in text):
+                            lyrics_sections.append(text)
+            
+            if not lyrics_sections:
+                log("[GENIUS] Trying fallback text analysis")
+                all_text = soup.get_text(separator="\n", strip=True)
+                lines = [line.strip() for line in all_text.split('\n') if line.strip()]
+                
+                current_section = []
+                for line in lines:
+                    if (any(marker in line for marker in ['[', ']', 'Verse', 'Chorus', 'Bridge', 'Hook']) 
+                        or (len(line.split()) > 3 and len(line) < 100)):
+                        current_section.append(line)
+                    elif current_section:
+                        if len('\n'.join(current_section)) > 100:
+                            lyrics_sections.append('\n'.join(current_section))
+                        current_section = []
+                
+                if current_section and len('\n'.join(current_section)) > 100:
+                    lyrics_sections.append('\n'.join(current_section))
+            
+            if not lyrics_sections:
+                log("[GENIUS] No lyrics found on page")
+                return None
+                
+            lyrics = '\n\n'.join(lyrics_sections)
+            
+            lyrics = re.sub(r'\s*\[[^\]]+\]\s*', '\n', lyrics)
+            lyrics = re.sub(r'\n{3,}', '\n\n', lyrics)
+            lyrics = re.sub(r'^\s*\n|\s*$', '', lyrics)
+            
+            if not lyrics or len(lyrics.strip()) < 50:  
+                log("[GENIUS] Lyrics found but appear to be too short")
+                return None
+                
+            log(f"[GENIUS] Successfully extracted {len(lyrics)} characters of lyrics")
+            return lyrics.strip()
+            
+        except requests.exceptions.RequestException as e:
+            log(f"[GENIUS] Request error: {str(e)}")
+            return None
+            
+        except Exception as e:
+            log(f"[GENIUS] Error getting lyrics: {str(e)}")
+            return None
+            
+    def _clean_lyrics(self, lyrics):
+        if not lyrics:
+            return None
+        try:
+            log(f"[GENIUS] Cleaning lyrics (length: {len(lyrics)})")
+            lyrics = re.sub(r'&[a-z]+;', '', lyrics)
+            lines = []
+            unwanted_patterns = [
+                r'^\s*\d+\s*contributors?\s*$',
+                r'^translations\s*$',
+                r'^(اردو|हिन्दी|हिंदी|hindi|english|español|espanol|français|francais|русский|русский язык|português|portugues|deutsch|italiano|日本語|한국어|中文|العربية|বাংলা|தமிழ்|తెలుగు|മലയാളം|ગુજરાતી|ਪੰਜਾਬੀ|اردو|हिंदी|हिन्दी)\s*(\([^)]+\))?\s*$',
+                r'^\([^)]+\)\s*$',
+                r'lyrics\s*(from|snippet|this)?\s*$',
+                r'romanization',
+                r'you\s*might\s*also\s*like',
+                r'more\s*on\s*genius',
+                r'embed',
+                r'about\s*genius',
+                r'track\s*info',
+                r'tags?',
+                r'credits?',
+                r'produced\s*by',
+                r'written\s*by',
+                r'release\s*date',
+                r'lyrics\s*powered\s*by',
+                r'album',
+                r'artist',
+                r'\d+\s*genius\s*users?',
+                r'\d+\s*genius\s*contributors?',
+                r'^[\s\d]+$',
+                r'lyrics$',
+            ]
+            unwanted_regex = re.compile('|'.join(unwanted_patterns), re.IGNORECASE | re.UNICODE)
+            for line in lyrics.split('\n'):
+                line_stripped = line.strip()
+                if line_stripped and len(line_stripped) < 80 and unwanted_regex.match(line_stripped):
+                    log(f"[GENIUS CLEAN] Removing line: {repr(line_stripped)}")
+                    continue
+                lines.append(line)
+            cleaned = '\n'.join(lines)
+            cleaned = re.sub(r'\n{3,}', '\n\n', cleaned)
+            cleaned = cleaned.strip()
+            log(f"[GENIUS] Cleaned lyrics length: {len(cleaned)}")
+            if not cleaned or len(cleaned) < 20:
+                log("[GENIUS] Lyrics too short after cleaning")
+                return None
+            return cleaned
+        except Exception:
+            return None  
+
+
+class SpotifyClient:
+    def __init__(self, client_id, client_secret, refresh_token):
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.refresh_token = refresh_token
+        self.access_token = None
+        self.token_expiry = 0
+        self.session = requests.Session()
+        self.session.headers.update({
+            'User-Agent': 'lrcfy-plugin/1.0 (https://github.com/yourusername/lrcfy)',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        })
+    
+    def _refresh_token(self):
+        """Refresh the Spotify access token using the refresh token"""
+        try:
+            if time.time() < self.token_expiry - 60:  
+                return True
+                
+            auth_string = f"{self.client_id}:{self.client_secret}"
+            auth_bytes = auth_string.encode('utf-8')
+            auth_b64 = base64.b64encode(auth_bytes).decode('utf-8')
+            
+            response = self.session.post(
+                'https://accounts.spotify.com/api/token',
+                data={
+                    'grant_type': 'refresh_token',
+                    'refresh_token': self.refresh_token
+                },
+                headers={
+                    'Authorization': f'Basic {auth_b64}'
+                },
+                timeout=10
+            )
+            
+            response.raise_for_status()
+            data = response.json()
+            
+            self.access_token = data['access_token']
+            self.token_expiry = time.time() + data['expires_in']
+            
+            self.session.headers.update({
+                'Authorization': f'Bearer {self.access_token}'
+            })
+            
+            return True
+            
+        except Exception as e:
+            log(f"[SPOTIFY] Error refreshing token: {str(e)}")
+            return False
+    
+    def get_now_playing(self):
+        """Get the currently playing track from Spotify
+        
+        Returns:
+            dict: Track info if playing, None otherwise
+            {
+                'title': str,
+                'artists': list[str],
+                'album_art': str,
+                'duration_ms': int,
+                'progress_ms': int,
+                'spotify_id': str,
+                'spotify_url': str,
+                'album_url': str
+            }
+        """
+        if not self._refresh_token():
+            log("[SPOTIFY] Failed to refresh access token")
+            return None
+            
+        try:
+            log("[SPOTIFY] Fetching currently playing track...")
+            response = self.session.get(
+                'https://api.spotify.com/v1/me/player/currently-playing',
+                timeout=10
+            )
+            
+            if response.status_code == 204:
+                log("[SPOTIFY] No track currently playing")
+                return None  
+                
+            response.raise_for_status()
+            data = response.json()
+            
+            if not data or 'item' not in data:
+                log("[SPOTIFY] No track data in response")
+                return None
+                
+            track = data['item']
+            track_title = track.get('name', 'Unknown Track')
+            artists = [artist.get('name', 'Unknown Artist') for artist in track.get('artists', [])]
+            artist_names = ", ".join(artists)
+            
+            log(f"[SPOTIFY] Now playing: {track_title} by {artist_names}")
+            
+            track_info = {
+                'title': track_title,
+                'artists': artists,
+                'album_art': track.get('album', {}).get('images', [{}])[0].get('url', ''),
+                'duration_ms': track.get('duration_ms', 0),
+                'progress_ms': data.get('progress_ms', 0),
+                'spotify_id': track.get('id', ''),
+                'spotify_url': track.get('external_urls', {}).get('spotify', ''),
+                'album_url': track.get('album', {}).get('external_urls', {}).get('spotify', '')
+            }
+            
+            return track_info
+            
+        except Exception as e:
+            log(f"[SPOTIFY] Error getting now playing: {str(e)}")
+            return None
+
+
+class LRCLibLyricsPlugin(BasePlugin):
+
+    def __init__(self):
+        super().__init__()
+        self.genius_client = GeniusClient(self.get_setting('genius_api_token', ''))
+        self.genius = self.genius_client
+        self.statsfm_client = StatsFMClient()
+        self.lastfm = None
+        self.loading_dialog = None
+        
+        self.set_setting('preferred_source_index', 0)  
+        self.set_setting('preferred_source', 'auto')   
+        
+        self.spotify_url_pattern = re.compile(r'open\.spotify\.com/track/([a-zA-Z0-9]+)')
+        self.spotify_uri_pattern = re.compile(r'spotify:track:([a-zA-Z0-9]+)')
+        self.songlink_pattern = re.compile(r'song\.link/s/([a-zA-Z0-9]+)')
+        
+        self._init_with_delay()
+    
+    def _init_with_delay(self):
+        def delayed_init():
+            import time
+            time.sleep(1)
+            
+            self._load_settings()
+            self._init_lastfm()
+            
+        threading.Thread(target=delayed_init, daemon=True).start()
+    
+    def _load_settings(self):
+        try:
+            settings_to_init = [
+                'lastfm_api_key',
+                'lastfm_username',
+                'genius_api_token',
+                'spotify_client_id',
+                'spotify_client_secret',
+                'enable_transliteration',
+                'gemini_api_key',
+                'preferred_source_index',
+                'preferred_source'
+            ]
+            
+            for setting in settings_to_init:
+                self.get_setting(setting, '')  
+                
+            genius_token = self.get_setting('genius_api_token', '').strip()
+            log(f"[SETTINGS] Loading Genius token: {'*' * 8 + genius_token[-4:] if genius_token else 'not set'}")
+            if genius_token:
+                self.genius_client.set_api_token(genius_token)
+                if not self.genius_client.api_token:
+                    log("[SETTINGS] WARNING: Failed to set Genius API token")
+                else:
+                    log("[SETTINGS] Successfully updated Genius client with API token")
+            else:
+                log("[SETTINGS] No Genius API token found in settings")
+                
+            log("[SETTINGS] All settings loaded successfully")
+            
+        except Exception as e:
+            log(f"[ERROR] Error loading settings: {str(e)}")
+            import traceback
+            log(f"[ERROR] {traceback.format_exc()}")
+    
+    def _init_lastfm(self):
+        try:
+            api_key = self.get_setting('lastfm_api_key', '').strip()
+            username = self.get_setting('lastfm_username', '').strip()
+            
+            log(f"[DEBUG] Initializing LastFM client. API Key: {'set' if api_key else 'not set'}, Username: {username}")
+            
+            if not api_key:
+                log("[DEBUG] No API key set, LastFM client not initialized")
+                self.lastfm = None
+                return
+                
+            self.lastfm = LastFMClient(api_key)
+            log("[DEBUG] LastFM client initialized successfully")
+            
+            if username:
+                try:
+                    track = self.lastfm.get_now_playing(username)
+                    log(f"[DEBUG] LastFM API test successful. Now playing: {track['title'] if track else 'nothing'}")
+                    return True
+                except Exception as e:
+                    log(f"[WARNING] LastFM API test failed: {str(e)}")
+            return True
+                    
+        except Exception as e:
+            log(f"[ERROR] Error initializing LastFM client: {str(e)}")
+            self.lastfm = None
+            return False
+    
+    def _show_help_dialog(self, view):
+        try:
+            fragment = get_last_fragment()
+            if not fragment or not hasattr(fragment, 'getParentActivity'):
+                return
+                
+            help_text = (
+                "To get your Last.fm API key:\n\n"
+                "1. Go to https://www.last.fm/api/account/create\n"
+                "2. Log in to your Last.fm account (or create one if needed)\n"
+                "3. Fill in the application details:\n"
+                "   • Application name: LRCLyrics Plugin\n"
+                "   • Application description: For fetching scrobbles and music data\n"
+                "   • Homepage URL: https://github.com/yourusername/lrclyrics\n"
+                "   • Callback URL: https://example.com/callback\n\n"
+                "4. Accept the terms and click 'Submit'\n"
+                "5. Copy your API Key from the next page and paste it above\n\n"
+                "Note: The API key is stored locally and only used to fetch your scrobbles."
+            )
+            
+            def open_lastfm_site(dialog, which):
+                from android.content import Intent
+                from android.net import Uri
+                try:
+                    intent = Intent(Intent.ACTION_VIEW)
+                    intent.setData(Uri.parse("https://www.last.fm/api/account/create"))
+                    fragment.getParentActivity().startActivity(intent)
+                except Exception as e:
+                    log(f"[ERROR] Failed to open Last.fm: {str(e)}")
+            
+            builder = AlertDialogBuilder(fragment.getParentActivity(), AlertDialogBuilder.ALERT_TYPE_MESSAGE)
+            builder.set_title("Help Center")
+            builder.set_message(help_text)
+            builder.set_positive_button("OK", None)
+            builder.set_negative_button("Create Now", open_lastfm_site)
+            builder.show()
+        except Exception as e:
+            log(f"[ERROR] Error showing Last.fm help: {str(e)}")
+            
+    def _show_spotify_help_dialog(self, view):
+        try:
+            fragment = get_last_fragment()
+            if not fragment or not hasattr(fragment, 'getParentActivity'):
+                return
+                
+            ctx = fragment.getParentActivity()
+            if not ctx:
+                return
+                
+            builder = AlertDialogBuilder(ctx, AlertDialogBuilder.ALERT_TYPE_MESSAGE)
+            builder.set_title("Help Center")
+            
+            message = (
+                "Step 1: Create a Spotify Developer Application\n"
+                "1. Go to https://developer.spotify.com/dashboard/\n"
+                "2. Log in with your Spotify account\n"
+                "3. Click 'Create App'\n"
+                "4. Fill in the form:\n"
+                "   • App Name: LRCfy (or any name)\n"
+                "   • App Description: For personal use with LRCfy plugin\n"
+                "   • Website: https://example.com (can be any URL)\n"
+                "   • Redirect URI: http://localhost:8888/callback\n"
+                "   • Check the terms box and click 'Save'\n\n"
+                "Step 2: Get Your API Credentials\n"
+                "1. After creating the app, note down your 'Client ID'\n"
+                "2. Click 'Show Client Secret' and note it down\n"
+                "3. Click 'Edit Settings' and ensure 'http://localhost:8888/callback' is added under 'Redirect URIs'\n"
+                "4. Click 'Save'\n\n"
+                "Step 3: Get Your Refresh Token\n"
+                "1. Open this URL in your browser (replace CLIENT_ID with your actual Client ID):\n"
+                "https://accounts.spotify.com/authorize?client_id=CLIENT_ID&response_type=code&redirect_uri=http://localhost:8888/callback&scope=user-read-currently-playing,user-read-playback-state\n\n"
+                "2. After authorizing, you'll be redirected to a localhost URL (it will show an error, that's normal)\n"
+                "3. Copy the entire URL from the address bar (it contains a 'code' parameter)\n\n"
+                "Step 4: Final Setup\n"
+                "1. Enter your Client ID and Client Secret in the settings above\n"
+                "2. Paste the entire callback URL when prompted\n"
+                "3. The plugin will automatically extract the refresh token\n\n"
+                "Troubleshooting:\n"
+                "• Make sure you've added the redirect URI exactly as shown\n"
+                "• If you get an 'invalid client' error, double-check your Client ID and Secret"
+            )
+            
+            builder.set_message(message)
+            builder.set_positive_button("OK", None)
+            
+            def open_spotify_dev():
+                from android.content import Intent
+                from android.net import Uri
+                try:
+                    intent = Intent(Intent.ACTION_VIEW)
+                    intent.setData(Uri.parse("https://developer.spotify.com/dashboard/"))
+                    fragment.getParentActivity().startActivity(intent)
+                except Exception as e:
+                    log(f"[ERROR] Failed to open Spotify Developer: {str(e)}")
+            
+            builder.set_negative_button("Create Now", lambda d, w: open_spotify_dev())
+            builder.show()
+        except Exception as e:
+            log(f"[ERROR] Error showing Spotify help: {str(e)}")
+            
+    def _show_genius_help_dialog(self, view):
+        try:
+            fragment = get_last_fragment()
+            if not fragment or not hasattr(fragment, 'getParentActivity'):
+                return
+                
+            ctx = fragment.getParentActivity()
+            if not ctx:
+                return
+                
+            builder = AlertDialogBuilder(ctx, AlertDialogBuilder.ALERT_TYPE_MESSAGE)
+            builder.set_title("Help Center")
+            
+            message = (
+                "Step 1: Go to https://genius.com/api-clients\n"
+                "   • If you don't have an account, click 'Sign Up' and create one\n\n"
+                "Step 2: Click 'New API Client' button\n"
+                "   • This will open a form to register a new application\n\n"
+                "Step 3: Fill in the application details\n"
+                "   • App Name: 'LRCFY Lyrics' (or any name you prefer)\n"
+                "   • App Website URL: https://github.com/yourusername/lrcfy\n"
+                "   • Redirect URI: https://localhost (or any valid URL)\n"
+                "   • App Description: 'For personal use with LRCFY lyrics plugin'\n\n"
+                "Step 4: Accept the API Terms of Service\n"
+                "   • Check the box to agree to the terms\n\n"
+                "Step 5: Copy your API Token\n"
+                "   • After creating the app, find the 'Client Access Token'\n"
+                "   • Click the copy button next to it\n\n"
+                "Step 6: Paste the token in the settings\n"
+                "   • Return to this app and paste the token in the 'Genius API Token' field\n\n"
+                "Having trouble?\n"
+                "• Make sure you're logged in to your Genius account\n"
+                "• The token should start with 'Bearer ' followed by random characters\n"
+                "• If you lose your token, you can always generate a new one"
+            )
+            
+            builder.set_message(message)
+            builder.set_positive_button("OK", None)
+            
+            def open_genius_site(dialog, which):
+                try:
+                    from android.content import Intent
+                    from android.net import Uri
+                    intent = Intent(Intent.ACTION_VIEW)
+                    intent.setData(Uri.parse("https://genius.com/api-clients"))
+                    fragment.getParentActivity().startActivity(intent)
+                except Exception as e:
+                    log(f"[ERROR] Failed to open Genius: {str(e)}")
+            
+            builder.set_negative_button("Open Website", open_genius_site)
+            builder.show()
+        except Exception as e:
+            log(f"[ERROR] Error showing Genius help: {str(e)}")
+    
+    def create_settings(self):
+        from ui.settings import Text, Header, Input, Switch, Selector, Divider
+        
+
+        source_index = self.get_setting('preferred_source_index', 0)
+        if not isinstance(source_index, int) or source_index < 0 or source_index > 3:   
+            source_index = 0
+            self.set_setting('preferred_source_index', source_index)
+            self.set_setting('preferred_source', 'auto')
+            
+        spotify_client_id = self.get_setting('spotify_client_id', '')
+        spotify_client_secret = self.get_setting('spotify_client_secret', '')
+        
+        settings = [
+            Divider(text="Lyrics Source"),
+            Selector(
+                key="preferred_source_index",
+                text="Lyrics Source",
+                default=self.get_setting('preferred_source_index', 0),
+                items=["Auto (Recommended)", "LRCLIB", "Genius"],
+                icon="msg_channel_14_solar",
+                on_change=lambda key, value: self._on_source_changed(value)
+            ),
+            
+            *(
+                [
+                    Input(
+                        key="genius_api_token",
+                        text="Genius API Token",
+                        default=self.get_setting('genius_api_token', ''),
+                        icon="msg_secret",
+                        on_change=lambda key, value: self._on_setting_changed(key, value, callback=self._on_genius_api_token_changed)
+                    ),
+                    Text(
+                        text="Get Genius API Token",
+                        icon="msg_link",
+                        on_click=lambda view: self._show_genius_help_dialog(view)
+                    )
+                ] if self.get_setting('preferred_source_index', 0) in [0, 2] else []
+            ),
+            Divider(text="Now Playing Source"),
+            Selector(
+                key="now_playing_source",
+                text="Music Source",
+                default=self.get_setting('now_playing_source', 0),
+                items=["Last.fm", "Stats.fm", "Spotify"],
+                icon="menu_feature_reactions_solar",
+                on_change=lambda key, value: self._on_now_playing_source_changed(value)
+            ),
+            *(
+                [
+                    Input(
+                        key="lastfm_api_key",
+                        text="API Key",
+                        default=self.get_setting('lastfm_api_key', ''),
+                        icon="msg_secret",
+                        on_change=lambda key, value: self._on_setting_changed(key, value)
+                    ),
+                    Input(
+                        key="lastfm_username",
+                        text="Username",
+                        default=self.get_setting('lastfm_username', ''),
+                        icon="menu_username_set_solar",
+                        on_change=lambda key, value: self._on_setting_changed(key, value)
+                    ),
+                    Text(
+                        text="Help center",
+                        icon="msg_link",
+                        on_click=lambda view: self._show_help_dialog(view)
+                    )
+                ] if self.get_setting('now_playing_source', 0) == 0 else []
+            ),
+            *(
+                [
+                    Input(
+                        key="statsfm_username",
+                        text="Username",
+                        default=self.get_setting('statsfm_username', ''),
+                        subtext="psst... make it public or we can't see your music",
+                        icon="menu_username_set_solar",
+                        on_change=lambda key, value: self._on_setting_changed(key, value)
+                    ),
+
+                ] if self.get_setting('now_playing_source', 0) == 1 else []
+            ),
+            *(
+                [
+                    Input(
+                        key="spotify_client_id",
+                        text="Client ID",
+                        default=self.get_setting('spotify_client_id', ''),
+                        icon="msg_link",
+                        on_change=lambda key, value: self._on_setting_changed(key, value)
+                    ),
+                    Input(
+                        key="spotify_client_secret",
+                        text="Client Secret",
+                        default=self.get_setting('spotify_client_secret', ''),
+                        icon="msg_secret",
+                        on_change=lambda key, value: self._on_setting_changed(key, value)
+                    ),
+                    Input(
+                        key="spotify_refresh_token",
+                        text="Refresh Token",
+                        default=self.get_setting('spotify_refresh_token', ''),
+                        icon="msg_secret",
+                        subtext="Get this from Spotify's developer dashboard",
+                        on_change=lambda key, value: self._on_setting_changed(key, value)
+                    ),
+                    Text(
+                        text="Get Spotify Refresh Token",
+                        icon="msg_link",
+                        on_click=lambda view: self._show_spotify_help_dialog(view)
+                    )
+                ] if self.get_setting('now_playing_source', 0) == 2 else []
+            ),
+            Divider(text="Gemini Transliteration"),
+            Switch(
+                key="enable_transliteration",
+                text="Lyrics Transliteration",
+                subtext="Convert lyrics to different writing systems",
+                default=bool(self.get_setting('enable_transliteration', False)),
+                icon="msg_translate_solar",
+                on_change=lambda key, value: self._on_setting_changed(key, value)
+            ),
+        ] + ([
+            Selector(
+                key="transliteration_target_script",
+                text="Target Script",
+                default=self.get_setting('transliteration_target_script', 0),
+                items=[
+                    "Auto (Recommended)",
+                    "Latin (English)",
+                    "Cyrillic (Russian)",
+                    "Hangul (Korean)",
+                    "Hiragana (Japanese)",
+                    "Katakana (Japanese)",
+                    "Devanagari (Hindi)",
+                    "Bengali",
+                    "Tamil",
+                    "Telugu",
+                    "Kannada",
+                    "Malayalam",
+                    "Gujarati",
+                    "Gurmukhi (Punjabi)",
+                    "Arabic",
+                    "Persian",
+                    "Greek",
+                    "Hebrew",
+                    "Thai",
+                    "Vietnamese",
+                    "Chinese (Pinyin)",
+                    "Chinese (Simplified)",
+                    "Chinese (Traditional)",
+                    "Armenian",
+                    "Georgian",
+                    "Mongolian",
+                    "Tibetan",
+                    "Khmer (Cambodian)",
+                    "Lao",
+                    "Myanmar (Burmese)",
+                    "Sinhala (Sinhalese)",
+                    "Odia (Oriya)",
+                    "Assamese",
+                    "Manipuri (Meitei)",
+                    "Nepali",
+                    "Urdu",
+                    "Kashmiri",
+                    "Sindhi",
+                    "Balochi",
+                    "Pashto",
+                    "Kurdish",
+                    "Uyghur",
+                    "Kazakh",
+                    "Kyrgyz",
+                    "Tajik",
+                    "Turkmen",
+                    "Azerbaijani",
+                    "Uzbek",
+                    "Moldovan",
+                    "Romanian",
+                    "Bulgarian",
+                    "Macedonian",
+                    "Serbian",
+                    "Bosnian",
+                    "Croatian",
+                    "Slovenian",
+                    "Slovak",
+                    "Czech",
+                    "Polish",
+                    "Ukrainian",
+                    "Belarusian",
+                    "Latvian",
+                    "Lithuanian",
+                    "Estonian",
+                    "Finnish",
+                    "Hungarian",
+                    "Turkish",
+                    "Icelandic",
+                    "Faroese",
+                    "Norwegian",
+                    "Swedish",
+                    "Danish",
+                    "Dutch",
+                    "German",
+                    "French",
+                    "Italian",
+                    "Spanish",
+                    "Portuguese",
+                    "Catalan",
+                    "Galician",
+                    "Basque",
+                    "Irish",
+                    "Scottish Gaelic",
+                    "Welsh",
+                    "Breton",
+                    "Cornish",
+                    "Manx"
+                ],
+                icon="msg_translate_solar",
+                on_change=lambda key, value: self._on_setting_changed(key, value)
+            ),
+            Input(
+                key="gemini_api_key",
+                text="Gemini API Key",
+                default=self.get_setting('gemini_api_key', ''),
+                icon="msg_link",
+                on_change=lambda key, value: self._on_setting_changed(key, value)
+            )
+        ] if self.get_setting('enable_transliteration', False) else []) + ([
+            Divider(text="Spotify Integration - To fetch lyrics from Spotify links, please enter your Spotify API credentials in the settings below. You only need to set this up once")
+        ] if not all([
+            self.get_setting('spotify_client_id', ''),
+            self.get_setting('spotify_client_secret', ''),
+            self.get_setting('spotify_refresh_token', '')
+        ]) else [])
+        
+        # Add auto-update toggle at the end
+        if is_zwylib_present():
+            settings.append(
+                Switch(
+                    key="enable_autoupdate",
+                    text="Auto-update Plugin",
+                    subtext="Enable or disable automatic plugin updates (requires ZwyLib)",
+                    icon="msg_channel_create",
+                    default=self.get_setting("enable_autoupdate", True),
+                    on_change=self._toggle_autoupdate
+                )
+            )
+        else:
+            settings.append(
+                Switch(
+                    key="enable_autoupdate",
+                    text="Auto-update Plugin (unavailable)",
+                    subtext="ZwyLib is required for auto-update.",
+                    icon="msg_channel_create",
+                    default=False,
+                    on_change=None
+                )
+            )
+        return settings
+    
+    def _on_source_changed(self, index):
+        """Handle changes to the preferred source selector"""
+        try:
+            self.set_setting('preferred_source_index', index)
+            
+            sources = ['auto', 'lrclib', 'genius', 'statsfm']
+            source_name = sources[index] if index < len(sources) else 'auto'
+            self.set_setting('preferred_source', source_name)
+            
+            
+        except Exception as e:
+            log(f"[ERROR] Error in _on_source_changed: {str(e)}")
+            self.set_setting('preferred_source_index', 0)
+            self.set_setting('preferred_source', 'auto')
+        
+    def _open_url(self, url):
+        """Open a URL in the default browser"""
+        try:
+            import webbrowser
+            webbrowser.open(url)
+            return True
+        except Exception as e:
+            log(f"[ERROR] Failed to open URL: {str(e)}")
+            return False
+            
+    def _get_spotify_token(self):
+        """Get Spotify API access token using client credentials flow"""
+        try:
+            client_id = self.get_setting('spotify_client_id', '').strip()
+            client_secret = self.get_setting('spotify_client_secret', '').strip()
+            
+            if not client_id or not client_secret:
+                log("[SPOTIFY] Missing Spotify API credentials")
+                return None
+                
+            token_data = self.get_setting('_spotify_token_data')
+            if token_data and isinstance(token_data, dict):
+                expires_at = token_data.get('expires_at', 0)
+                if isinstance(expires_at, (int, float)) and expires_at > time.time() + 60:  
+                    access_token = token_data.get('access_token')
+                    if access_token:
+                        return access_token
+            
+            log("[SPOTIFY] Requesting new access token...")
+            auth_header = base64.b64encode(f"{client_id}:{client_secret}".encode()).decode()
+            response = requests.post(
+                'https://accounts.spotify.com/api/token',
+                headers={
+                    'Authorization': f'Basic {auth_header}',
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                data={'grant_type': 'client_credentials'},
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                token_data = response.json()
+                if not isinstance(token_data, dict):
+                    log("[SPOTIFY] Invalid token data format received")
+                    return None
+                    
+                token_data['expires_at'] = time.time() + token_data.get('expires_in', 3600) - 60  
+                self.set_setting('_spotify_token_data', token_data)
+                
+                access_token = token_data.get('access_token')
+                if not access_token:
+                    log("[SPOTIFY] No access token in response")
+                    return None
+                    
+                log("[SPOTIFY] Successfully obtained access token")
+                return access_token
+                
+            else:
+                log(f"[SPOTIFY] Failed to get access token: {response.status_code} - {response.text}")
+                self.set_setting('_spotify_token_data', None)
+                return None
+                
+        except requests.exceptions.RequestException as e:
+            log(f"[SPOTIFY] Request failed: {str(e)}")
+            return None
+            
+        except Exception as e:
+            log(f"[SPOTIFY] Error in _get_spotify_token: {str(e)}")
+            log(f"[SPOTIFY] Error type: {type(e).__name__}")
+            import traceback
+            log(f"[SPOTIFY] Stack trace: {traceback.format_exc()}")
+            return None
+    
+    def _on_spotify_toggle_changed(self, enabled):
+        """Handle changes to the Spotify API toggle"""
+        if hasattr(self, 'settings_view') and self.settings_view is not None:
+            self.settings_view.reloadSettings()
+    
+    def _on_now_playing_source_changed(self, value):
+        """Handle changes to the now playing source selector"""
+        self.set_setting('now_playing_source', value)
+        if hasattr(self, 'settings_view') and self.settings_view is not None:
+            self.settings_view.reloadSettings()
+    
+    def _on_setting_changed(self, key, value, callback=None):
+        """Handle setting changes"""
+        self.set_setting(key, value)
+        
+        if callback:
+            callback(value)
+        elif key == 'lastfm_api_key':
+            self._on_lastfm_api_key_changed(value)
+        elif key == 'genius_api_token':
+            self._on_genius_api_token_changed(value)
+            if key == 'lastfm_api_key':
+                if value:
+                    msg = "Last.fm API key updated" + ("" if success else " (but API test failed)")
+                    self._show_toast(msg)
+            elif key == 'lastfm_username' and value:
+                self._show_toast(f"Last.fm username set to {value}")
+                
+        elif key in ('spotify_client_id', 'spotify_client_secret'):
+            self.set_setting('_spotify_token_data', None)
+            log("[SPOTIFY] Cleared cached token due to credential change")
+            
+            if key == 'spotify_client_id' and value:
+                client_secret = self.get_setting('spotify_client_secret', '').strip()
+                if not client_secret:
+                    self._show_toast("Please enter your Spotify Client Secret")
+                else:
+                    token = self._get_spotify_token()
+                    if token:
+                        self._show_toast("Spotify API connected successfully")
+                    else:
+                        self._show_toast("Failed to connect to Spotify API. Check your credentials.")
+    
+    def _on_lastfm_api_key_changed(self, new_key):
+        """Handle Last.fm API key change"""
+        self.lastfm = LastFMClient(new_key) if new_key else None
+        
+    def _on_genius_api_token_changed(self, new_token):
+        """Handle Genius API token change"""
+        new_token = new_token.strip() if new_token else ''
+        log(f"[GENIUS] API token changed: {'*' * 8 + new_token[-4:] if new_token else 'token cleared'}")
+        if new_token and len(new_token) < 10:  
+            log("[GENIUS] WARNING: New token seems too short")
+        
+        if hasattr(self, 'genius_client'):
+            self.genius_client.set_api_token(new_token)
+            log("[GENIUS] Updated existing client with new token")
+        else:
+            self.genius_client = GeniusClient(new_token)
+            self.genius = self.genius_client
+            log("[GENIUS] Created new client with token")
+
+
+
+    def _dismiss_dialog(self):
+        global progress_dialog
+        try:
+            if progress_dialog is not None and progress_dialog.isShowing():
+                progress_dialog.dismiss()
+        except Exception:
+            pass
+        finally:
+            progress_dialog = None
+
+    def on_plugin_load(self):
+        global logger, BulletinHelper
+
+        import_zwylib()
+        if not is_zwylib_present():
+            plugins_controller = PluginsController.getInstance()
+            plugins_controller.setPluginEnabled(__id__, False, None)
+            return
+
+        # Respect the auto-update toggle setting
+        if self.get_setting("enable_autoupdate", True):
+            zwylib.add_autoupdater_task(__id__, AUTOUPDATE_CHANNEL_ID, AUTOUPDATE_CHANNEL_USERNAME, AUTOUPDATE_MSG_ID)
+        else:
+            zwylib.remove_autoupdater_task(__id__)
+
+        logger = zwylib.build_log(LOG_PREFIX)
+        BulletinHelper = zwylib.build_bulletin_helper(LOG_PREFIX)
+
+        log("[DEBUG] on_plugin_load called")
+        self.add_on_send_message_hook()
+
+    def on_plugin_unload(self):
+        if is_zwylib_present():
+            zwylib.remove_autoupdater_task(__id__)
+        log("Unloaded")
+
+    def _is_good_match(self, result, query):
+        """Determine if a search result is a good match"""
+        if not result:
+            return False
+            
+        
+        if 'score' in result:
+            return result['score'] >= 70  
+            
+        
+        title_similarity = self._calculate_similarity(query, result.get('title', ''))
+        artist_similarity = self._calculate_similarity(query, result.get('artist', ''))
+        return (title_similarity * 0.7 + artist_similarity * 0.3) >= 0.7
+        
+    def _search_genius(self, query):
+        """Search for lyrics on Genius using the official API
+        
+        Args:
+            query (str): Search query (song title or artist - title)
+            
+        Returns:
+            dict: Song info with lyrics or None if not found
+        """
+        try:
+            if not self.genius_client.api_token:
+                log("[GENIUS] No API token configured")
+                return None
+                
+            log(f"[GENIUS] Searching for: {query}")
+            
+            results = self.genius_client.search_song(query, limit=5)
+            if not results:
+                log("[GENIUS] No search results found")
+                return None
+                
+            return self._process_genius_results(results, query)
+            
+        except Exception as e:
+            log(f"[GENIUS] Error in _search_genius: {str(e)}")
+            return None
+            
+    def _process_genius_results(self, results, original_query):
+        """Process Genius search results to match genius_lyrics behavior
+        
+        Args:
+            results: List of track results from Genius API
+            original_query: Original search query (unused, kept for compatibility)
+            
+        Returns:
+            dict: Song info with lyrics or None if no results
+        """
+        try:
+            if not results or not results[0]:
+                log("[GENIUS] No valid results to process")
+                return None
+                
+            result = results[0]
+            
+            track_name = result.get('title', '').strip()
+            artist_name = result.get('primary_artist', {}).get('name', '').strip()
+            song_id = result.get('id')
+            url = result.get('url', '')
+            
+            if not all([track_name, artist_name, song_id]):
+                log("[GENIUS] Missing required track information")
+                return None
+                
+            log(f"[GENIUS] Selected track: {track_name} by {artist_name}")
+            
+            lyrics = self.genius_client.get_lyrics(song_id)
+            
+            if not lyrics:
+                log("[GENIUS] No lyrics found for track")
+                return None
+                
+            return {
+                'title': track_name,
+                'artist': artist_name,
+                'lyrics': lyrics,
+                'url': url,
+                'source': 'Genius',
+                'score': 1.0
+            }
+                
+        except Exception as e:
+            log(f"[GENIUS] Error in _process_genius_results: {str(e)}")
+            return None
+            
+    def search_lrclib(self, query):
+        """Search for lyrics on LRCLIB with improved parameter handling"""
+        try:
+            query = query.lower().strip()
+            
+            title = query
+            artist = None
+            
+            patterns = [
+                (r'^(.+?)\s+by\s+(.+?)$', 2, 1),
+                (r'^(.+?)\s+[-~–—]\s+(.+?)$', 1, 2),
+                (r'^(.+?)\s+[|]\s+(.+?)$', 1, 2),
+                (r'^(.+?)\s+//\s+(.+?)$', 1, 2),
+            ]
+            
+            for pattern, artist_idx, title_idx in patterns:
+                match = re.search(pattern, query, re.IGNORECASE)
+                if match:
+                    artist = match.group(artist_idx).strip()
+                    title = match.group(title_idx).strip()
+                    log(f"[LRCLIB] Matched pattern '{pattern}': artist='{artist}', title='{title}'")
+                    break
+            
+            query_variations = []
+            
+            if artist and title:
+                query_variations.append({
+                    'track_name': title,
+                    'artist_name': artist,
+                    'duration': 0
+                })
+            
+            query_variations.append({
+                'track_name': title,
+                'artist_name': '',
+                'duration': 0
+            })
+            
+            if artist:
+                query_variations.append({
+                    'track_name': '',
+                    'artist_name': artist,
+                    'duration': 0
+                })
+                
+            for query_params in query_variations:
+                log(f"[LRCLIB] Searching with params: {query_params}")
+                
+                try:
+                    response = requests.get(
+                        'https://lrclib.net/api/search',
+                        params=query_params,
+                        timeout=10
+                    )
+                    
+                    if response.status_code != 200:
+                        log(f"[LRCLIB] API returned status {response.status_code}")
+                        continue
+                        
+                    results = response.json()
+                    if not isinstance(results, list):
+                        log(f"[LRCLIB] Unexpected response format: {results}")
+                        continue
+                        
+                    if results:
+                        processed = self._process_lrclib_results(results, query)
+                        if processed:
+                            return processed
+                        
+                except Exception as e:
+                    log(f"[LRCLIB] Error during search: {str(e)}")
+                    continue
+            
+            return None
+            
+        except requests.exceptions.RequestException as e:
+            log(f"[LRCLIB] Error: {str(e)}")
+            return None
+        except Exception as e:
+            log(f"[LRCLIB] Error: {str(e)}")
+            return None
+            
+    def _clean_query(self, query):
+        """Clean and prepare query for better search results"""
+        clean = re.sub(r'\s*\([^)]*\)|\[[^]]*\]', '', query)
+        clean = re.sub(r'\s*-\s*(official|lyrics?|video|audio|hq|hd|4k|1080p|720p|full song|with lyrics|lyric video|official video|official audio|official music video|mv|hindi|english|remix|version|from ".*?")', '', clean, flags=re.IGNORECASE)
+        clean = ' '.join(clean.split())
+        return clean.strip()
+    
+    def _generate_query_variations(self, query):
+        """Generate multiple query variations to improve search results"""
+        variations = set()
+        
+        variations.add(query)
+        
+        clean = self._clean_query(query)
+        if clean != query:
+            variations.add(clean)
+        
+        for sep in [' by ', ' - ']:
+            if sep in query:
+                parts = [p.strip() for p in query.split(sep, 1)]
+                if len(parts) == 2:
+                    variations.add(f"{parts[1]} {parts[0]}")
+                    variations.add(parts[0])
+                    variations.add(parts[1])
+        
+        if not query.isascii():
+            try:
+                translit_map = {
+                    'ghodey': 'ghode',
+                    'sawaar': 'sawar',
+                    'pe': 'pe',
+                    'qala': 'qaala',
+                }
+                
+                translit = query.lower()
+                for orig, trans in translit_map.items():
+                    translit = translit.replace(orig, trans)
+                
+                if translit != query.lower():
+                    variations.add(translit)
+            except Exception as e:
+                log(f"Transliteration error: {str(e)}")
+        
+        return [q for q in variations if q.strip()]
+    
+    def search_lyrics(self, query):
+        """Search for lyrics using the selected source"""
+        source_index = self.get_setting('preferred_source_index', 0)
+        sources = ['auto', 'lrclib', 'genius']
+        source = sources[source_index] if 0 <= source_index < len(sources) else 'auto'
+        
+        clean_query = ' '.join(query.strip().split())
+        
+        query_variations = []
+        
+        if ' by ' in clean_query.lower() or ' - ' in clean_query:
+            if ' - ' in clean_query:
+                parts = [p.strip() for p in clean_query.split(' - ', 1)]
+                if len(parts) == 2:
+                    artist, title = parts
+                    query_variations.append(f"{artist} - {title}")
+                    query_variations.append(f"{title} by {artist}")
+                    query_variations.append(title)
+                    query_variations.append(artist)
+            
+            if ' by ' in clean_query.lower():
+                parts = [p.strip() for p in clean_query.split(' by ', 1)]
+                if len(parts) == 2:
+                    title, artist = parts
+                    query_variations.append(f"{artist} - {title}")
+                    query_variations.append(f"{title} by {artist}")
+                    query_variations.append(title)
+                    query_variations.append(artist)
+        
+        if not query_variations:
+            query_variations = [clean_query]
+        
+        seen = set()
+        query_variations = [q for q in query_variations if not (q in seen or seen.add(q))]
+        
+        seen = set()
+        query_variations = [q for q in query_variations if not (q in seen or seen.add(q))]
+        
+        log(f"[SEARCH] Trying query variations: {query_variations}")
+        
+        if source != 'auto':
+            for q in query_variations:
+                if source == 'genius':
+                    result = self._search_genius(q)
+                    if result:
+                        return result
+                
+                elif source == 'lrclib':
+                    result = self.search_lrclib(q)
+                    if result:
+                        return result
+            
+            log(f"[SEARCH] No results found from {source} after trying all query variations")
+            return None
+        
+        for q in query_variations:
+            genius_result = self._search_genius(q)
+            if genius_result:
+                log("[SEARCH] Found results from Genius")
+                return genius_result
+        
+        for q in query_variations:
+            lrclib_result = self.search_lrclib(q)
+            if lrclib_result:
+                log("[SEARCH] Found results from LRCLIB")
+                return lrclib_result
+                
+        log("[SEARCH] No results found from any source after trying all query variations")
+        return None
+
+    def _normalize_text(self, text):
+        """Normalize text for better matching"""
+        if not text:
+            return ''
+        text = text.lower().strip()
+        text = re.sub(r'[^\w\s-]', '', text)
+        text = re.sub(r'\s+', ' ', text)
+        text = re.sub(r'^\s*(official\s*(lyric\s*)?(video|audio|lyrics?|music\s*video|hd|hq|4k|1080p|720p)?\s*[\-:]?\s*|lyrics?\s*[\-:]?\s*|video\s*[\-:]?\s*|audio\s*[\-:]?\s*|hd\s*[\-:]?\s*|hq\s*[\-:]?\s*|4k\s*[\-:]?\s*|1080p\s*[\-:]?\s*|720p\s*[\-:]?\s*)+', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'\s+', ' ', text).strip()
+        return text
+        
+    def _extract_artist_title(self, query):
+        """Extract artist and title from query using common patterns"""
+        patterns = [
+            (r'^(.+?)\s+[-~–—]\s+(.+)$', 2, 1),
+            (r'^(.+?)\s+by\s+(.+)$', 1, 2),
+            (r'^(.+?)\s*\|\s*(.+)$', 1, 2),
+            (r'^(.+?)\s*[:]\s*(.+)$', 2, 1),
+            (r'^(.+?)\s*\(feat[.]?\s*(.+?)\)', 1, 2),
+            (r'^(.+?)\s+[-~–—]\s+(.+?)(?:\s+\([^)]+\))?$', 2, 1),
+        ]
+        
+        query = self._normalize_text(query)
+        
+        for pattern, title_idx, artist_idx in patterns:
+            match = re.match(pattern, query, re.IGNORECASE)
+            if match and len(match.groups()) >= max(title_idx, artist_idx):
+                title = match.group(title_idx).strip()
+                artist = match.group(artist_idx).strip()
+                if title and artist:
+                    return title, artist
+        
+        return query, ''
+    
+    def _calculate_similarity(self, str1, str2):
+        """Calculate similarity between two strings (0-1)"""
+        if not str1 or not str2:
+            return 0.0
+            
+        str1 = self._normalize_text(str1)
+        str2 = self._normalize_text(str2)
+        
+        if str1 == str2:
+            return 1.0
+            
+        words1 = set(re.findall(r'\w+', str1))
+        words2 = set(re.findall(r'\w+', str2))
+        
+        if not words1 or not words2:
+            return 0.0
+            
+        intersection = words1.intersection(words2)
+        union = words1.union(words2)
+        
+        return len(intersection) / len(union) if union else 0.0
+    
+    def _calculate_match_score(self, query, track_name, artist_name, search_title, search_artist):
+        """Calculate a match score between search query and track info
+        
+        Args:
+            query: Original search query
+            track_name: Track name from search result
+            artist_name: Artist name from search result
+            search_title: Extracted title from search query
+            search_artist: Extracted artist from search query
+            
+        Returns:
+            float: Match score between 0.0 and 1.0
+        """
+        norm_track = self._normalize_text(track_name)
+        norm_artist = self._normalize_text(artist_name)
+        norm_title = self._normalize_text(search_title)
+        norm_artist_query = self._normalize_text(search_artist) if search_artist else ''
+        
+        if norm_title == norm_track and (not search_artist or norm_artist_query == norm_artist):
+            return 1.0
+            
+        title_sim = self._calculate_similarity(norm_title, norm_track)
+        artist_sim = self._calculate_similarity(norm_artist_query, norm_artist) if search_artist else 1.0
+        
+        score = (title_sim * 0.7) + (artist_sim * 0.3)
+        
+        full_query = f"{norm_artist} {norm_track}".lower()
+        if self._normalize_text(query).lower() in full_query:
+            score = min(1.0, score + 0.2)
+            
+        return score
+    
+    def _clean_lyrics(self, lyrics):
+        """Clean up lyrics by removing timestamps and extra whitespace"""
+        if not lyrics:
+            return lyrics
+            
+        lyrics = re.sub(r'\[\d{0,2}:\d{2}(?:\.\d+)?\]', '', lyrics)
+        return '\n'.join(line.strip() for line in lyrics.split('\n') if line.strip())
+        
+    def _is_lyrics_complete(self, lyrics):
+        """Check if the lyrics appear to be complete"""
+        if not lyrics:
+            return False
+            
+        endings = [
+            'thank you for listening',
+            'thanks for listening',
+            'repeat',
+            'x2',
+            'x3',
+            'x4',
+            'outro',
+            'fade out',
+            'end',
+            'repeat chorus',
+            'repeat verse',
+        ]
+        
+        last_lines = '\n'.join(lyrics.split('\n')[-3:]).lower()
+        return any(ending in last_lines for ending in endings)
+
+    def _fetch_full_lyrics(self, song_id):
+        """Fetch full lyrics for a song by ID from LRCLib"""
+        try:
+            response = requests.get(
+                f'https://lrclib.net/api/get/{song_id}',
+                timeout=15
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                return data.get('syncedLyrics') or data.get('plainLyrics')
+        except Exception as e:
+            log(f"[LRCLIB] Error fetching full lyrics: {str(e)}")
+        return None
+
+    def _process_lrclib_results(self, results, original_query, limit=20):
+        """Process and score LRCLIB search results with flexible matching
+        
+        Args:
+            results: List of track results from LRCLIB API
+            original_query: Original search query string
+            limit: Maximum number of results to consider (default: 20)
+            
+        Returns:
+            dict: Best matching track with lyrics, or None if no good match found
+        """
+        if not results or not original_query:
+            return None
+            
+        search_title, search_artist = self._extract_artist_title(original_query)
+        scored_results = []
+        
+        log(f"[LRCLIB] Processing {min(len(results), limit)} results for: '{search_title}' by '{search_artist or 'any artist'}")
+        
+        norm_search_title = self._normalize_text(search_title).lower()
+        norm_search_artist = self._normalize_text(search_artist).lower() if search_artist else ''
+        
+        for result in results[:limit]:
+            track_name = result.get('trackName', '').strip()
+            artist_name = result.get('artistName', '').strip()
+            song_id = result.get('id')
+            
+            lyrics = result.get('syncedLyrics') or result.get('plainLyrics')
+            
+            if not lyrics or not self._is_lyrics_complete(lyrics):
+                if song_id:
+                    log(f"[LRCLIB] Lyrics seem incomplete, fetching full version for {track_name}")
+                    full_lyrics = self._fetch_full_lyrics(song_id)
+                    if full_lyrics:
+                        lyrics = full_lyrics
+                
+                if not lyrics:
+                    continue
+                
+            scored_result = result.copy()
+                
+            norm_track = self._normalize_text(track_name).lower()
+            norm_artist = self._normalize_text(artist_name).lower()
+            
+            title_score = self._calculate_similarity(norm_search_title, norm_track)
+            artist_score = self._calculate_similarity(norm_search_artist, norm_artist) if norm_search_artist else 1.0
+            
+            title_exact = norm_search_title in norm_track or norm_track in norm_search_title
+            artist_exact = (not norm_search_artist) or (norm_search_artist in norm_artist) or (norm_artist in norm_search_artist)
+            
+            if title_exact:
+                title_score = min(1.0, title_score + 0.3)
+            if artist_exact:
+                artist_score = min(1.0, artist_score + 0.2)
+                
+            score = (title_score * 0.75) + (artist_score * 0.25)
+            
+            if title_score > 0.7 and artist_score > 0.7:
+                score = min(1.0, score + 0.2)
+                
+            log(f"[LRCLIB] Scored: '{track_name}' by '{artist_name}' - Title: {title_score:.2f}, Artist: {artist_score:.2f}, Total: {score:.2f}")
+            
+            scored_result['_score'] = score
+            scored_result['_lyrics'] = lyrics
+            scored_results.append(scored_result)
+            
+        if not scored_results:
+            log("[LRCLIB] No valid results with lyrics found")
+            return None
+            
+        scored_results.sort(key=lambda x: x['_score'], reverse=True)
+        
+        best_result = scored_results[0]
+        best_score = best_result['_score']
+        best_title = best_result.get('trackName', '').strip()
+        best_artist = best_result.get('artistName', '').strip()
+        
+        log(f"[LRCLIB] Best match (score: {best_score:.2f}): '{best_title}' by '{best_artist}'")
+        
+        if best_score < 0.4:  
+            log(f"[LRCLIB] No good matches found (best score: {best_score:.2f})")
+            return None
+            
+        lyrics = best_result.get('_lyrics', '')
+        
+        lyrics = re.sub(r'&[a-z]+;', '', lyrics)
+        lyrics = re.sub(r'\[\d{0,2}:\d{2}(?:\.\d+)?\]', '', lyrics)
+        
+        lyrics = re.sub(r'\n{3,}', '\n\n', lyrics)
+        
+        if not lyrics.strip():
+            log("[LRCLIB] No lyrics content found in the best match")
+            return None
+                
+        return {
+            'title': best_title,
+            'artist': best_artist,
+            'lyrics': lyrics.strip(),
+            'source': 'LRCLIB',
+            'url': f"https://lrclib.net/song/{best_result.get('id', '')}",
+            'score': best_score
+        }
+            
+        log(f"[LRCLIB] No good matches found (best score: {best_score:.2f})")
+        return None
+        
+    def format_lyrics_message(self, song_info, now_playing=False):
+        if not song_info:
+            return ["Lyrics not found. Try another song or check the spelling."]
+            
+        title = song_info.get('title', 'Unknown Title')
+        artist = song_info.get('artist', 'Unknown Artist')
+        source = song_info.get('source', 'Unknown source')
+        warning = song_info.get('warning', '')
+        
+        spotify_url = song_info.get('spotify_url')
+        
+        if not spotify_url:
+            if 'external_urls' in song_info and 'spotify' in song_info['external_urls']:
+                spotify_url = song_info['external_urls']['spotify']
+            elif 'url' in song_info and 'spotify.com' in song_info['url']:
+                spotify_url = song_info['url']
+            elif 'track_url' in song_info and 'spotify.com' in song_info['track_url']:
+                spotify_url = song_info['track_url']
+        
+        if 'plain_lyrics' in song_info and song_info['plain_lyrics']:
+            lyrics = song_info['plain_lyrics']
+            lyrics_preview = (lyrics[:50] + '...') if len(lyrics) > 50 else lyrics
+            log(f"[{source}] Found plain_lyrics (preview): {lyrics_preview}")
+        elif 'lyrics' in song_info and song_info['lyrics']:
+            lyrics = song_info['lyrics']
+            lyrics_preview = (lyrics[:50] + '...') if len(lyrics) > 50 else lyrics
+            log(f"[{source}] Found lyrics (preview): {lyrics_preview}")
+        else:
+            log(f"[{source}] No lyrics available in song_info")
+            return ["Lyrics not found for this song."]
+        
+        if not lyrics:
+            log(f"[{source}] No lyrics available (empty string)")
+            return ["Lyrics not found for this song."]
+            
+        if isinstance(lyrics, list):
+            lyrics = '\n'.join(lyrics)
+        
+        warning_emoji = "⚠️"
+        note_emoji = "📝"
+        music_emoji = "🎵"
+        artist_emoji = "👤"
+        now_playing_emoji = "ᯤ"
+        
+        if now_playing and spotify_url:
+            spotify_link = f"[ᯤ Now playing on Spotify]({spotify_url})"
+            warning_line = f"\n{warning_emoji} _{warning}_" if warning else ""
+            header = (
+                f"{spotify_link}\n\n"
+                f"{music_emoji} _{title}_\n"
+                f"{artist_emoji} Artist: _{artist}_"
+                f"{warning_line}"
+                f"\n{note_emoji} Source: _{source}_\n\n"
+            )
+        else:
+            header = (
+                (f"{now_playing_emoji} Now playing on Spotify\n\n" if now_playing else "") +
+                f"{music_emoji} _{title}_\n" +
+                f"{artist_emoji} Artist: _{artist}_" +
+                (f"\n{warning_emoji} _{warning}_" if warning else '') +
+                f"\n{note_emoji} Source: _{source}_\n\n"
+            )
+        
+        max_content_length = 4000 - len(header) - 100
+        
+        if len(header + lyrics) <= max_content_length:
+            return [header + lyrics]
+            
+        messages = []
+        current_chunk = header
+        
+        lines = lyrics.split('\n')
+        current_line_group = []
+        
+        for line in lines:
+            if current_line_group and len(current_chunk) + len('\n'.join(current_line_group + [line])) > max_content_length - 2:
+                if current_line_group:
+                    current_chunk += '\n'.join(current_line_group) + '\n'
+                
+                if current_chunk.strip() and current_chunk != header:
+                    messages.append(current_chunk.rstrip())
+                    
+                current_chunk = f"**{title}**\n\n"
+                current_line_group = []
+                
+            current_line_group.append(line)
+        
+        if current_line_group:
+            current_chunk += '\n'.join(current_line_group)
+        
+        if current_chunk.strip() and current_chunk != header:
+            messages.append(current_chunk.rstrip())
+        
+        if not messages:
+            return [header + "Lyrics format not recognized."]
+            
+        return messages
+
+    def _extract_track_info(self, url):
+        """Extract track information from various music service URLs"""
+        match = self.spotify_url_pattern.search(url)
+        if match:
+            track_id = match.group(1)
+            return {
+                'type': 'spotify',
+                'id': track_id,
+                'url': f'https://open.spotify.com/track/{track_id}'
+            }
+            
+        match = self.spotify_uri_pattern.search(url)
+        if match:
+            track_id = match.group(1)
+            return {
+                'type': 'spotify',
+                'id': track_id,
+                'url': f'https://open.spotify.com/track/{track_id}'
+            }
+            
+        match = self.songlink_pattern.search(url)
+        if match:
+            track_id = match.group(1)
+            return {
+                'type': 'songlink',
+                'id': track_id,
+                'url': f'https://song.link/s/{track_id}'
+            }
+            
+        return None
+
+    def _get_track_info(self, track_info):
+        """Fetch track info based on the service type"""
+        try:
+            if track_info['type'] == 'spotify':
+                track_id = track_info['id']
+                log(f"[SPOTIFY] Fetching track info for ID: {track_id}")
+                
+                access_token = self._get_spotify_token()
+                if not access_token:
+                    log("[SPOTIFY] No access token available")
+                    return None
+                
+                try:
+                    headers = {
+                        'Authorization': f'Bearer {access_token}',
+                        'Content-Type': 'application/json'
+                    }
+                    
+                    log(f"[SPOTIFY] Making request to Spotify API for track ID: {track_id}")
+                    response = requests.get(
+                        f"https://api.spotify.com/v1/tracks/{track_id}",
+                        headers=headers,
+                        timeout=10
+                    )
+                    
+                    log(f"[SPOTIFY] Response status: {response.status_code}")
+                    
+                    if response.status_code == 401:
+                        log("[SPOTIFY] Token expired or invalid, attempting to refresh...")
+                        self.set_setting('_spotify_token_data', None)
+                        access_token = self._get_spotify_token()
+                        
+                        if access_token:
+                            headers['Authorization'] = f'Bearer {access_token}'
+                            log("[SPOTIFY] Retrying with new token...")
+                            response = requests.get(
+                                f"https://api.spotify.com/v1/tracks/{track_id}",
+                                headers=headers,
+                                timeout=10
+                            )
+                            log(f"[SPOTIFY] Retry response status: {response.status_code}")
+                    
+                    if response.status_code == 200:
+                        try:
+                            data = response.json()
+                            log(f"[SPOTIFY] Raw API response: {json.dumps(data, indent=2)[:500]}...")
+                            
+                            if not isinstance(data, dict):
+                                log("[SPOTIFY] Invalid response format: not a dictionary")
+                                return None
+                                
+                            if not data.get('artists') or not data.get('name'):
+                                log("[SPOTIFY] Incomplete track data in API response")
+                                log(f"[SPOTIFY] Available keys: {list(data.keys())}")
+                                return None
+                            
+                            artist = data.get('artists', [{}])[0].get('name', 'Unknown Artist')
+                            title = data.get('name', 'Unknown Track')
+                            album = data.get('album', {}).get('name', '')
+                            
+                            query = f"{title} by {artist}"
+                            log(f"[SPOTIFY] Found track: {query}")
+                            return {
+                                'artist': artist,
+                                'title': title,
+                                'album': album,
+                                'source': 'Spotify',
+                                'url': data.get('external_urls', {}).get('spotify', f"https://open.spotify.com/track/{track_id}"),
+                                'query': query
+                            }
+                            
+                        except (ValueError, KeyError, IndexError, AttributeError) as e:
+                            log(f"[SPOTIFY] Error parsing API response: {str(e)}")
+                            log(f"[SPOTIFY] Response content: {response.text[:500]}")
+                            return None
+                            
+                    else:
+                        log(f"[SPOTIFY] API error: {response.status_code} - {response.text}")
+                        return None
+                        
+                except requests.exceptions.RequestException as e:
+                    return None
+                    
+                except Exception:
+                    return None
+                
+            elif track_info['type'] == 'songlink':
+                response = requests.get(
+                    f"https://api.song.link/v1-alpha.1/links?url={track_info['url']}",
+                    timeout=10
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    
+                    page_title = data.get('pageTitle', '')
+                    if 'by' in page_title:
+                        parts = page_title.split('by', 1)
+                        if len(parts) == 2:
+                            return {
+                                'title': parts[0].strip(),
+                                'artist': parts[1].strip(),
+                                'query': f"{parts[0].strip()} by {parts[1].strip()}",
+                                'url': track_info['url']
+                            }
+                    
+                    for service in data.get('linksByPlatform', {}).values():
+                        if 'title' in service and 'artist' in service:
+                            return {
+                                'title': service['title'],
+                                'artist': service['artist'],
+                                'query': f"{service['title']} by {service['artist']}",
+                                'url': track_info['url']
+                            }
+                    
+                    if page_title:
+                        return {'title': page_title, 'query': page_title, 'url': track_info['url']}
+                else:
+                    log(f"[SONGLINK] API error: {response.status_code}")
+        
+        except (requests.exceptions.RequestException, Exception):
+            pass
+                
+        return None
+
+    def _extract_spotify_link(self, text):
+        """Extract Spotify track URI from various URL formats"""
+        if not text:
+            return None
+            
+        
+        uri_match = re.search(r'spotify:track:([a-zA-Z0-9]+)', text)
+        if uri_match:
+            return f'spotify:track:{uri_match.group(1)}'
+            
+        web_match = re.search(r'open\.spotify\.com/track/([a-zA-Z0-9]+)', text)
+        if web_match:
+            return f'spotify:track:{web_match.group(1)}'
+            
+        short_match = re.search(r'spotify\.link/([a-zA-Z0-9]+)', text)
+        if short_match:
+            return f'spotify:track:{short_match.group(1)}'
+            
+        preview_match = re.search(r'\[([^\]]+)\]\(https?://(?:open\.spotify\.com/track/|spotify\.link/)([a-zA-Z0-9]+)[^)]*\)', text)
+        if preview_match:
+            return f'spotify:track:{preview_match.group(2)}'
+            
+        return None
+
+    def _extract_links_from_entities(self, message):
+        """Extract links from message entities"""
+        links = []
+        try:
+            if hasattr(message, 'entities') and message.entities:
+                for entity in message.entities:
+                    if hasattr(entity, 'url') and entity.url:
+                        links.append(entity.url)
+                    elif hasattr(entity, '_type') and entity._type == 'textUrl' and hasattr(entity, 'url'):
+                        links.append(entity.url)
+        except Exception as e:
+            log(f"[ERROR] Error extracting links from entities: {str(e)}")
+        return links
+
+    def _get_replied_message_text(self, params):
+        """Get text and extract Spotify links from the replied message"""
+        try:
+            if not hasattr(params, 'replyToMsg') or not params.replyToMsg:
+                return None
+                
+            msg = params.replyToMsg
+            
+            message_text = None
+            if hasattr(msg, 'message') and msg.message:
+                message_text = str(msg.message)
+            elif hasattr(msg, 'messageOwner') and hasattr(msg.messageOwner, 'message'):
+                message_text = str(msg.messageOwner.message)
+            
+            if message_text:
+                spotify_link = self._extract_spotify_link(message_text)
+                if spotify_link:
+                    return spotify_link
+            
+            if hasattr(msg, 'media') and msg.media and hasattr(msg.media, 'webpage') and msg.media.webpage:
+                webpage = msg.media.webpage
+                
+                if hasattr(webpage, 'url') and webpage.url:
+                    spotify_link = self._extract_spotify_link(webpage.url)
+                    if spotify_link:
+                        return spotify_link
+                
+                if hasattr(webpage, 'title') and webpage.title:
+                    spotify_link = self._extract_spotify_link(webpage.title)
+                    if spotify_link:
+                        return spotify_link
+                
+                if hasattr(webpage, 'description') and webpage.description:
+                    spotify_link = self._extract_spotify_link(webpage.description)
+                    if spotify_link:
+                        return spotify_link
+            
+            if hasattr(msg, 'messageOwner') and hasattr(msg.messageOwner, 'entities') and msg.messageOwner.entities:
+                try:
+                    entities = msg.messageOwner.entities
+                    for i in range(entities.size()):
+                        entity = entities.get(i)
+                        if entity and hasattr(entity, 'url') and entity.url:
+                            spotify_link = self._extract_spotify_link(str(entity.url))
+                            if spotify_link:
+                                return spotify_link
+                except Exception:
+                    pass
+            
+            if hasattr(msg, 'media') and hasattr(msg.media, 'document') and msg.media.document:
+                doc = msg.media.document
+                if hasattr(doc, 'attributes') and doc.attributes:
+                    for i in range(doc.attributes.size()):
+                        attr = doc.attributes.get(i)
+                        if not attr:
+                            continue
+                            
+                        if hasattr(attr, 'file_name') and attr.file_name:
+                            spotify_link = self._extract_spotify_link(attr.file_name)
+                            if spotify_link:
+                                return spotify_link
+                        
+                        if hasattr(attr, 'alt') and attr.alt:
+                            spotify_link = self._extract_spotify_link(attr.alt)
+                            if spotify_link:
+                                return spotify_link
+            
+            return message_text
+            
+        except Exception:
+            pass
+            
+        return None
+
+
+    def _is_nowfy_installed(self):
+        """Check if nowfy plugin is installed and available"""
+        try:
+            import nowfy
+            return True
+        except ImportError:
+            return False
+            
+    def on_send_message_hook(self, account, params) -> HookStrategy:
+        if params.message is None:
+            return None
+            
+        message_text = params.message.strip()
+        
+        if message_text in ['.now', '.fm'] or message_text.startswith(('.now ', '.fm ')):
+            if not self._is_nowfy_installed():
+                from ui.bulletin import R
+                from android.content import Intent
+                from android.net import Uri
+                
+                def open_download_link():
+                    try:
+                        intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/ApplePlugins"))
+                        activity = get_last_fragment().getParentActivity()
+                        if activity:
+                            activity.startActivity(intent)
+                    except Exception as e:
+                        log(f"[ERROR] Failed to open download link: {str(e)}")
+                
+                BulletinHelper.show_with_button(
+                    "nowfy plugin required for this command to work",
+                    R.raw.error,
+                    "Download",
+                    on_click=open_download_link,
+                    duration=10000
+                )
+                return HookResult(strategy=HookStrategy.CANCEL)
+                
+            def show_lyrics_confirm():
+                def on_confirm():
+                    self._handle_now_playing(params, None)
+                
+                from ui.bulletin import R
+                BulletinHelper.show_with_button(
+                    "🎵 nowfy shows the track, but I've got the lyrics! Want them?",
+                    R.raw.linkbroken,
+                    "Fetch Lyrics",
+                    on_click=on_confirm,
+                    duration=30000  
+                )
+            
+            def delayed_show():
+                import time
+                time.sleep(6)
+                run_on_ui_thread(show_lyrics_confirm)
+            
+            threading.Thread(target=delayed_show, daemon=True).start()
+            
+            return None
+            
+        if not (message_text in ('!lyrics', '!now') or 
+                message_text.startswith(('!lyrics ', '!now '))):
+            return None
+            
+        command_type = message_text.split()[0]
+        
+        command_prefix = "!lyrics"
+        now_playing_command = "!now"
+        
+        if message_text == now_playing_command or message_text.startswith(f"{now_playing_command} "):
+            username = message_text[len(now_playing_command):].strip() or None
+            return self._handle_now_playing(params, username)
+            
+        if not message_text.startswith(command_prefix + " ") and message_text != command_prefix:
+            return HookResult()
+
+        query = "" if message_text == command_prefix else message_text[len(command_prefix):].strip()
+        
+        if message_text == '!lyrics' and hasattr(params, 'replyToMsg') and params.replyToMsg:
+            replied_text = self._get_replied_message_text(params)
+            if replied_text:
+                spotify_link = self._extract_spotify_link(replied_text)
+                if spotify_link:
+                    query = spotify_link
+                    log(f"[DEBUG] Found Spotify link in replied message: {spotify_link}")
+        
+        if not query:
+            params.message = (
+                '🎵 Lyrics Search Help 🎵\n\n'
+                'Search for lyrics:\n'
+                '• `!lyrics [song name]`\n'
+                '• `!lyrics [artist] - [song]`\n\n'
+                'Or use a music link:\n'
+                '• `!lyrics https://open.spotify.com/track/...`\n'
+                '• `!lyrics spotify:track:...`\n\n'
+                'Or reply to a message containing a Spotify link with just `!lyrics`\n\n'
+                'Get lyrics for currently playing track on Last.fm:\n'
+                '• `!now [username]` (leave empty to use saved username)\n\n'
+                '💡 **Tip**: Enable transliteration in settings to convert lyrics to different writing systems!'
+            )
+            return HookResult(strategy=HookStrategy.MODIFY, params=params)
+
+        current_fragment = get_last_fragment()
+        if not current_fragment:
+            return HookResult()
+            
+        activity = current_fragment.getParentActivity()
+        if not activity:
+            return HookResult()
+            
+        peer = params.peer
+        reply_to_msg_id = getattr(params, 'replyToMsg', None)
+        reply_to_top_msg_id = getattr(params, 'replyToTopMsg', None)
+        
+        self._show_loading(activity, "Fetching the lyrics you're craving...")
+        
+        params.message = ""
+        
+        def process_query():
+            try:
+                track_info = self._extract_track_info(query)
+                if track_info:
+                    track_metadata = self._get_track_info(track_info)
+                    if track_metadata:
+                        search_query = track_metadata['query']
+                        log(f"[{track_info['type'].upper()}] Searching for: {search_query}")
+                    else:
+                        search_query = query
+                        log(f"[WARNING] Could not extract track info from {track_info['type']} link, using original query")
+                else:
+                    search_query = query
+                
+                run_on_queue(lambda: self.search_and_reply(
+                    peer=peer,
+                    song_name=search_query,
+                    activity=activity,
+                    reply_to_msg_id=reply_to_msg_id,
+                    reply_to_top_msg_id=reply_to_top_msg_id
+                ))
+                
+            except Exception as e:
+                log(f"[ERROR] Error processing query: {str(e)}")
+                run_on_ui_thread(lambda: self._show_error(activity, "Failed to process your request. Please try again."))
+        
+        threading.Thread(target=process_query, daemon=True).start()
+        return HookResult(strategy=HookStrategy.CANCEL)
+    
+    def _handle_spotify_now_playing(self, params, activity):
+        """Handle now playing with Spotify"""
+        client_id = self.get_setting('spotify_client_id', '').strip()
+        client_secret = self.get_setting('spotify_client_secret', '').strip()
+        refresh_token = self.get_setting('spotify_refresh_token', '').strip()
+        
+        if not all([client_id, client_secret, refresh_token]):
+            error_msg = "Spotify credentials not configured. Please set up Client ID, Client Secret, and Refresh Token in settings."
+            log(f"[DEBUG] {error_msg}")
+            self._show_error(activity, error_msg)
+            return HookResult(strategy=HookStrategy.CANCEL)
+        
+        self._show_loading(activity, "Asking Spotify what you're listening to... because apparently you can't just tell me")
+        
+        peer = params.peer
+        reply_to_msg_id = getattr(params, 'replyToMsg', None)
+        reply_to_top_msg_id = getattr(params, 'replyToTopMsg', None)
+        
+        def fetch_now_playing():
+            try:
+                spotify = SpotifyClient(client_id, client_secret, refresh_token)
+                track = spotify.get_now_playing()
+                
+                if not track:
+                    run_on_ui_thread(lambda: BulletinHelper.show_info(
+                        "Nothing currently playing on Spotify. Make sure you have an active session."
+                    ))
+                    return
+                
+                artists = ", ".join(track['artists']) if track['artists'] else "Unknown Artist"
+                query = f"{track['title']} by {artists}"
+                spotify_url = track.get('spotify_url', '')
+
+                run_on_queue(lambda: self.search_and_reply(
+                    peer=peer,
+                    song_name=query,
+                    activity=activity,
+                    reply_to_msg_id=reply_to_msg_id,
+                    reply_to_top_msg_id=reply_to_top_msg_id,
+                    now_playing=True,
+                    spotify_url=spotify_url
+                ))
+                
+            except Exception as e:
+                error_msg = str(e)
+                log(f"[ERROR] Error in Spotify now playing check: {error_msg}")
+                run_on_ui_thread(lambda: BulletinHelper.show_error(
+                    "Failed to fetch currently playing track from Spotify"
+                ))
+        
+        threading.Thread(target=fetch_now_playing, daemon=True).start()
+        return HookResult(strategy=HookStrategy.CANCEL)
+        
+    def _handle_now_playing(self, params, username_override=None):
+        """Handle the !nowplaying command"""
+        current_fragment = get_last_fragment()
+        if not current_fragment:
+            log("[DEBUG] No current fragment found")
+            return HookResult()
+            
+        activity = current_fragment.getParentActivity()
+        if not activity:
+            log("[DEBUG] No activity found")
+            return HookResult()
+        
+        now_playing_source = self.get_setting('now_playing_source', 0)
+        
+        if now_playing_source == 0:
+            return self._handle_lastfm_now_playing(params, username_override, activity)
+        elif now_playing_source == 1:
+            return self._handle_statsfm_now_playing(params, username_override, activity)
+        else:  
+            return self._handle_spotify_now_playing(params, activity)
+    
+    def _handle_lastfm_now_playing(self, params, username_override, activity):
+        """Handle now playing with Last.fm"""
+        username = username_override or self.get_setting('lastfm_username', '')
+        
+        if not username:
+            error_msg = "No Last.fm username provided. Set it in plugin settings or use: !now [username]"
+            log(f"[DEBUG] {error_msg}")
+            self._show_error(activity, error_msg)
+            return HookResult(strategy=HookStrategy.CANCEL)
+        
+        if not self.lastfm:
+            error_msg = "Last.fm API key not configured. Please set it in plugin settings."
+            log(f"[DEBUG] {error_msg}")
+            log(f"[DEBUG] LastFM client: {self.lastfm}")
+            log(f"[DEBUG] API Key in settings: {self.get_setting('lastfm_api_key', 'NOT SET')}")
+            self._show_error(activity, error_msg)
+            return HookResult(strategy=HookStrategy.CANCEL)
+        
+        self._show_loading(activity, f"Checking {username}'s Last.fm... because stalking is totally normal")
+        
+        peer = params.peer
+        reply_to_msg_id = getattr(params, 'replyToMsg', None)
+        reply_to_top_msg_id = getattr(params, 'replyToTopMsg', None)
+        
+        def fetch_now_playing():
+            try:
+                track = self.lastfm.get_now_playing(username)
+                if not track:
+                    run_on_ui_thread(lambda: BulletinHelper.show_info(
+                        "Nothing playing on Last.fm. Maybe try listening to some music?"
+                    ))
+                    return
+                
+                query = f"{track['title']} by {track['artist']}"
+                log(f"[LASTFM] Now playing: {query}")
+                
+                run_on_queue(lambda: self.search_and_reply(
+                    peer=peer,
+                    song_name=query,
+                    activity=activity,
+                    reply_to_msg_id=reply_to_msg_id,
+                    reply_to_top_msg_id=reply_to_top_msg_id,
+                    now_playing=True,
+                    spotify_url=track.get('spotify_url')
+                ))
+                
+            except Exception as e:
+                error_msg = str(e)
+                log(f"[ERROR] Error in Last.fm now playing check: {error_msg}")
+                run_on_ui_thread(lambda: BulletinHelper.show_error(
+                    f"Failed to fetch {username}'s current track from Last.fm"
+                ))
+        
+        threading.Thread(target=fetch_now_playing, daemon=True).start()
+        return HookResult(strategy=HookStrategy.CANCEL)
+    
+    def _handle_statsfm_now_playing(self, params, username_override, activity):
+        """Handle now playing with Stats.fm"""
+        username = username_override or self.get_setting('statsfm_username', '')
+        
+        if not username:
+            error_msg = "No Stats.fm username/URL provided. Set it in plugin settings or use: !now [username_or_url]"
+            log(f"[DEBUG] {error_msg}")
+            self._show_error(activity, error_msg)
+            return HookResult(strategy=HookStrategy.CANCEL)
+        
+        self._show_loading(activity, f"Stalking {username}'s music taste on Stats.fm... because normal people ask first")
+        
+        peer = params.peer
+        reply_to_msg_id = getattr(params, 'replyToMsg', None)
+        reply_to_top_msg_id = getattr(params, 'replyToTopMsg', None)
+        
+        def fetch_now_playing():
+            try:
+                track = self.statsfm_client.get_now_playing(username)
+                if not track:
+                    run_on_ui_thread(lambda: BulletinHelper.show_info(
+                        "Nothing playing on Stats.fm. Make sure your profile is public and you're currently playing music."
+                    ))
+                    return
+                
+                artists = ", ".join(track['artists']) if track['artists'] else "Unknown Artist"
+                query = f"{track['title']} by {artists}"
+
+                
+                lyrics_found = threading.Event()
+                
+                def run_search(search_query, lyrics_event, is_fallback=False):
+                    try:
+                        if is_fallback:
+                            log(f"[STATS.FM] Trying fallback search with: {search_query}")
+                        
+                        original_search_lyrics = self.search_lyrics
+                        
+                        def wrapped_search_lyrics(query):
+                            result = original_search_lyrics(query)
+                            if result:
+                                lyrics_event.set()
+                                log("[STATS.FM] Lyrics found in search")
+                            return result
+                        
+                        self.search_lyrics = wrapped_search_lyrics
+                        
+                        self.search_and_reply(
+                            peer=peer,
+                            song_name=search_query,
+                            activity=activity,
+                            reply_to_msg_id=reply_to_msg_id,
+                            reply_to_top_msg_id=reply_to_msg_id,
+                            now_playing=True,
+                            spotify_url=track.get('spotify_url')
+                        )
+                        
+                        self.search_lyrics = original_search_lyrics
+                        
+                    except Exception as e:
+                        log(f"[STATS.FM] Search error: {str(e)}")
+                
+                song_name = f"{track['title']} - {artists}" if artists else track['title']
+                song_name = f"{track['title']} - {artists}" if artists else track['title']
+                
+                run_search(song_name, lyrics_found)
+                
+                if track.get('spotify_url') and not lyrics_found.is_set():
+                    lyrics_found.wait(3)  
+                    
+                    if not lyrics_found.is_set():
+                        run_search(track['spotify_url'], lyrics_found, is_fallback=True)
+                        
+                
+            except Exception as e:
+                error_msg = str(e)
+                log(f"[ERROR] Error in Stats.fm now playing check: {error_msg}")
+                run_on_ui_thread(lambda: BulletinHelper.show_error(
+                    f"Failed to fetch {username}'s current track from Stats.fm"
+                ))
+        
+        threading.Thread(target=fetch_now_playing, daemon=True).start()
+        return HookResult(strategy=HookStrategy.CANCEL)
+    
+    def _show_loading(self, activity, message="Loading..."):
+        """Show a loading bulletin"""
+        msg = message if message != "Loading..." else "Finding those lyrics..."
+        run_on_ui_thread(lambda: BulletinHelper.show_info(msg))
+        
+    def _show_error(self, activity, message):
+        """Show an error bulletin"""
+        run_on_ui_thread(lambda: BulletinHelper.show_error(message))
+    
+    def search_and_reply(self, peer, song_name, activity=None, reply_to_msg_id=None, reply_to_top_msg_id=None, now_playing=False, spotify_url=None):
+        song_info = None
+        try:
+            try:
+                song_info = self.search_lyrics(song_name)
+                if not song_info:
+                    if self.loading_dialog:
+                        self.loading_dialog.dismiss()
+                    BulletinHelper.show_error("No lyrics found. Maybe try humming it?")
+                    return
+                if isinstance(song_info, dict) and song_info.get('error'):
+                    if self.loading_dialog:
+                        self.loading_dialog.dismiss()
+                    error_message = song_info.get('message', 'An unknown error occurred.')
+                    BulletinHelper.show_error(
+                        f"Error: {error_message}"
+                    )
+                    return
+            except Exception as e:
+                log(f"[LRCLIB] Error in search_lyrics: {str(e)}")
+                if self.loading_dialog:
+                    self.loading_dialog.dismiss()
+                BulletinHelper.show_error("Failed. Blame the internets.")
+
+                return
+
+            enable_transliteration = bool(self.get_setting('enable_transliteration', False))
+            gemini_api_key = self.get_setting('gemini_api_key', '').strip()
+            transliterated_lyrics = None
+            translit_error = None
+            lang = None
+            if spotify_url and isinstance(song_info, dict):
+                song_info['spotify_url'] = spotify_url
+                
+            if enable_transliteration:
+                lang = song_info.get('lang') or song_info.get('language') or "the original language"
+                lyrics_for_translit = song_info.get('plain_lyrics') or song_info.get('lyrics')
+                if gemini_api_key:
+                    
+                    target_script = self.get_setting('transliteration_target_script', 0)
+                    
+                    transliterated_lyrics, translit_error = transliterate_lyrics_with_gemini(
+                        lyrics_for_translit, 
+                        lang, 
+                        gemini_api_key, 
+                        target_script
+                    )
+                if transliterated_lyrics:
+                    song_info['plain_lyrics'] = transliterated_lyrics
+                    song_info['lyrics'] = ''
+                formatted_message = self.format_lyrics_message(song_info, now_playing=now_playing)
+                if translit_error and not transliterated_lyrics:
+                    run_on_ui_thread(lambda: BulletinHelper.show_error("Transliteration failed. Try again later."))
+            else:
+                formatted_message = self.format_lyrics_message(song_info, now_playing=now_playing)
+            if self.loading_dialog:
+                self.loading_dialog.dismiss()
+            def send_messages():
+                messages_sent = 0
+                try:
+                    messages = [formatted_message] if not isinstance(formatted_message, list) else formatted_message
+                    if not messages:
+                        return
+                    base_params = {"peer": peer}
+                    if reply_to_msg_id is not None:
+                        base_params["replyToMsg"] = reply_to_msg_id
+                    if reply_to_top_msg_id is not None:
+                        base_params["replyToTopMsg"] = reply_to_top_msg_id
+                    for i, msg in enumerate(messages):
+                        try:
+                            if i > 0:
+                                time.sleep(0.5)
+                            parsed_message = parse_markdown(msg)
+                            message_params = base_params.copy()
+                            message_params["message"] = parsed_message.text
+                            
+                            entities = []
+                            if hasattr(parsed_message, 'entities') and parsed_message.entities:
+                                entities = [entity.to_tlrpc_object() for entity in parsed_message.entities]
+                            
+                            blockquote_entity = TLRPC.TL_messageEntityBlockquote()
+                            blockquote_entity.collapsed = True
+                            blockquote_entity.offset = 0
+                            blockquote_entity.length = int(len(parsed_message.text.encode('utf-16-le')) / 2)
+                            entities.insert(0, blockquote_entity)
+                            
+                            message_params["entities"] = entities
+                            message_params["searchLinks"] = False
+                            
+                            send_message(message_params)
+                            messages_sent += 1
+                            log(f"[LRCLIB] Sent message part {i+1}/{len(messages)}. Length: {len(parsed_message.text)} chars")
+                        except Exception as e:
+                            log(f"[LRCLIB] Error sending message {i+1}/{len(messages)}: {str(e)}")
+                            if i == 0:
+                                BulletinHelper.show_error(
+                                    "Failed to send lyrics. The song might be too long or contain unsupported characters."
+                                )
+                            break
+                except Exception:
+                    if messages_sent == 0:
+                        BulletinHelper.show_error(
+"Oops, something broke. Try again?"
+                        )
+            def on_messages_sent():
+                send_messages()
+            threading.Thread(target=on_messages_sent, daemon=True).start()
+        except Exception as e:
+            log(f"[ERROR] Error in search_and_reply: {str(e)}")
+
+    def _toggle_autoupdate(self, enabled: bool):
+        try:
+            if enabled:
+                if is_zwylib_present():
+                    zwylib.add_autoupdater_task(__id__, AUTOUPDATE_CHANNEL_ID, AUTOUPDATE_CHANNEL_USERNAME, AUTOUPDATE_MSG_ID)
+                    run_on_ui_thread(lambda: BulletinHelper.show_success("Auto-update enabled"))
+                else:
+                    run_on_ui_thread(lambda: BulletinHelper.show_error("ZwyLib not available!"))
+            else:
+                if is_zwylib_present():
+                    zwylib.remove_autoupdater_task(__id__)
+                    run_on_ui_thread(lambda: BulletinHelper.show_success("Auto-update disabled"))
+        except Exception as e:
+            log(f"[lrcfy] Error toggling autoupdate: {e}")
+            run_on_ui_thread(lambda: BulletinHelper.show_error(f"Error toggling auto-update: {e}"))
+
+def transliterate_lyrics_with_gemini(lyrics, lang, api_key, target_script=None):
+    """
+    Use Gemini API to transliterate lyrics to specified target script.
+    Converts pronunciation to different writing systems without changing meaning.
+    """
+    if not api_key:
+        return None, "No Gemini API key set."
+    
+    if target_script is None:
+        target_script = 0  
+    
+    target_scripts = {
+        0: "Latin script (auto-detect best variant)",
+        1: "Latin script (English alphabet)",
+        2: "Cyrillic script (Russian alphabet)",
+        3: "Hangul script (Korean alphabet)",
+        4: "Hiragana script (Japanese)",
+        5: "Katakana script (Japanese)",
+        6: "Devanagari script (Hindi)",
+        7: "Bengali script",
+        8: "Tamil script",
+        9: "Telugu script",
+        10: "Kannada script",
+        11: "Malayalam script",
+        12: "Gujarati script",
+        13: "Gurmukhi script (Punjabi)",
+        14: "Arabic script",
+        15: "Persian script",
+        16: "Greek script",
+        17: "Hebrew script",
+        18: "Thai script",
+        19: "Vietnamese script",
+        20: "Chinese Pinyin (Latin with tones)",
+        21: "Chinese Simplified characters",
+        22: "Chinese Traditional characters",
+        23: "Armenian script",
+        24: "Georgian script",
+        25: "Mongolian script",
+        26: "Tibetan script",
+        27: "Khmer script (Cambodian)",
+        28: "Lao script",
+        29: "Myanmar script (Burmese)",
+        30: "Sinhala script (Sinhalese)",
+        31: "Odia script (Oriya)",
+        32: "Assamese script",
+        33: "Manipuri script (Meitei)",
+        34: "Nepali script",
+        35: "Urdu script",
+        36: "Kashmiri script",
+        37: "Sindhi script",
+        38: "Balochi script",
+        39: "Pashto script",
+        40: "Kurdish script",
+        41: "Uyghur script",
+        42: "Kazakh script",
+        43: "Kyrgyz script",
+        44: "Tajik script",
+        45: "Turkmen script",
+        46: "Azerbaijani script",
+        47: "Uzbek script",
+        48: "Moldovan script",
+        49: "Romanian script",
+        50: "Bulgarian script",
+        51: "Macedonian script",
+        52: "Serbian script",
+        53: "Bosnian script",
+        54: "Croatian script",
+        55: "Slovenian script",
+        56: "Slovak script",
+        57: "Czech script",
+        58: "Polish script",
+        59: "Ukrainian script",
+        60: "Belarusian script",
+        61: "Latvian script",
+        62: "Lithuanian script",
+        63: "Estonian script",
+        64: "Finnish script",
+        65: "Hungarian script",
+        66: "Turkish script",
+        67: "Icelandic script",
+        68: "Faroese script",
+        69: "Norwegian script",
+        70: "Swedish script",
+        71: "Danish script",
+        72: "Dutch script",
+        73: "German script",
+        74: "French script",
+        75: "Italian script",
+        76: "Spanish script",
+        77: "Portuguese script",
+        78: "Catalan script",
+        79: "Galician script",
+        80: "Basque script",
+        81: "Irish script",
+        82: "Scottish Gaelic script",
+        83: "Welsh script",
+        84: "Breton script",
+        85: "Cornish script",
+        86: "Manx script"
+    }
+    
+    target_desc = target_scripts.get(target_script, "Latin script")
+    
+    if target_script == 0: 
+        auto_prompt = (
+            f"Transliterate the following {lang} song lyrics into the most appropriate Latin script variant. "
+            f"Choose the best Latin alphabet based on the original language and pronunciation patterns. "
+            f"For example: Hindi → Hinglish, Korean → Konglish, Japanese → Romaji, Arabic → Arabizi, etc. "
+            f"Use diacritics and special characters as needed for accurate pronunciation. "
+            f"Do not translate the meaning, only convert the script/pronunciation. "
+            f"Preserve line breaks and formatting exactly.\n\nLyrics:\n{lyrics}\n\n"
+            f"If the lyrics are already in the requested script, return ONLY the lyrics, with no explanation, comments, or extra text."
+        )
+    else:
+        auto_prompt = (
+            f"Transliterate the following {lang} song lyrics into {target_desc}. "
+            f"This means convert the pronunciation to the target writing system while keeping the same meaning. "
+            f"For example: 'Hello' in Latin → 'Привет' in Cyrillic, '안녕하세요' in Hangul, 'こんにちは' in Hiragana. "
+            f"Do not translate the meaning, only convert the script/pronunciation. "
+            f"Preserve line breaks and formatting exactly.\n\nLyrics:\n{lyrics}\n\n"
+            f"If the lyrics are already in the requested script, return ONLY the lyrics, with no explanation, comments, or extra text."
+        )
+    
+    prompt = auto_prompt
+    
+    headers = {"Content-Type": "application/json"}
+    data = {
+        "contents": [{"parts": [{"text": prompt}]}]
+    }
+    
+    try:
+        response = requests.post(
+            f"{GEMINI_API_URL}?key={api_key}",
+            headers=headers,
+            data=json.dumps(data),
+            timeout=20
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            candidates = result.get("candidates", [])
+            if candidates:
+                text = candidates[0]["content"]["parts"][0]["text"]
+                return text.strip(), None
+            else:
+                return None, "No transliteration result from Gemini."
+        else:
+            try:
+                error_json = response.json()
+                error_message = error_json.get('error', {}).get('message')
+                if error_message:
+                    return None, f"Gemini API error {response.status_code}: {error_message}"
+                else:
+                    return None, f"Gemini API error: {response.status_code} {response.text}"
+            except Exception:
+                return None, f"Gemini API error: {response.status_code} {response.text}"
+    except requests.exceptions.ReadTimeout:
+        return None, "Gemini API timed out. Please try again, or try with shorter lyrics."
+    except Exception as e:
+        return None, f"Gemini API error: {str(e)}"
+
+def list_gemini_models(api_key):
+    """List available Gemini models for the given API key."""
+    try:
+        response = requests.get(f"{GEMINI_LIST_MODELS_URL}?key={api_key}", timeout=15)
+        if response.status_code == 200:
+            data = response.json()
+            models = data.get('models', [])
+            if not models:
+                return "No models found for this API key."
+            model_list = '\n'.join([m.get('name', '') for m in models])
+            return f"Available Gemini models for your API key:\n{model_list}"
+        else:
+            try:
+                error_json = response.json()
+                error_message = error_json.get('error', {}).get('message')
+                if error_message:
+                    return f"Gemini ListModels error {response.status_code}: {error_message}"
+                else:
+                    return f"Gemini ListModels error: {response.status_code} {response.text}"
+            except Exception:
+                return f"Gemini ListModels error: {response.status_code} {response.text}"
+    except Exception as e:
+        return f"Gemini ListModels error: {str(e)}"
+
+LRCLibLyricsPlugin()

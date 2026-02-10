@@ -1,0 +1,356 @@
+from base_plugin import BasePlugin, MenuItemData, MenuItemType
+from ui.alert import AlertDialogBuilder
+from client_utils import get_last_fragment
+from hook_utils import find_class
+from java import dynamic_proxy
+from android_utils import run_on_ui_thread
+from org.telegram.messenger import LocaleController
+
+TextView = find_class("android.widget.TextView")
+GridLayout = find_class("android.widget.GridLayout")
+LinearLayout = find_class("android.widget.LinearLayout")
+FrameLayout = find_class("android.widget.FrameLayout")
+R = find_class("org.telegram.messenger.R")
+AndroidUtilities = find_class("org.telegram.messenger.AndroidUtilities")
+Theme = find_class("org.telegram.ui.ActionBar.Theme")
+Gravity = find_class("android.view.Gravity")
+OnClickListenerInterface = find_class("android.view.View$OnClickListener")
+
+__id__ = "tictactoe"
+__name__ = "Tic-Tac-Toe"
+__description__ = "Play Tic-Tac-Toe against the AI. Access via 3dot chat menu."
+__author__ = "@exteraDev"
+__version__ = "1.0.0"
+__min_version__ = "11.12.0"
+__icon__ = "exteraDevPlugins/10"
+
+EMPTY, HUMAN, AI = 0, 1, 2
+
+class TicTacToeGame:
+    def __init__(self):
+        self.board = [[EMPTY for _ in range(3)] for _ in range(3)]
+        self.current_player = HUMAN
+        self.status = "playing"
+        self.score = {"human": 0, "ai": 0, "draw": 0}
+        self.human_symbol = "X"
+        self.ai_symbol = "O"
+
+    def reset(self):
+        import random
+        self.board = [[EMPTY for _ in range(3)] for _ in range(3)]
+        self.status = "playing"
+        if random.choice([True, False]):
+            self.human_symbol, self.ai_symbol = "X", "O"
+            self.current_player = HUMAN
+        else:
+            self.human_symbol, self.ai_symbol = "O", "X"
+            self.current_player = AI
+
+    def make_move(self, r, c, player):
+        if self.board[r][c] == EMPTY and self.status == "playing":
+            self.board[r][c] = player
+            self.update_status()
+            return True
+        return False
+
+    def update_status(self):
+        winner = self.check_winner()
+        if winner == HUMAN:
+            self.status = "human_win"
+            self.score["human"] += 1
+        elif winner == AI:
+            self.status = "ai_win"
+            self.score["ai"] += 1
+        elif all(self.board[r][c] != EMPTY for r in range(3) for c in range(3)):
+            self.status = "draw"
+            self.score["draw"] += 1
+
+    def check_winner(self):
+        lines = []
+        lines.extend(self.board)
+        lines.extend([[self.board[r][c] for r in range(3)] for c in range(3)])
+        lines.append([self.board[i][i] for i in range(3)])
+        lines.append([self.board[i][2-i] for i in range(3)])
+        for line in lines:
+            if line[0] != EMPTY and all(cell == line[0] for cell in line):
+                return line[0]
+        return None
+
+    def get_empty_cells(self):
+        return [(r, c) for r in range(3) for c in range(3) if self.board[r][c] == EMPTY]
+
+    def ai_move(self):
+
+        for r, c in self.get_empty_cells():
+
+            self.board[r][c] = AI
+            if self.check_winner() == AI:
+                self.update_status()
+                return r, c
+            self.board[r][c] = EMPTY
+        for r, c in self.get_empty_cells():
+
+            self.board[r][c] = HUMAN
+            if self.check_winner() == HUMAN:
+                self.board[r][c] = AI
+                self.update_status()
+                return r, c
+            self.board[r][c] = EMPTY
+
+        for pos in [(1,1), (0,0), (0,2), (2,0), (2,2), (0,1), (1,0), (1,2), (2,1)]:
+            if self.board[pos[0]][pos[1]] == EMPTY:
+                self.board[pos[0]][pos[1]] = AI
+                self.update_status()
+                return pos
+        return None
+
+class CellClickListener(dynamic_proxy(OnClickListenerInterface)):
+    def __init__(self, plugin, chat_id, r, c):
+        super().__init__()
+        self.plugin, self.chat_id, self.r, self.c = plugin, chat_id, r, c
+    def onClick(self, view): self.plugin.on_cell_click(self.chat_id, self.r, self.c)
+
+def get_locale():
+    try:
+        lang = LocaleController.getInstance().getCurrentLocale().getLanguage()
+        return lang
+    except Exception:
+        return "en"
+
+def t(key, **kwargs):
+    lang = get_locale()
+    ru = {
+        "restart": "Сыграть ещё",
+        "close": "Закрыть",
+        "your_turn": "Ваш ход",
+        "ai_turn": "Ход ИИ",
+        "score": "Счёт: Вы {human} - ИИ {ai} - Ничьих {draw}",
+        "you": "Вы: {human_symbol}   ИИ: {ai_symbol}",
+        "won": "Вы победили!",
+        "ai_won": "ИИ победил!",
+        "draw": "Ничья!",
+        "play_again": "Хотите сыграть ещё раз?",
+        "dialog_title": "Крестики-нолики",
+        "congrats": "Поздравляем! Вы победили 🎉",
+        "ai_win_msg": "ИИ победил 😢",
+        "draw_msg": "Ничья!",
+    }
+    en = {
+        "restart": "Restart",
+        "close": "Close",
+        "your_turn": "Your turn",
+        "ai_turn": "AI's turn",
+        "score": "Score: You {human} - AI {ai} - Draws {draw}",
+        "you": "You: {human_symbol}   AI: {ai_symbol}",
+        "won": "You won!",
+        "ai_won": "AI won!",
+        "draw": "Draw!",
+        "play_again": "Do you want to play again?",
+        "dialog_title": "Tic-Tac-Toe",
+        "congrats": "Congratulations! You won 🎉",
+        "ai_win_msg": "AI won 😢",
+        "draw_msg": "Draw!",
+    }
+    d = ru if lang.startswith("ru") else en
+    val = d.get(key, key)
+    if kwargs:
+        return val.format(**kwargs)
+    return val
+
+class TicTacToePlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self.active_games = {}
+        self.cell_views = {}
+        self.status_views = {}
+        self.scores = {}
+
+    def on_plugin_load(self):
+        self.add_menu_item(MenuItemData(
+            menu_type=MenuItemType.CHAT_ACTION_MENU,
+            text=t("Tic-Tac-Toe"),
+            icon="msg_media",
+            on_click=self.show_game_dialog
+        ))
+
+    def show_game_dialog(self, context: dict):
+        chat_id = context.get("dialog_id")
+        fragment = get_last_fragment(); activity = fragment and fragment.getParentActivity()
+        if not activity: return
+
+        if chat_id not in self.scores:
+            self.scores[chat_id] = {"human": 0, "ai": 0, "draw": 0}
+        self.active_games[chat_id] = TicTacToeGame()
+        game = self.active_games[chat_id]
+        game.score = self.scores[chat_id]
+        game.reset()
+
+        builder = AlertDialogBuilder(activity)
+        builder.set_title(t("dialog_title"))
+
+        main_container = LinearLayout(activity)
+        main_container.setOrientation(LinearLayout.VERTICAL)
+        padding = AndroidUtilities.dp(24)
+        main_container.setPadding(padding, AndroidUtilities.dp(8), padding, AndroidUtilities.dp(8))
+        status_view = TextView(activity)
+        status_view.setTextSize(16)
+        status_view.setTextColor(Theme.getColor(Theme.key_dialogTextBlack))
+        status_view.setPadding(0, 0, 0, AndroidUtilities.dp(8))
+        self.status_views[chat_id] = status_view
+        main_container.addView(status_view)
+        grid_wrapper = FrameLayout(activity)
+        grid_wrapper_params = LinearLayout.LayoutParams(-1, -2)
+        grid_wrapper_params.setMargins(0, AndroidUtilities.dp(8), 0, AndroidUtilities.dp(8))
+        grid_wrapper.setLayoutParams(grid_wrapper_params)
+
+        grid = GridLayout(activity)
+        grid.setColumnCount(3); grid.setRowCount(3)
+        grid.setAlignmentMode(GridLayout.ALIGN_BOUNDS)
+        size = AndroidUtilities.dp(64)
+        margin = AndroidUtilities.dp(4)
+        views = {}
+        for r in range(3):
+            for c in range(3):
+                cell_view = TextView(activity)
+                params = GridLayout.LayoutParams(GridLayout.spec(r), GridLayout.spec(c))
+                params.width = params.height = size
+                params.setMargins(margin, margin, margin, margin)
+                cell_view.setLayoutParams(params)
+                cell_view.setTextSize(32)
+                cell_view.setGravity(Gravity.CENTER)
+                cell_view.setBackgroundColor(Theme.getColor(Theme.key_chat_attachPhotoBackground))
+                cell_view.setOnClickListener(CellClickListener(self, chat_id, r, c))
+                grid.addView(cell_view)
+                views[(r, c)] = cell_view
+        self.cell_views[chat_id] = views
+
+        grid_params = FrameLayout.LayoutParams(-2, -2)
+        grid_params.gravity = Gravity.CENTER
+        grid.setLayoutParams(grid_params)
+        grid_wrapper.addView(grid)
+        main_container.addView(grid_wrapper)
+
+        def on_restart(bld, w):
+            if hasattr(game, "dialog") and game.dialog:
+                try:
+                    game.dialog.dismiss()
+                except Exception:
+                    pass
+            self.show_game_dialog({"dialog_id": chat_id})
+
+        builder.set_positive_button(t("restart"), on_restart)
+        builder.set_negative_button(t("close"), lambda b, w: b.dismiss())
+
+        builder.set_view(main_container)
+        dialog = builder.show()
+        game.dialog = dialog
+
+        self.redraw_board(chat_id)
+        self.update_status(chat_id)
+        if game.current_player == AI:
+            run_on_ui_thread(lambda: self.ai_turn(chat_id), 200)
+
+    def on_cell_click(self, chat_id: int, r: int, c: int):
+        game = self.active_games.get(chat_id)
+        if not game or game.status != "playing": return
+        if game.current_player != HUMAN: return
+        if not game.make_move(r, c, HUMAN): return
+        self.scores[chat_id] = game.score
+        self.redraw_board(chat_id)
+        self.update_status(chat_id)
+        if game.status == "playing":
+            game.current_player = AI
+            run_on_ui_thread(lambda: self.ai_turn(chat_id), 200)
+        elif game.status in ("human_win", "ai_win", "draw"):
+            self.show_result_dialog(chat_id, game.status)
+
+    def ai_turn(self, chat_id: int):
+        game = self.active_games.get(chat_id)
+        if not game or game.status != "playing": return
+        if game.current_player != AI: return
+        game.ai_move()
+        self.scores[chat_id] = game.score
+        self.redraw_board(chat_id)
+        self.update_status(chat_id)
+        if game.status == "playing":
+            game.current_player = HUMAN
+        elif game.status in ("human_win", "ai_win", "draw"):
+            self.show_result_dialog(chat_id, game.status)
+
+    def redraw_board(self, chat_id: int):
+        game = self.active_games.get(chat_id); views = self.cell_views.get(chat_id)
+        if not game or not views: return
+        for (r, c), view in views.items():
+            val = game.board[r][c]
+            if val == HUMAN:
+                view.setText(game.human_symbol)
+                view.setTextColor(Theme.getColor(Theme.key_chat_attachAudioText))
+            elif val == AI:
+                view.setText(game.ai_symbol)
+                view.setTextColor(Theme.getColor(Theme.key_text_RedBold))
+            else:
+                view.setText("")
+                view.setTextColor(Theme.getColor(Theme.key_dialogTextBlack))
+
+    def update_status(self, chat_id: int):
+        game = self.active_games.get(chat_id)
+        status_view = self.status_views.get(chat_id)
+        if not game or not status_view: return
+        if game.status == "playing":
+            turn = t("your_turn") if game.current_player == HUMAN else t("ai_turn")
+            status_view.setText(
+                f"{turn} ({game.human_symbol if game.current_player == HUMAN else game.ai_symbol})\n"
+                f"{t('score', human=game.score['human'], ai=game.score['ai'], draw=game.score['draw'])}\n"
+                f"{t('you', human_symbol=game.human_symbol, ai_symbol=game.ai_symbol)}"
+            )
+        elif game.status == "human_win":
+            status_view.setText(
+                f"{t('won')}\n{t('score', human=game.score['human'], ai=game.score['ai'], draw=game.score['draw'])}\n"
+                f"{t('you', human_symbol=game.human_symbol, ai_symbol=game.ai_symbol)}"
+            )
+        elif game.status == "ai_win":
+            status_view.setText(
+                f"{t('ai_won')}\n{t('score', human=game.score['human'], ai=game.score['ai'], draw=game.score['draw'])}\n"
+                f"{t('you', human_symbol=game.human_symbol, ai_symbol=game.ai_symbol)}"
+            )
+        elif game.status == "draw":
+            status_view.setText(
+                f"{t('draw')}\n{t('score', human=game.score['human'], ai=game.score['ai'], draw=game.score['draw'])}\n"
+                f"{t('you', human_symbol=game.human_symbol, ai_symbol=game.ai_symbol)}"
+            )
+
+    def show_result_dialog(self, chat_id: int, status: str):
+        fragment = get_last_fragment(); activity = fragment and fragment.getParentActivity()
+        if not activity: return
+        builder = AlertDialogBuilder(activity)
+        if status == "human_win":
+            builder.set_title(t("congrats"))
+        elif status == "ai_win":
+            builder.set_title(t("ai_win_msg"))
+        else:
+            builder.set_title(t("draw_msg"))
+        builder.set_message(t("play_again"))
+        def restart(bld, w):
+            bld.dismiss()
+            game = self.active_games.get(chat_id)
+            if game and hasattr(game, "dialog") and game.dialog:
+                try:
+                    game.dialog.dismiss()
+                except Exception:
+                    pass
+            self.show_game_dialog({"dialog_id": chat_id})
+        builder.set_positive_button(t("restart"), restart)
+        builder.set_negative_button(t("close"), lambda b, w: (
+            b.dismiss(),
+            self._close_game_dialog(chat_id)
+        ))
+        builder.set_cancelable(False)
+        builder.show()
+
+    def _close_game_dialog(self, chat_id):
+        game = self.active_games.get(chat_id)
+        if game and hasattr(game, "dialog") and game.dialog:
+            try:
+                game.dialog.dismiss()
+            except Exception:
+                pass

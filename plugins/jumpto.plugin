@@ -1,0 +1,888 @@
+import threading
+import time
+import uuid
+import os
+import requests
+import base64
+from datetime import datetime
+from io import BytesIO
+from java.util import Locale, ArrayList
+from java.io import File
+from android.content import Intent
+from android.net import Uri
+from org.telegram.messenger import ApplicationLoader
+from org.telegram.ui.ActionBar import AlertDialog
+from ui.settings import Header, Divider, Input, Switch, Text
+from ui.alert import AlertDialogBuilder
+from ui.bulletin import BulletinHelper
+from client_utils import run_on_queue, get_last_fragment, get_messages_controller
+from android_utils import run_on_ui_thread
+from com.exteragram.messenger.plugins import PluginsController
+from com.exteragram.messenger.plugins.ui import PluginSettingsActivity
+from base_plugin import BasePlugin, HookResult, HookStrategy, MenuItemData, MenuItemType
+
+
+# Powered by @AGeekApple - Dotted Production
+# JumpTo Plugin for exteraGram by @ApplePlugins
+
+__id__ = "jumpto"
+__name__ = "JumpTo"
+__description__ = "JumpTo creates custom commands (.apple, .team, etc.) to quickly open public Telegram links and internal screens. Type .jump to see how it works."
+
+__author__ = "@AGeekApple, @exteraDevPlugins"
+__version__ = "1.0.0"
+__min_version__ = "11.12.0"
+__icon__ = "ApplePlugins/13"
+
+# Langs
+TRANSLATIONS = {
+    "plugin_name": {
+        "en": "JumpTo",
+        "pt": "JumpTo",
+        "es": "JumpTo",
+        "fr": "JumpTo",
+        "ru": "JumpTo"
+    },
+    "plugin_description": {
+        "en": "JumpTo lets you create custom commands like .apple, .exteragram, .team, etc., that instantly open any public @link (user, group, or channel) on Telegram. Configure your shortcuts once and use them from any chat. Use the .jump command to see usage instructions.",
+        "pt": "JumpTo permite criar comandos personalizados como .apple, .exteragram, .team, etc., que abrem instantaneamente qualquer @link público (usuário, grupo ou canal) no Telegram. Configure os atalhos uma vez e use de qualquer chat. Use o comando .jump para ver as instruções.",
+        "es": "JumpTo te permite crear comandos personalizados como .apple, .exteragram, .team, etc., que abren instantáneamente cualquier @link público (usuario, grupo o canal) en Telegram. Configura los atajos una vez y úsalos desde cualquier chat. Usa el comando .jump para ver las instrucciones.",
+        "fr": "JumpTo vous permet de créer des commandes personnalisées comme .apple, .exteragram, .team, etc., qui ouvrent instantanément n'importe quel @lien public (utilisateur, groupe ou canal) sur Telegram. Configurez vos raccourcis une fois et utilisez-les depuis n'importe quel chat. Utilisez la commande .jump pour voir les instructions.",
+        "ru": "JumpTo позволяет создавать пользовательские команды, такие как .apple, .exteragram, .team и т.д., которые мгновенно открывают любой публичный @линк (пользователь, группа или канал) в Telegram. Настройте ярлыки один раз и используйте их из любого чата. Используйте команду .jump для просмотра инструкции."
+    },
+    "plugin_long_description": {
+        "en": "JumpTo lets you create custom commands like .apple, .exteragram, .team, etc., that instantly open any public @link (user, group, or channel) on Telegram.\n\nConfigure your shortcuts once and then use them from any chat, the plugin will open the conversation directly, no need to copy links or use Telegram search.\n\nExample usage:\n.apple → opens @AGeekApple\n.exteragram → opens @exteraGram\n.plugins → opens @exteraDevPlugins\n\nType .jump to see this help anytime.",
+        "pt": "JumpTo permite criar comandos personalizados como .apple, .exteragram, .team, etc., que abrem instantaneamente qualquer @link público (usuário, grupo ou canal) no Telegram.\n\nConfigure os atalhos uma vez e depois use de qualquer chat, o plugin abrirá diretamente a conversa com aquele destino, sem precisar copiar links ou usar a busca do Telegram.\n\nExemplo de uso:\n.apple → abre @AGeekApple\n.exteragram → abre @exteraGram\n.plugins → abre @exteraDevPlugins\n\nDigite .jump para ver esta ajuda a qualquer momento.",
+        "es": "JumpTo te permite crear comandos personalizados como .apple, .exteragram, .team, etc., que abren instantáneamente cualquier @link público (usuario, grupo o canal) en Telegram.\n\nConfigura los atajos una vez y luego úsalos desde cualquier chat, el plugin abrirá directamente la conversación con ese destino, sin necesidad de copiar enlaces o usar la búsqueda de Telegram.\n\nEjemplo de uso:\n.apple → abre @AGeekApple\n.exteragram → abre @exteraGram\n.plugins → abre @exteraDevPlugins\n\nEscribe .jump para ver esta ayuda en cualquier momento.",
+        "fr": "JumpTo vous permet de créer des commandes personnalisées comme .apple, .exteragram, .team, etc., qui ouvrent instantanément n'importe quel @lien public (utilisateur, groupe ou canal) sur Telegram.\n\nConfigurez vos raccourcis une fois et utilisez-les ensuite depuis n'importe quel chat, le plugin ouvrira directement la conversation avec cette destination, sans avoir à copier de liens ou utiliser la recherche Telegram.\n\nExemple d'utilisation :\n.apple → ouvre @AGeekApple\n.exteragram → ouvre @exteraGram\n.plugins → ouvre @exteraDevPlugins\n\nTapez .jump pour voir cette aide à tout moment.",
+        "ru": "JumpTo позволяет создавать пользовательские команды, такие как .apple, .exteragram, .team и т.д., которые мгновенно открывают любой публичный @линк (пользователь, группа или канал) в Telegram.\n\nНастройте ярлыки один раз и затем используйте их из любого чата, плагин откроет диалог напрямую, не нужно копировать ссылки или использовать поиск Telegram.\n\nПример использования:\n.apple → открывает @AGeekApple\n.exteragram → открывает @exteraGram\n.plugins → открывает @exteraDevPlugins\n\nВведите .jump, чтобы увидеть эту справку в любое время."
+    },
+    "jump_help": {
+        "en": "How to use JumpTo:\n\n1. Open the plugin settings and expand a Space.\n2. Choose a shortcut name (prefix), like .apple, and set the destination.\n   - You can use @username, t.me link, or just the user/channel ID.\n3. Save your shortcuts.\n4. In any chat, type your shortcut (e.g., .apple) to instantly open the destination.\n\nAdvanced: Use the 'Links' section to configure DeepLinks. These allow you to open Telegram interface elements like settings, theme, proxy, etc.\n   - Just enter the internal keyword (e.g., settings), and it will open tg://settings.\n\nExamples:\n.apple → opens @AGeekApple\n.exteragram → opens @exteraGram\n.plugins → opens @exteraDevPlugins\n\nYou can create as many shortcuts as you want. Type .jump anytime to see this help again.",
+        "pt": "Como usar o JumpTo:\n\n1. Abra as configurações do plugin e expanda um Espaço.\n2. Escolha um nome de atalho (prefixo), como .apple, e defina o destino.\n   - Você pode usar @usuário, link t.me ou apenas o ID numérico.\n3. Salve seus atalhos.\n4. Em qualquer chat, digite o atalho (ex: .apple) para abrir instantaneamente o destino.\n\nAvançado: Use a seção 'Links' para configurar DeepLinks. Eles permitem abrir elementos internos do Telegram como configurações, tema, proxy, etc.\n   - Basta digitar a palavra-chave interna (ex: settings), e será aberto o tg:// correspondente.\n\nExemplos:\n.apple → abre @AGeekApple\n.exteragram → abre @exteraGram\n.plugins → abre @exteraDevPlugins\n\nVocê pode criar quantos atalhos quiser. Digite .jump a qualquer momento para ver esta ajuda novamente.",
+        "es": "Cómo usar JumpTo:\n\n1. Abre la configuración del plugin y expande un Espacio.\n2. Elige un nombre de acceso directo (prefijo), como .apple, y define el destino.\n   - Puedes usar @usuario, enlace t.me o solo el ID numérico.\n3. Guarda tus accesos directos.\n4. En cualquier chat, escribe tu acceso directo (por ejemplo, .apple) para abrir el destino al instante.\n\nAvanzado: Usa la sección 'Links' para configurar DeepLinks. Estos permiten abrir secciones internas de Telegram como configuración, tema, proxy, etc.\n   - Solo escribe la palabra clave interna (por ejemplo: settings), y se abrirá el tg:// correspondiente.\n\nEjemplos:\n.apple → abre @AGeekApple\n.exteragram → abre @exteraGram\n.plugins → abre @exteraDevPlugins\n\nPuedes crear tantos accesos directos como desees. Escribe .jump en cualquier momento para ver esta ayuda nuevamente.",
+        "fr": "Comment utiliser JumpTo :\n\n1. Ouvrez les paramètres du plugin et développez un Espace.\n2. Choisissez un nom de raccourci (préfixe), comme .apple, et définissez la destination.\n   - Vous pouvez utiliser @utilisateur, un lien t.me ou simplement l'identifiant numérique.\n3. Enregistrez vos raccourcis.\n4. Dans n'importe quelle discussion, tapez votre raccourci (par exemple : .apple) pour ouvrir instantanément la destination.\n\nAvancé : utilisez la section 'Links' pour configurer les DeepLinks. Ils permettent d'accéder à des éléments internes de Telegram comme les paramètres, le thème, le proxy, etc.\n   - Saisissez simplement le mot-clé interne (par exemple : settings), et cela ouvrira le tg:// correspondant.\n\nExemples :\n.apple → ouvre @AGeekApple\n.exteragram → ouvre @exteraGram\n.plugins → ouvre @exteraDevPlugins\n\nVous pouvez créer autant de raccourcis que vous le souhaitez. Tapez .jump à tout moment pour revoir cette aide.",
+        "ru": "Как пользоваться JumpTo:\n\n1. Откройте настройки плагина и разверните блок.\n2. Укажите имя ярлыка (префикс), например .apple, и задайте назначение.\n   - Вы можете использовать @имя, ссылку t.me или просто числовой ID.\n3. Сохраните свои ярлыки.\n4. В любом чате введите ярлык (например, .apple), и JumpTo откроет назначение сразу.\n\nДополнительно: используйте раздел 'Links' для настройки DeepLinks. Это позволяет открывать внутренние экраны Telegram, такие как настройки, темы, прокси и т. д.\n   - Просто введите внутреннее ключевое слово (например: settings), и будет открыт соответствующий tg://.\n\nПримеры:\n.apple → открывает @AGeekApple\n.exteragram → открывает @exteraGram\n.plugins → открывает @exteraDevPlugins\n\nВы можете создать сколько угодно ярлыков. Введите .jump в любое время, чтобы снова увидеть эту справку."
+    },
+    "settings_header": {
+        "en": "JumpTo Settings",
+        "pt": "Configurações do JumpTo",
+        "es": "Configuración de JumpTo",
+        "fr": "Paramètres JumpTo",
+        "ru": "Настройки JumpTo"
+    },
+    "enable_shortcuts": {
+        "en": "Enable Shortcuts",
+        "pt": "Ativar Atalhos",
+        "es": "Activar Atajos",
+        "fr": "Activer les Raccourcis",
+        "ru": "Включить сокращения"
+    },
+    "enable_shortcuts_subtext": {
+        "en": "Enable or disable all shortcuts",
+        "pt": "Ativar ou desativar todos os atalhos",
+        "es": "Activar o desactivar todos los atajos",
+        "fr": "Activer ou désactiver tous les raccourcis",
+        "ru": "Включить или отключить все сокращения"
+    },
+    "show_chat_menu": {
+        "en": "Show in Chat Menu",
+        "pt": "Mostrar no Menu do Chat",
+        "es": "Mostrar en el Menú del Chat",
+        "fr": "Afficher dans le Menu du Chat",
+        "ru": "Показать в меню чата"
+    },
+    "show_chat_menu_subtext": {
+        "en": "Show JumpTo settings in chat menu",
+        "pt": "Mostrar configurações do JumpTo no menu do chat",
+        "es": "Mostrar configuración de JumpTo en el menú del chat",
+        "fr": "Afficher les paramètres JumpTo dans le menu du chat",
+        "ru": "Показать настройки JumpTo в меню чата"
+    },
+    "shortcut_opened": {
+        "en": "Opening shortcut...",
+        "pt": "Abrindo atalho...",
+        "es": "Abriendo acceso directo...",
+        "fr": "Ouverture du raccourci...",
+        "ru": "Открытие ярлыка..."
+    },
+    "shortcut_not_found": {
+        "en": "Shortcut not found or not configured",
+        "pt": "Atalho não encontrado ou não configurado",
+        "es": "Atajo no encontrado o no configurado",
+        "fr": "Raccourci introuvable ou non configuré",
+        "ru": "Сокращение не найдено или не настроено"
+    },
+    "invalid_format": {
+        "en": "Invalid format. Use ID, username or t.me link",
+        "pt": "Formato inválido. Use ID, username ou link t.me",
+        "es": "Formato inválido. Usa ID, username o enlace t.me",
+        "fr": "Format invalide. Utilisez ID, nom d'utilisateur ou lien t.me",
+        "ru": "Неверный формат. Используйте ID, имя пользователя или ссылку t.me"
+    },
+    "space_1": {
+        "en": "Space 1",
+        "pt": "Espaço 1",
+        "es": "Espacio 1",
+        "fr": "Espace 1",
+        "ru": "Пространство 1"
+    },
+    "space_2": {
+        "en": "Space 2",
+        "pt": "Espaço 2",
+        "es": "Espacio 2",
+        "fr": "Espace 2",
+        "ru": "Пространство 2"
+    },
+    "space_3": {
+        "en": "Space 3",
+        "pt": "Espaço 3",
+        "es": "Espacio 3",
+        "fr": "Espace 3",
+        "ru": "Пространство 3"
+    },
+    "shortcut_dest": {
+        "en": "Shortcut",
+        "pt": "Atalho",
+        "es": "Acceso directo",
+        "fr": "Raccourci",
+        "ru": "Ярлык"
+    },
+    "shortcut_prefix": {
+        "en": "Prefix",
+        "pt": "Prefixo",
+        "es": "Prefijo",
+        "fr": "Préfixe",
+        "ru": "Префикс"
+    },
+    "shortcut_dest_subtext": {
+        "en": "Username or t.me link",
+        "pt": "Username ou link t.me",
+        "es": "Nombre de usuario o enlace t.me",
+        "fr": "Nom d'utilisateur ou lien t.me",
+        "ru": "Имя пользователя или ссылка t.me"
+    },
+    "shortcut_prefix_subtext": {
+        "en": "Command to trigger the shortcut",
+        "pt": "Comando para acionar o atalho",
+        "es": "Comando para activar el acceso directo",
+        "fr": "Commande pour déclencher le raccourci",
+        "ru": "Команда для запуска ярлыка"
+    },
+    "show_shortcut_feedback": {
+        "en": "Show shortcut feedback",
+        "pt": "Mostrar aviso de atalho",
+        "es": "Mostrar aviso de acceso directo",
+        "fr": "Afficher l'alerte de raccourci",
+        "ru": "Показывать уведомление о сокращении"
+    },
+    "show_shortcut_feedback_subtext": {
+        "en": "Show a message when a shortcut is triggered",
+        "pt": "Exibir uma mensagem ao acionar um atalho",
+        "es": "Mostrar un mensaje al usar un acceso directo",
+        "fr": "Afficher un message lors de l'utilisation d'un raccourci",
+        "ru": "Показывать сообщение при использовании сокращения"
+    },
+    "space_1_subtext": {
+        "en": "Expand to configure and manage shortcuts for Space 1",
+        "pt": "Expanda para configurar e gerenciar atalhos do Espaço 1",
+        "es": "Expanda para configurar y gestionar accesos directos del Espacio 1",
+        "fr": "Développez pour configurer et gérer les raccourcis de l'Espace 1",
+        "ru": "Разверните для настройки и управления сокращениями Пространства 1"
+    },
+    "space_2_subtext": {
+        "en": "Expand to configure and manage shortcuts for Space 2",
+        "pt": "Expanda para configurar e gerenciar atalhos do Espaço 2",
+        "es": "Expanda para configurar y gestionar accesos directos del Espacio 2",
+        "fr": "Développez pour configurer et gérer les raccourcis de l'Espace 2",
+        "ru": "Разверните для настройки и управления сокращениями Пространства 2"
+    },
+    "space_3_subtext": {
+        "en": "Expand to configure and manage shortcuts for Space 3",
+        "pt": "Expanda para configurar e gerenciar atalhos do Espaço 3",
+        "es": "Expanda para configurar y gestionar accesos directos del Espacio 3",
+        "fr": "Développez pour configurer et gérer les raccourcis de l'Espace 3",
+        "ru": "Разверните для настройки и управления сокращениями Пространства 3"
+    },
+    "dialog_ok": {
+        "en": "OK",
+        "pt": "OK",
+        "es": "Aceptar",
+        "fr": "OK",
+        "ru": "ОК"
+    },
+    "dotted_credit": {
+        "en": "Dotted Plugins",
+        "pt": "Dotted Plugins",
+        "es": "Dotted Plugins",
+        "fr": "Dotted Plugins",
+        "ru": "Dotted Plugins"
+    },
+    "trying_invite": {
+        "en": "Trying to join invite: {invite_hash}",
+        "pt": "Tentando entrar no convite: {invite_hash}",
+        "es": "Intentando unirse al convite: {invite_hash}",
+        "fr": "Tentative de rejoindre l'invitation: {invite_hash}",
+        "ru": "Пытаюсь присоединиться к приглашению: {invite_hash}"
+    },
+    "jumpto_note": {
+        "en": "Set up a shortcut to open any chat, group or channel using @username, t.me link or ID. You can also use DeepLinks to open Telegram interface elements like settings or theme. Type .jump to see full instructions.",
+        "pt": "Configure um atalho para abrir qualquer chat, grupo ou canal usando @usuário, link t.me ou ID. Você também pode usar DeepLinks para abrir elementos da interface do Telegram, como configurações ou tema. Digite .jump para ver as instruções completas.",
+        "es": "Configura un acceso directo para abrir cualquier chat, grupo o canal usando @usuario, enlace t.me o ID. También puedes usar DeepLinks para abrir elementos de la interfaz de Telegram como configuración o tema. Escribe .jump para ver las instrucciones completas.",
+        "fr": "Configurez un raccourci pour ouvrir n'importe quel chat, groupe ou canal en utilisant @utilisateur, lien t.me ou ID. Vous pouvez aussi utiliser les DeepLinks pour ouvrir des éléments internes de Telegram comme les paramètres ou le thème. Tapez .jump pour voir les instructions complètes.",
+        "ru": "Настройте ярлык для открытия любого чата, группы или канала с помощью @имени, ссылки t.me или ID. Вы также можете использовать DeepLinks для открытия внутренних элементов Telegram, таких как настройки или темы. Введите .jump, чтобы увидеть полную инструкцию."
+    },
+    "deeplink_header": {
+        "en": "DeepLinks",
+        "pt": "DeepLinks",
+        "es": "DeepLinks",
+        "fr": "DeepLinks",
+        "ru": "DeepLinks"
+    },
+    "deeplink_section_1": {
+        "en": "Links 1",
+        "pt": "Links 1",
+        "es": "Enlaces 1",
+        "fr": "Liens 1",
+        "ru": "Ссылки 1"
+    },
+    "deeplink_section_2": {
+        "en": "Links 2",
+        "pt": "Links 2",
+        "es": "Enlaces 2",
+        "fr": "Liens 2",
+        "ru": "Ссылки 2"
+    },
+    "deeplink_section_3": {
+        "en": "Links 3",
+        "pt": "Links 3",
+        "es": "Enlaces 3",
+        "fr": "Liens 3",
+        "ru": "Ссылки 3"
+    },
+    "deeplink_dest": {
+        "en": "Deep Link",
+        "pt": "Deep Link",
+        "es": "Deep Link",
+        "fr": "Deep Link",
+        "ru": "Deep Link"
+    },
+    "deeplink_dest_subtext": {
+        "en": "Enter a Telegram deep link (must start with tg://)",
+        "pt": "Digite um deep link do Telegram (deve começar com tg://)",
+        "es": "Ingresa un deep link de Telegram (debe comenzar con tg://)",
+        "fr": "Entrez un deep link Telegram (doit commencer par tg://)",
+        "ru": "Введите deep link Telegram (должен начинаться с tg://)"
+    },
+    "deeplink_prefix": {
+        "en": "Shortcut",
+        "pt": "Atalho",
+        "es": "Acceso directo",
+        "fr": "Raccourci",
+        "ru": "Ярлык"
+    },
+    "deeplink_prefix_subtext": {
+        "en": "Command to trigger the deep link",
+        "pt": "Comando para acionar o deep link",
+        "es": "Comando para activar el deep link",
+        "fr": "Commande pour déclencher le deep link",
+        "ru": "Команда для запуска deep link"
+    },
+    "deeplink_invalid": {
+        "en": "Invalid deep link. Must start with tg://",
+        "pt": "Deep link inválido. Deve começar com tg://",
+        "es": "Deep link inválido. Debe comenzar con tg://",
+        "fr": "Deep link invalide. Doit commencer par tg://",
+        "ru": "Неверный deep link. Должен начинаться с tg://"
+    },
+    "deeplink_section_1_subtext": {
+        "en": "Expand to configure deep links for Links 1 (e.g. support, settings)",
+        "pt": "Expanda para configurar deep links para Links 1 (ex: support, settings)",
+        "es": "Expanda para configurar deep links para Enlaces 1 (ej: support, settings)",
+        "fr": "Développez pour configurer les deep links pour Liens 1 (ex: support, settings)",
+        "ru": "Разверните для настройки deep links для Ссылки 1 (например: support, settings)"
+    },
+    "deeplink_section_2_subtext": {
+        "en": "Expand to configure deep links for Links 2",
+        "pt": "Expanda para configurar deep links para Links 2",
+        "es": "Expanda para configurar deep links para Enlaces 2",
+        "fr": "Développez pour configurer les deep links pour Liens 2",
+        "ru": "Разверните для настройки deep links для Ссылки 2"
+    },
+    "deeplink_section_3_subtext": {
+        "en": "Expand to configure deep links for Links 3",
+        "pt": "Expanda para configurar deep links para Links 3",
+        "es": "Expanda para configurar deep links para Enlaces 3",
+        "fr": "Développez pour configurer les deep links pour Liens 3",
+        "ru": "Разверните для настройки deep links для Ссылки 3"
+    },
+    "deeplink_note": {
+        "en": "DeepLinks section is for advanced users. Configure Telegram deep links like 'support', 'settings', etc. Note: The expand/collapse switches may have a UI bug - if options don't appear immediately, just go back and re-enter this section.",
+        "pt": "A seção DeepLinks é para usuários avançados. Configure deep links do Telegram como 'support', 'settings', etc. Nota: Os switches de expandir/compactar podem ter um bug na UI - se as opções não aparecerem imediatamente, apenas volte e entre novamente nesta seção.",
+        "es": "La sección DeepLinks es para usuarios avanzados. Configura deep links de Telegram como 'support', 'settings', etc. Nota: Los switches de expandir/compactar pueden tener un bug en la UI - si las opciones no aparecen inmediatamente, solo regresa y vuelve a entrar en esta sección.",
+        "fr": "La section DeepLinks est pour les utilisateurs avancés. Configurez les deep links Telegram comme 'support', 'settings', etc. Note : Les switches d'expansion/réduction peuvent avoir un bug d'interface - si les options n'apparaissent pas immédiatement, revenez simplement et réentrez dans cette section.",
+        "ru": "Раздел DeepLinks предназначен для продвинутых пользователей. Настройте deep links Telegram, такие как 'support', 'settings' и т.д. Примечание: Переключатели развертывания/сворачивания могут иметь ошибку интерфейса - если опции не появляются сразу, просто вернитесь и снова войдите в этот раздел."
+    },
+    "space_4": {
+        "en": "Space 4",
+        "pt": "Espaço 4",
+        "es": "Espacio 4",
+        "fr": "Espace 4",
+        "ru": "Пространство 4"
+    },
+    "space_4_subtext": {
+        "en": "Expand to configure and manage shortcuts for Space 4",
+        "pt": "Expanda para configurar e gerenciar atalhos do Espaço 4",
+        "es": "Expanda para configurar y gestionar accesos directos del Espacio 4",
+        "fr": "Développez pour configurer et gérer les raccourcis de l'Espace 4",
+        "ru": "Разверните для настройки и управления сокращениями Пространства 4"
+    },
+    "deeplink_section_4": {
+        "en": "Links 4",
+        "pt": "Links 4",
+        "es": "Enlaces 4",
+        "fr": "Liens 4",
+        "ru": "Ссылки 4"
+    },
+    "deeplink_section_4_subtext": {
+        "en": "Expand to configure deep links for Links 4",
+        "pt": "Expanda para configurar deep links para Links 4",
+        "es": "Expanda para configurar deep links para Enlaces 4",
+        "fr": "Développez pour configurer les deep links pour Liens 4",
+        "ru": "Разверните для настройки deep links для Ссылки 4"
+    }
+}
+
+def tr(key):
+    lang = Locale.getDefault().getLanguage()
+    return TRANSLATIONS.get(key, {}).get(lang, TRANSLATIONS.get(key, {}).get("en", key))
+
+class JumpToPlugin(BasePlugin):
+    def __init__(self):
+        self._message_lock = threading.Lock()
+        self._shortcuts_cache = {}
+        self.error_message = ""
+        self._temp_dir = File(ApplicationLoader.getFilesDirFixed(), "JumpTo")
+        if not self._temp_dir.exists():
+            self._temp_dir.mkdirs()
+        
+    def tr(self, key):
+        return tr(key)
+
+    def _add_menu_items(self):
+        try:
+            if self.get_setting("show_chat_menu", True):
+                self.add_menu_item(MenuItemData(
+                    menu_type=MenuItemType.CHAT_ACTION_MENU,
+                    text=self.tr("settings_header"),
+                    icon="msg_viewchats",
+                    priority=5,
+                    on_click=lambda ctx: run_on_ui_thread(lambda: self._open_plugin_settings())
+                ))
+        except Exception as e:
+            print(f"Failed to add menu items: {e}")
+
+    def remove_menu_items(self):
+        try:
+            pass
+        except Exception as e:
+            print(f"Failed to remove menu items: {e}")
+
+    def on_setting_changed(self, key, value):
+        if key == "show_chat_menu":
+            self.remove_menu_items()
+            self._add_menu_items()
+        if key.startswith("space_") and ("_shortcut_" in key):
+            self._check_and_expand_blocks("space")
+        if key.startswith("deeplink_") and ("_shortcut_" in key):
+            self._check_and_expand_blocks("deeplink")
+
+    def _open_plugin_settings(self):
+        try:
+            print("Attempting to open plugin settings...")
+            controller = PluginsController.getInstance()
+            print(f"Controller instance: {controller}")
+            plugin = controller.plugins.get(self.id)
+            print(f"Plugin instance: {plugin}")
+            fragment = get_last_fragment()
+            print(f"Fragment instance: {fragment}")
+            if plugin and fragment:
+                fragment.presentFragment(PluginSettingsActivity(plugin))
+                print("Settings opened successfully")
+            else:
+                print(f"Failed to open settings - Plugin: {plugin}, Fragment: {fragment}")
+        except Exception as e:
+            print(f"Error opening plugin settings: {str(e)}\nType: {type(e)}")
+            import traceback
+            print(traceback.format_exc())
+
+    def _parse_chat_identifier(self, identifier):
+        try:
+            print(f"[JumpTo] Parsing identifier: {identifier}")
+            identifier = identifier.strip()
+            if not identifier:
+                return None
+            if identifier.startswith("https://"):
+                identifier = identifier[8:]
+            if identifier.startswith("http://"):
+                identifier = identifier[7:]
+            if identifier.startswith("t.me/"):
+                identifier = identifier[5:]
+            if identifier.startswith("telegram.me/"):
+                identifier = identifier[12:]
+            if identifier.startswith("@"):
+                identifier = identifier[1:]
+            if identifier.lstrip("-").isdigit():
+                return int(identifier)
+            return identifier
+        except Exception as e:
+            print(f"[JumpTo] Error parsing chat identifier: {e}")
+            return None
+
+    def _open_chat(self, chat_identifier):
+        print(f"[Apple] _open_chat called with: '{chat_identifier}'")
+        try:
+            identifier = chat_identifier.strip()
+
+            if not identifier.startswith("tg://") and not identifier.startswith("https://") and not identifier.startswith("http://") and not identifier.startswith("t.me/") and not identifier.startswith("telegram.me/") and not identifier.startswith("@") and not identifier.lstrip("-").isdigit() and not identifier.startswith("+") and not identifier.startswith("c/"):
+
+                identifier = f"tg://{identifier}"
+            if identifier.startswith("tg://"):
+                from android.content import Intent
+                from android.net import Uri
+                fragment = get_last_fragment()
+                ctx = None
+                if fragment and fragment.getParentActivity():
+                    ctx = fragment.getParentActivity()
+                else:
+                    ctx = ApplicationLoader.applicationContext
+                intent = Intent(Intent.ACTION_VIEW, Uri.parse(identifier))
+                if ctx == ApplicationLoader.applicationContext:
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                run_on_ui_thread(lambda: ctx.startActivity(intent))
+                print(f"[JumpTo] Abrindo link tg://: {identifier}")
+                return True
+            if identifier.startswith("https://"):
+                identifier = identifier[8:]
+            if identifier.startswith("http://"):
+                identifier = identifier[7:]
+            if identifier.startswith("t.me/"):
+                identifier = identifier[5:]
+            if identifier.startswith("telegram.me/"):
+                identifier = identifier[12:]
+            if identifier.startswith("+"):
+                invite_hash = identifier[1:]
+                print(f"[JumpTo] {self.tr('trying_invite').format(invite_hash=invite_hash)}")
+                fragment = get_last_fragment()
+                def try_methods():
+                    from ui.bulletin import BulletinHelper
+                    from android.content import Intent
+                    from android.net import Uri
+                    from org.telegram.messenger import ApplicationLoader
+                    try:
+                        def on_invite_processed(result, error):
+                            print(f"[JumpTo] processChatInvite callback: result={result}, error={error}")
+                            if error is None and result is not None:
+                                try:
+                                    chat_id = result.chat.id if hasattr(result, 'chat') else getattr(result, 'id', None)
+                                    if chat_id:
+                                        run_on_ui_thread(lambda: get_messages_controller().openByChatId(chat_id, fragment, 1))
+                                        return
+                                except Exception as e:
+                                    print(f"Erro ao abrir chat após convite: {e}")
+                            open_external()
+                        get_messages_controller().processChatInvite(invite_hash, fragment, on_invite_processed)
+                        print("[JumpTo] processChatInvite (com callback) chamado")
+                        return True
+                    except Exception as e:
+                        print(f"[JumpTo] processChatInvite (com callback) falhou: {e}")
+                    try:
+                        get_messages_controller().processChatInvite(invite_hash, fragment)
+                        print("[JumpTo] processChatInvite (sem callback) chamado")
+                        return True
+                    except Exception as e:
+                        print(f"[JumpTo] processChatInvite (sem callback) falhou: {e}")
+                    try:
+                        get_messages_controller().joinChatInvite(invite_hash, fragment)
+                        print("[JumpTo] joinChatInvite chamado")
+                        return True
+                    except Exception as e:
+                        print(f"[JumpTo] joinChatInvite falhou: {e}")
+                    try:
+                        get_messages_controller().acceptChatInvite(invite_hash, fragment)
+                        print("[JumpTo] acceptChatInvite chamado")
+                        return True
+                    except Exception as e:
+                        print(f"[JumpTo] acceptChatInvite falhou: {e}")
+                    def open_external():
+                        url = f"https://t.me/+{invite_hash}"
+                        ctx = ApplicationLoader.applicationContext
+                        intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                        run_on_ui_thread(lambda: ctx.startActivity(intent))
+                        BulletinHelper.show_info(f"Abrindo convite no navegador: {url}")
+                        print(f"[JumpTo] Abrindo convite no navegador: {url}")
+                    open_external()
+                    print("[JumpTo] Nenhum método de convite funcionou! Fallback para navegador.")
+                    return False
+                run_on_ui_thread(try_methods)
+                return True
+            if identifier.startswith("c/"):
+                parts = identifier.split("/")
+                if len(parts) >= 2 and parts[1].lstrip("-").isdigit():
+                    identifier = parts[1]
+            if identifier.startswith("@"):
+                identifier = identifier[1:]
+            if identifier.lstrip("-").isdigit():
+                chat_id = int(identifier)
+                try:
+                    run_on_ui_thread(lambda: get_messages_controller().openByChatId(chat_id, get_last_fragment(), 1))
+                    return True
+                except Exception as e:
+                    print(f"Erro ao abrir chat por ChatId: {e}")
+                    try:
+                        run_on_ui_thread(lambda: get_messages_controller().openByUserId(chat_id, get_last_fragment(), 1))
+                        return True
+                    except Exception as e2:
+                        print(f"Erro ao abrir chat por UserId: {e2}")
+                        return False
+            run_on_ui_thread(lambda: get_messages_controller().openByUserName(identifier, get_last_fragment(), 1))
+            return True
+        except Exception as e:
+            print(f"Erro ao abrir chat: {e}")
+            return False
+
+    def on_send_message_hook(self, account, params):
+        if not hasattr(params, "message") or not isinstance(params.message, str):
+            return HookResult()
+        msg = params.message.strip()
+        print(f"[JumpTo] Received message: {msg}")
+        if not self.get_setting("enable_shortcuts", True):
+            print("[JumpTo] Shortcuts disabled")
+            return HookResult()
+        NUM_SHORTCUTS = 5
+        for space_key in ["space_1", "space_2", "space_3"]:
+            for i in range(1, NUM_SHORTCUTS + 1):
+                shortcut_id = self.get_setting(f"{space_key}_shortcut_{i}_id", "")
+                shortcut_prefix = self.get_setting(f"{space_key}_shortcut_{i}_prefix", "")
+                print(f"[JumpTo] msg: '{msg}', shortcut_id: '{shortcut_id}', shortcut_prefix: '{shortcut_prefix}'")
+                if shortcut_id and shortcut_prefix and msg == shortcut_prefix:
+                    print(f"[JumpTo] Match found for {space_key} shortcut {i}")
+                    run_on_queue(lambda sid=shortcut_id: self._handle_shortcut(sid, params, shortcut_type="space"))
+                    return HookResult(strategy=HookStrategy.CANCEL)
+        for section_key in ["deeplink_1", "deeplink_2", "deeplink_3"]:
+            for i in range(1, NUM_SHORTCUTS + 1):
+                shortcut_id = self.get_setting(f"{section_key}_shortcut_{i}_id", "")
+                shortcut_prefix = self.get_setting(f"{section_key}_shortcut_{i}_prefix", "")
+                if shortcut_id and shortcut_prefix and msg == shortcut_prefix:
+                    print(f"[JumpTo] DeepLink match: {shortcut_id}")
+                    run_on_queue(lambda sid=shortcut_id: self._handle_shortcut(sid, params, shortcut_type="deeplink"))
+                    return HookResult(strategy=HookStrategy.CANCEL)
+        if msg == ".jump":
+            fragment = get_last_fragment()
+            if not fragment:
+                return HookResult()
+            activity = fragment.getParentActivity()
+            if not activity:
+                return HookResult()
+            from ui.alert import AlertDialogBuilder
+            builder = AlertDialogBuilder(activity)
+            builder.set_title(self.tr("plugin_name"))
+            builder.set_message(self.tr("jump_help"))
+            def on_ok(bld, which):
+                bld.dismiss()
+            builder.set_positive_button(self.tr("dialog_ok"), on_ok)
+            run_on_ui_thread(builder.show)
+            return HookResult(strategy=HookStrategy.CANCEL)
+        print("[JumpTo] No shortcut matched!")
+        return HookResult()
+
+    def _handle_shortcut(self, chat_identifier, params, shortcut_type=None):
+        try:
+            fragment = get_last_fragment()
+            if fragment:
+                run_on_ui_thread(lambda: self._show_dialog(fragment))
+            show_feedback = self.get_setting("show_shortcut_feedback", True)
+            open_result = False
+            if shortcut_type == "space":
+                if str(chat_identifier).lstrip("-").isdigit():
+                    open_result = self._open_chat(f"tg://user?id={chat_identifier}")
+                else:
+                    open_result = self._open_chat(chat_identifier)
+            elif shortcut_type == "deeplink":
+                val = str(chat_identifier).strip()
+                if (
+                    not val.startswith("tg://") and
+                    not val.startswith("http://") and
+                    not val.startswith("https://") and
+                    not val.startswith("t.me/") and
+                    not val.startswith("telegram.me/") and
+                    not val.startswith("@") and
+                    not val.lstrip("-").isdigit() and
+                    " " not in val and
+                    "/" not in val and
+                    not val.startswith("+")
+                ):
+                    open_result = self._open_chat(f"tg://{val}")
+                else:
+                    open_result = self._open_chat(chat_identifier)
+            else:
+                open_result = self._open_chat(chat_identifier)
+            if open_result:
+                if show_feedback:
+                    run_on_ui_thread(lambda: BulletinHelper.show_success(self.tr("shortcut_opened")))
+            else:
+                if show_feedback:
+                    run_on_ui_thread(lambda: BulletinHelper.show_error(self.tr("shortcut_not_found")))
+        except Exception as e:
+            print(f"Error handling shortcut: {e}")
+            if self.get_setting("show_shortcut_feedback", True):
+                run_on_ui_thread(lambda: BulletinHelper.show_error(self.tr("shortcut_not_found")))
+        finally:
+            run_on_ui_thread(self._dismiss_dialog)
+
+    def _show_dialog(self, fragment):
+        try:
+            self.dialog = AlertDialog(fragment.getParentActivity(), 3)
+            self.dialog.setMessage("Opening chat...")
+            self.dialog.show()
+        except Exception as e:
+            print(f"Error showing dialog: {e}")
+
+    def _dismiss_dialog(self):
+        try:
+            if hasattr(self, "dialog") and self.dialog and self.dialog.isShowing():
+                self.dialog.dismiss()
+        except Exception:
+            pass
+        self.dialog = None
+
+    def _all_blocks_filled(self, section_keys, num_shortcuts):
+        """Verifica se todos os blocos (Spaces ou DeepLinks) estão preenchidos."""
+        for section_key in section_keys:
+            for i in range(1, num_shortcuts + 1):
+                shortcut_id = self.get_setting(f"{section_key}_shortcut_{i}_id", "").strip()
+                shortcut_prefix = self.get_setting(f"{section_key}_shortcut_{i}_prefix", "").strip()
+                if not shortcut_id or not shortcut_prefix:
+                    return False
+        return True
+
+    def _get_dynamic_block_count(self, base_key, default_count=3):
+        """Conta quantos blocos existem dinamicamente (inclui extras criados)."""
+        count = default_count
+        while self.get_setting(f"show_{base_key}_{count+1}", None) is not None:
+            count += 1
+        return count
+
+    def _add_dynamic_block(self, base_key, idx):
+        """Ativa a exibição de um novo bloco dinâmico."""
+        self.set_setting(f"show_{base_key}_{idx}", True)
+
+    def _show_auto_expand_dialog(self, on_yes, on_no):
+        fragment = get_last_fragment()
+        if not fragment:
+            return
+        activity = fragment.getParentActivity()
+        if not activity:
+            return
+        from ui.alert import AlertDialogBuilder
+        builder = AlertDialogBuilder(activity)
+        builder.set_title(self.tr("auto_expand_dialog_title"))
+        builder.set_message(self.tr("auto_expand_dialog_message"))
+        def yes_cb(bld, which):
+            bld.dismiss()
+            on_yes()
+        def no_cb(bld, which):
+            bld.dismiss()
+            if on_no:
+                on_no()
+        builder.set_positive_button(self.tr("auto_expand_dialog_yes"), yes_cb)
+        builder.set_negative_button(self.tr("auto_expand_dialog_no"), no_cb)
+        run_on_ui_thread(builder.show)
+
+    def _check_and_expand_blocks(self, section_type):
+        NUM_SHORTCUTS = 5
+        auto_expand = self.get_setting("auto_expand_blocks", False)
+        if not auto_expand:
+            return
+        if section_type == "space":
+            base_key = "space"
+            section_keys = [f"space_{i+1}" for i in range(self._get_dynamic_block_count("space", 3))]
+        else:
+            base_key = "deeplink"
+            section_keys = [f"deeplink_{i+1}" for i in range(self._get_dynamic_block_count("deeplink", 3))]
+        if self._all_blocks_filled(section_keys, NUM_SHORTCUTS):
+            def on_yes():
+                idx = len(section_keys) + 1
+                self._add_dynamic_block(base_key, idx)
+                self.reload_settings()
+            def on_no():
+                pass
+            self._show_auto_expand_dialog(on_yes, on_no)
+
+    def create_deeplinks_settings(self):
+        NUM_SHORTCUTS = 5
+        deeplink_count = 4
+        show_deeplink = [self.get_setting(f"show_deeplink_{i+1}", True) for i in range(deeplink_count)]
+        settings = [
+            Divider(text=self.tr("deeplink_note")),
+            Header(text=self.tr("deeplink_header")),
+        ]
+        for idx in range(deeplink_count):
+            if idx > 0:
+                settings.append(Divider())
+            settings.append(Switch(
+                key=f"show_deeplink_{idx+1}",
+                text=self.tr(f"deeplink_section_{idx+1}") if f"deeplink_section_{idx+1}" in TRANSLATIONS else f"Links {idx+1}",
+                icon="profile_list",
+                default=True,
+                subtext=self.tr(f"deeplink_section_{idx+1}_subtext") if f"deeplink_section_{idx+1}_subtext" in TRANSLATIONS else "",
+                on_change=lambda _, idx=idx: self.reload_settings()
+            ))
+            if show_deeplink[idx]:
+                for i in range(1, NUM_SHORTCUTS + 1):
+                    settings.append(Input(
+                        key=f"deeplink_{idx+1}_shortcut_{i}_id",
+                        text=self.tr("deeplink_dest"),
+                        icon="menu_feature_links",
+                        default="",
+                        subtext=self.tr("deeplink_dest_subtext")
+                    ))
+                    settings.append(Input(
+                        key=f"deeplink_{idx+1}_shortcut_{i}_prefix",
+                        text=self.tr("deeplink_prefix"),
+                        icon="slide_dot_big",
+                        default="",
+                        subtext=self.tr("deeplink_prefix_subtext")
+                    ))
+                    if i < NUM_SHORTCUTS:
+                        settings.append(Divider())
+        return settings
+
+    def create_settings(self):
+        NUM_SHORTCUTS = 5
+        space_count = 4
+        show_space = [self.get_setting(f"show_space_{i+1}", True) for i in range(space_count)]
+        show_deeplink_1 = self.get_setting("show_deeplink_1", False)
+        show_deeplink_2 = self.get_setting("show_deeplink_2", False)
+        show_deeplink_3 = self.get_setting("show_deeplink_3", False)
+        settings = [
+            Divider(text=self.tr("jumpto_note")),
+            Header(text=self.tr("settings_header")),
+            Switch(
+                key="enable_shortcuts",
+                text=self.tr("enable_shortcuts"),
+                icon="msg_viewchats",
+                default=True,
+                subtext=self.tr("enable_shortcuts_subtext")
+            ),
+            Switch(
+                key="show_chat_menu",
+                text=self.tr("show_chat_menu"),
+                icon="preview_dots",
+                default=True,
+                subtext=self.tr("show_chat_menu_subtext")
+            ),
+            Switch(
+                key="show_shortcut_feedback",
+                text=self.tr("show_shortcut_feedback"),
+                icon="notification",
+                default=True,
+                subtext=self.tr("show_shortcut_feedback_subtext")
+            ),
+            Divider(),
+        ]
+        for idx in range(space_count):
+            if idx > 0:
+                settings.append(Divider())
+            settings.append(Switch(
+                key=f"show_space_{idx+1}",
+                text=self.tr(f"space_{idx+1}") if f"space_{idx+1}" in TRANSLATIONS else f"Space {idx+1}",
+                icon="profile_list",
+                default=True,
+                subtext=self.tr(f"space_{idx+1}_subtext") if f"space_{idx+1}_subtext" in TRANSLATIONS else "",
+                on_change=lambda _, idx=idx: self.reload_settings()
+            ))
+            if show_space[idx]:
+                for i in range(1, NUM_SHORTCUTS + 1):
+                    settings.append(Input(
+                        key=f"space_{idx+1}_shortcut_{i}_id",
+                        text=self.tr("shortcut_dest"),
+                        icon="menu_username_change",
+                        default="",
+                        subtext=self.tr("shortcut_dest_subtext")
+                    ))
+                    settings.append(Input(
+                        key=f"space_{idx+1}_shortcut_{i}_prefix",
+                        text=self.tr("shortcut_prefix"),
+                        icon="menu_feature_links",
+                        default="",
+                        subtext=self.tr("shortcut_prefix_subtext")
+                    ))
+                    if i < NUM_SHORTCUTS:
+                        settings.append(Divider())
+        settings.append(Divider())
+        settings.append(Text(
+            text=self.tr("deeplink_header"),
+            icon="msg_input_send_mini",
+            create_sub_fragment=self.create_deeplinks_settings
+        ))
+        settings.append(Divider())
+        settings.append(Text(
+            text=self.tr("dotted_credit"),
+            icon="etg_settings",
+            accent=True,
+            on_click=lambda view: run_on_ui_thread(lambda: get_messages_controller().openByUserName("exteraDevPlugins", get_last_fragment(), 1))
+        ))
+        return settings
+
+    def _open_deeplink(self, link_type):
+        link = self.get_setting(f"custom_link{link_type}", "")
+        if link:
+            self._open_chat(link)
+        else:
+            from ui.bulletin import BulletinHelper
+            run_on_ui_thread(lambda: BulletinHelper.show_error(self.tr("deeplink_invalid")))
+
+    def on_plugin_load(self):
+        self.add_on_send_message_hook()
+        self._add_menu_items()
+
+    def on_plugin_unload(self):
+        try:
+            self.remove_menu_items()
+        except:
+            pass 
+
+    def _reload_deeplinks_fragment(self):
+        try:
+            fragment = get_last_fragment()
+            if fragment:
+                run_on_ui_thread(lambda: fragment.reload())
+        except Exception as e:
+            print(f"[JumpTo] Error reloading deeplinks fragment: {e}") 
+
+    def _show_auto_expand_warning(self, value):
+        if value:
+            fragment = get_last_fragment()
+            if fragment:
+                activity = fragment.getParentActivity()
+                if activity:
+                    def show_dialog():
+                        from ui.alert import AlertDialogBuilder
+                        builder = AlertDialogBuilder(activity)
+                        builder.set_title(self.tr("auto_expand_blocks"))
+                        builder.set_message(self.tr("auto_expand_blocks_subtext"))
+                        def on_yes(bld, which):
+                            bld.dismiss()
+                            self.set_setting("auto_expand_blocks", True)
+                            self.reload_settings()
+                        def on_no(bld, which):
+                            bld.dismiss()
+                            self.set_setting("auto_expand_blocks", False)
+                            self.reload_settings()
+                        builder.set_positive_button(self.tr("auto_expand_dialog_yes"), on_yes)
+                        builder.set_negative_button(self.tr("auto_expand_dialog_no"), on_no)
+                        builder.show()
+                    run_on_ui_thread(show_dialog)
+        else:
+            self.set_setting("auto_expand_blocks", False) 

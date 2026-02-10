@@ -1,0 +1,203 @@
+from base_plugin import BasePlugin, MenuItemData, MenuItemType
+from ui.alert import AlertDialogBuilder
+from client_utils import get_last_fragment
+from hook_utils import find_class
+from java import dynamic_proxy
+from android_utils import run_on_ui_thread
+from org.telegram.messenger import LocaleController
+# Powered by @AGeekApple - inspired by @ExteraDev
+# Memory Match Game Plugin for exteraGram by  @ApplePlugins
+import random
+import time
+
+TextView = find_class("android.widget.TextView")
+GridLayout = find_class("android.widget.GridLayout")
+LinearLayout = find_class("android.widget.LinearLayout")
+FrameLayout = find_class("android.widget.FrameLayout")
+R = find_class("org.telegram.messenger.R")
+AndroidUtilities = find_class("org.telegram.messenger.AndroidUtilities")
+Theme = find_class("org.telegram.ui.ActionBar.Theme")
+Gravity = find_class("android.view.Gravity")
+OnClickListenerInterface = find_class("android.view.View$OnClickListener")
+
+__id__ = "memorymatch"
+__name__ = "Memory Match"
+__description__ = (
+    "Play Memory Match. Flip cards to find pairs.\n\n"
+    "How to use:\n"
+    "Open the 3-dot menu, tap on Plugins, and choose the Memory Match game..\n"
+)
+__author__ = "@ApplePlugins"
+__version__ = "1.0.0"
+__min_version__ = "11.12.0"
+__icon__ = "ApplePlugins/4"
+
+
+class CardClickListener(dynamic_proxy(OnClickListenerInterface)):
+    def __init__(self, plugin, chat_id, r, c):
+        super().__init__()
+        self.plugin, self.chat_id, self.r, self.c = plugin, chat_id, r, c
+
+    def onClick(self, view):
+        self.plugin.on_card_click(self.chat_id, self.r, self.c)
+
+
+class MemoryMatchGame:
+    def __init__(self, size=4):
+        self.size = size
+        self.board = [["" for _ in range(size)] for _ in range(size)]
+        self.visible = [[False for _ in range(size)] for _ in range(size)]
+        self.matched = [[False for _ in range(size)] for _ in range(size)]
+        self.first_pick = None
+        self.generate_board()
+
+    def generate_board(self):
+        symbols = [chr(65 + i) for i in range((self.size * self.size) // 2)] * 2
+        random.shuffle(symbols)
+        for r in range(self.size):
+            for c in range(self.size):
+                self.board[r][c] = symbols.pop()
+
+    def reveal_card(self, r, c):
+        if self.matched[r][c] or self.visible[r][c]:
+            return False
+        self.visible[r][c] = True
+        return True
+
+    def hide_cards(self, cards):
+        for r, c in cards:
+            self.visible[r][c] = False
+
+    def match_cards(self, cards):
+        for r, c in cards:
+            self.matched[r][c] = True
+
+    def is_match(self, a, b):
+        return self.board[a[0]][a[1]] == self.board[b[0]][b[1]]
+
+    def all_matched(self):
+        return all(all(row) for row in self.matched)
+
+
+class MemoryMatchPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self.active_games = {}
+        self.views = {}
+
+    def on_plugin_load(self):
+        self.add_menu_item(MenuItemData(
+            menu_type=MenuItemType.CHAT_ACTION_MENU,
+            text="Memory Match",
+            icon="msg_media",
+            on_click=self.show_game_dialog
+        ))
+
+    def show_game_dialog(self, context: dict):
+        chat_id = context.get("dialog_id")
+        fragment = get_last_fragment()
+        activity = fragment and fragment.getParentActivity()
+        if not activity:
+            return
+
+        game = MemoryMatchGame()
+        self.active_games[chat_id] = game
+
+        builder = AlertDialogBuilder(activity)
+        builder.set_title("Memory Match")
+
+        main_container = LinearLayout(activity)
+        main_container.setOrientation(LinearLayout.VERTICAL)
+        padding = AndroidUtilities.dp(24)
+        main_container.setPadding(padding, AndroidUtilities.dp(8), padding, AndroidUtilities.dp(8))
+
+        grid = GridLayout(activity)
+        grid.setColumnCount(game.size)
+        grid.setRowCount(game.size)
+        grid.setAlignmentMode(GridLayout.ALIGN_BOUNDS)
+
+        size = AndroidUtilities.dp(48)
+        margin = AndroidUtilities.dp(4)
+        views = {}
+
+        for r in range(game.size):
+            for c in range(game.size):
+                card_view = TextView(activity)
+                params = GridLayout.LayoutParams(GridLayout.spec(r), GridLayout.spec(c))
+                params.width = params.height = size
+                params.setMargins(margin, margin, margin, margin)
+                card_view.setLayoutParams(params)
+                card_view.setText("?")
+                card_view.setTextSize(24)
+                card_view.setGravity(Gravity.CENTER)
+                card_view.setBackgroundColor(Theme.getColor(Theme.key_chat_attachPhotoBackground))
+                card_view.setOnClickListener(CardClickListener(self, chat_id, r, c))
+                grid.addView(card_view)
+                views[(r, c)] = card_view
+
+        self.views[chat_id] = views
+
+        grid_params = FrameLayout.LayoutParams(-2, -2)
+        grid_params.gravity = Gravity.CENTER
+        grid.setLayoutParams(grid_params)
+
+        wrapper = FrameLayout(activity)
+        wrapper.addView(grid)
+        main_container.addView(wrapper)
+
+        builder.set_negative_button("Close", lambda b, w: b.dismiss())
+        builder.set_view(main_container)
+        dialog = builder.show()
+        game.dialog = dialog
+
+    def on_card_click(self, chat_id: int, r: int, c: int):
+        game = self.active_games.get(chat_id)
+        views = self.views.get(chat_id)
+        if not game or not views:
+            return
+
+        if not game.reveal_card(r, c):
+            return
+
+        views[(r, c)].setText(game.board[r][c])
+
+        if game.first_pick is None:
+            game.first_pick = (r, c)
+        else:
+            second_pick = (r, c)
+            if game.is_match(game.first_pick, second_pick):
+                game.match_cards([game.first_pick, second_pick])
+                game.first_pick = None
+                if game.all_matched():
+                    self.show_win_dialog(chat_id)
+            else:
+                def hide():
+                    game.hide_cards([game.first_pick, second_pick])
+                    views[game.first_pick].setText("?")
+                    views[second_pick].setText("?")
+                    game.first_pick = None
+                run_on_ui_thread(hide, 1000)
+
+    def show_win_dialog(self, chat_id: int):
+        fragment = get_last_fragment()
+        activity = fragment and fragment.getParentActivity()
+        if not activity:
+            return
+
+        builder = AlertDialogBuilder(activity)
+        builder.set_title("You won!")
+        builder.set_message("Play again?")
+
+        def restart(b, w):
+            b.dismiss()
+            game = self.active_games.get(chat_id)
+            if game and hasattr(game, "dialog") and game.dialog:
+                try:
+                    game.dialog.dismiss()
+                except:
+                    pass
+            self.show_game_dialog({"dialog_id": chat_id})
+
+        builder.set_positive_button("Yes", restart)
+        builder.set_negative_button("No", lambda b, w: b.dismiss())
+        builder.show()

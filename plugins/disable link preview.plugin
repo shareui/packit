@@ -1,0 +1,104 @@
+__id__ = "disable_link_preview"
+__name__ = "Disable Link Preview"
+__description__ = "Disables link previews for all outgoing messages."
+__author__ = "@luvztroy"
+__version__ = "1.0.1"
+__min_version__ = "11.12.0"
+__icon__ = "luvztroyIcons/4"
+
+from base_plugin import BasePlugin, HookResult, HookStrategy
+from android_utils import log
+import re
+from client_utils import send_message, run_on_queue
+from markdown_utils import parse_markdown
+from ui.settings import Header, Input, Divider
+
+def has_link(params):
+    if re.search(r'https?://[^\s]+', params.message):
+        return True
+    
+    if hasattr(params, "entities") and params.entities:
+        try:
+            entities = params.entities.toArray()
+        except Exception:
+            entities = params.entities
+        for entity in entities:
+            if hasattr(entity, "url") and entity.url:
+                return True
+            if hasattr(entity, "_type") and entity._type == "textUrl" and hasattr(entity, "url"):
+                return True
+    return False
+
+class DisableLinkPreviewPlugin(BasePlugin):
+    def create_settings(self):
+        return [
+            Divider(text="Disable Link Preview Settings"),
+            Input(
+                key="skip_link_preview_patterns",
+                text="Skip Patterns (Regex)",
+                default="",
+                subtext="Enter regex patterns to skip disabling link preview. One per line.",
+                icon="input_bot1_solar"
+            ),
+            Divider(text="Messages matching any pattern will keep their link preview.")
+        ]
+
+    def _should_skip_by_pattern(self, message):
+        patterns = self.get_setting("skip_link_preview_patterns", "")
+        if not patterns:
+            return False
+        for pattern in [p.strip() for p in patterns.splitlines() if p.strip()]:
+            try:
+                if re.search(pattern, message):
+                    return True
+            except Exception as e:
+                log(f"[DisableLinkPreview] Invalid regex pattern: {pattern} ({e})")
+        return False
+
+    def on_plugin_load(self):
+        self.add_on_send_message_hook()
+        log("[DisableLinkPreview] Plugin loaded.")
+
+    def on_send_message_hook(self, account, params):
+        MARKER = "\u2063"
+        if hasattr(params, "message") and isinstance(params.message, str):
+            if params.message.endswith(MARKER):
+                return HookResult()
+            if not has_link(params):
+                return HookResult()
+            if self._should_skip_by_pattern(params.message):
+                log("[DisableLinkPreview] Skipping removal due to user pattern match.")
+                return HookResult()
+
+            peer = getattr(params, "peer", None)
+            if not peer:
+                log("[DisableLinkPreview] No peer found, not resending message.")
+                return HookResult()
+            message_params = {
+                "peer": peer,
+                "message": params.message + MARKER,
+                "searchLinks": False,
+            }
+            if hasattr(params, "entities") and params.entities:
+                try:
+                    entities = params.entities.toArray()
+                except Exception:
+                    entities = params.entities
+                message_params["entities"] = entities
+            else:
+                parsed = parse_markdown(params.message)
+                if hasattr(parsed, "entities") and parsed.entities:
+                    message_params["entities"] = [entity.to_tlrpc_object() for entity in parsed.entities]
+            if hasattr(params, "replyToMsg") and params.replyToMsg:
+                message_params["replyToMsg"] = params.replyToMsg
+            if hasattr(params, "replyToTopMsg") and params.replyToTopMsg:
+                message_params["replyToTopMsg"] = params.replyToTopMsg
+            def send():
+                try:
+                    log(f"[DisableLinkPreview] Resending message with params: {message_params}")
+                    send_message(message_params)
+                except Exception as e:
+                    log(f"[DisableLinkPreview] Error resending message: {e}")
+            run_on_queue(send)
+            return HookResult(strategy=HookStrategy.CANCEL)
+        return HookResult() 

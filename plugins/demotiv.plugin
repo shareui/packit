@@ -1,0 +1,1990 @@
+"""
+/============================================================\
+||• ▌ ▄ ·. ▪  .▄▄ ·  ▄ .▄ ▄▄▄· ▄▄▄▄·       ▄▄▄▄▄       ▌ ▐· ||
+||·██ ▐███▪██ ▐█ ▀. ██▪▐█▐█ ▀█ ▐█ ▀█▪▪     •██  ▪     ▪█·█▌ ||
+||▐█ ▌▐▌▐█·▐█·▄▀▀▀█▄██▀▐█▄█▀▀█ ▐█▀▀█▄ ▄█▀▄  ▐█.▪ ▄█▀▄ ▐█▐█• ||
+||██ ██▌▐█▌▐█▌▐█▄▪▐███▌▐▀▐█ ▪▐▌██▄▪▐█▐█▌.▐▌ ▐█▌·▐█▌.▐▌ ███  ||
+||▀▀  █▪▀▀▀▀▀▀ ▀▀▀▀ ▀▀▀ · ▀  ▀ ·▀▀▀▀  ▀█▄▀▪ ▀▀▀  ▀█▄▀▪. ▀   ||
+\============================================================/
+
+Перед копированием/изменением кода уведомите @mihailkotovski
+"""
+
+from base_plugin import BasePlugin, HookResult, HookStrategy
+import os
+import requests
+import uuid
+import time
+import threading
+import traceback
+from typing import Any, Optional
+
+from PIL import Image, ImageDraw, ImageFont, ImageSequence
+
+from java.io import File, FileOutputStream
+from java.util import Locale
+
+from org.telegram.messenger import (
+    ApplicationLoader,
+    MessageObject,
+    FileLoader,
+    UserConfig,
+    ImageLocation,
+    ImageLoader,
+)
+from org.telegram.tgnet import TLRPC
+from org.telegram.ui.Components import RLottieDrawable
+
+from android.media import MediaMetadataRetriever
+from android.graphics import Bitmap
+
+from android_utils import log, run_on_ui_thread
+
+from client_utils import (
+    send_message,
+    get_send_messages_helper,
+    get_last_fragment,
+    run_on_queue,
+    EXTERNAL_NETWORK_QUEUE,
+    get_account_instance,
+    get_file_loader,
+)
+from ui.bulletin import BulletinHelper
+from ui.settings import Header, Input, Divider, Text, Switch, Selector
+from ui.alert import AlertDialogBuilder
+from android.content import ClipData, Context
+from android.graphics import BitmapFactory
+from java.io import ByteArrayOutputStream
+import io
+from org.telegram.messenger import SendMessagesHelper
+
+__id__ = "demotiv"
+__name__ = "Demotivator"
+__description__ = "Create demotivators from replied photos [.demotiv/.dm]"
+__author__ = "@mihailkotovski & @mishabotov"
+__version__ = "5.0.0 [stable]"
+__min_version__ = "11.12.0"
+__icon__ = "alegquin33/12"
+
+
+TEMP_DIR_NAME = "DemotivTemp"
+
+FONT_PATHS = [
+    "/storage/emulated/0/Download/exteraGram/TimesNewRoman.ttf",
+    "/system/fonts/Roboto.ttf",
+    "/system/fonts/DroidSans.ttf",
+    "/system/fonts/NotoSans.ttf",
+]
+
+FONT_NAMES = {
+    "ru": [
+        "По умолчанию",
+        "Times New Roman",
+        "Roboto",
+        "DroidSans",
+        "NotoSans",
+    ],
+    "en": [
+        "Default",
+        "Times New Roman",
+        "Roboto",
+        "DroidSans",
+        "NotoSans",
+    ],
+}
+
+TRANSLATIONS = {
+    "settings_header": ("Настройки демотиватора", "Demotivator Settings"),
+    "enable_plugin": ("Включить плагин", "Enable Plugin"),
+    "font_size_title": ("Размер шрифта заголовка", "Title Font Size"),
+    "font_size_subtitle": ("Размер шрифта подзаголовка", "Subtitle Font Size"),
+    "font_family": ("Семейство шрифта", "Font Family"),
+    "border_width": ("Ширина рамки", "Border Width"),
+    "gif_settings": ("GIF настройки", "GIF Settings"),
+    "gif_square_side": ("Размер GIF-кадра", "GIF square size"),
+    "gif_fps": ("Кадров в секунду (GIF)", "GIF FPS"),
+    "gif_max_frames": ("Максимум кадров (GIF)", "GIF max frames"),
+    "gif_palette": ("Палитра", "Palette"),
+    "gif_palette_global": ("Глобальная палитра", "Global palette"),
+    "gif_palette_web": ("Веб‑палитра", "Web palette"),
+    "gif_subrectangles": ("Субпрямоугольники", "Subrectangles"),
+    "usage_info": ("Использование", "Usage"),
+    "usage_text": (
+        ".demotiv [текст] — ответ на фото\nДве строки: заголовок и подзаголовок. Разделители: перенос строки или |\nПримеры:\n.demotiv Заголовок | Подзаголовок\n.demotiv Заголовок\\nПодзаголовок\n\nGIF-настройки:\n\n• Размер кадра: размер квадрата в пикселях (рекомендуется 360-480). Меньше = быстрее обработка и меньше размер файла.\n\n• FPS (кадров/сек): скорость анимации (рекомендуется 10-15). Ниже = меньше размер, выше = плавнее анимация.\n\n• Макс. кадров: ограничение длины GIF. Формула: кадры = FPS × секунды. Например, 12 FPS × 10 сек = 120 кадров.\n\n• Палитра:\n  - Глобальная: лучшее качество, сохраняет чистый чёрный фон, но медленнее\n  - Веб-палитра: быстрее обработка, но меньше цветов и возможны искажения чёрного\n\n• Субпрямоугольники: оптимизация, сохраняющая только изменённые области между кадрами. Уменьшает размер файла, но может добавить артефакты.",
+        ".demotiv [text] — reply to photo\nTwo lines: title and subtitle. Delimiters: newline or |\nExamples:\n.demotiv Title | Subtitle\n.demotiv Title\\nSubtitle\n\nGIF Settings:\n\n• Frame size: square size in pixels (recommended 360-480). Smaller = faster processing and smaller file size.\n\n• FPS (frames/sec): animation speed (recommended 10-15). Lower = smaller size, higher = smoother animation.\n\n• Max frames: limits GIF length. Formula: frames = FPS × seconds. Example: 12 FPS × 10 sec = 120 frames.\n\n• Palette:\n  - Global: better quality, preserves pure black background, but slower\n  - Web palette: faster processing, but fewer colors and possible black distortion\n\n• Subrectangles: optimization that saves only changed areas between frames. Reduces file size but may add artifacts.",
+    ),
+    "no_reply": (
+        "❌ Команда должна быть ответом на сообщение с фотографией",
+        "❌ Command must be a reply to a message with a photo",
+    ),
+    "no_photo": ("❌ Сообщение не содержит фотографию", "❌ Message doesn't contain a photo"),
+    "no_media": ("❌ Сообщение не содержит фото/стикер/GIF", "❌ Message doesn't contain a photo/sticker/GIF"),
+    "no_text": ("❌ Укажите текст для демотиватора", "❌ Specify text for demotivator"),
+    "processing": ("🖼️ Создаю демотиватор...", "🖼️ Creating demotivator..."),
+    "error": ("❌ Ошибка: {error}", "❌ Error: {error}"),
+    "download_error": (
+        "❌ Не удалось загрузить фотографию. Попробуйте еще раз.",
+        "❌ Failed to download photo. Please try again.",
+    ),
+    "create_error": (
+        "❌ Не удалось создать демотиватор. Проверьте изображение.",
+        "❌ Failed to create demotivator. Check the image.",
+    ),
+    "send_error": ("❌ Ошибка отправки: {error}", "❌ Sending error: {error}"),
+    "gif_create_error": ("❌ Не удалось создать GIF демотиватор", "❌ Failed to create GIF demotivator"),
+    "already_processing": ("Уже обрабатывается другой запрос", "Another request is already being processed"),
+    "success": ("✅ Демотиватор создан и отправлен!", "✅ Demotivator created and sent!"),
+}
+
+
+def Z(key: str, **kwargs) -> str:
+    lang = Locale.getDefault().getLanguage()
+    idx = 0 if lang.startswith("ru") else 1
+    base = TRANSLATIONS.get(key, (key, key))[idx]
+    return base.format(**kwargs) if kwargs else base
+
+
+class DemotivPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self._temp_dir: Optional[File] = None
+        self._processing: bool = False
+        self._fonts_downloaded_once: bool = False
+        self._fonts_progress_dialog: Optional[AlertDialogBuilder] = None
+        self._fonts_cancelled: bool = False
+
+    def on_plugin_load(self):
+        self.add_on_send_message_hook()
+        self._temp_dir = self._get_temp_dir()
+        if self._temp_dir:
+            self._cleanup_old_files()
+            log("[Demotiv] Plugin loaded")
+        else:
+            log("[Demotiv] Failed to init temp dir")
+        try:
+            if not self.get_setting("fonts_bootstrap_done", False):
+                self._ensure_standard_fonts_async(False)
+                self.set_setting("fonts_bootstrap_done", True)
+        except Exception as e:
+            log(f"[Demotiv] Fonts init error: {e}")
+
+    def on_plugin_unload(self):
+        log("[Demotiv] Plugin unloaded")
+
+    def create_settings(self):
+        lang = Locale.getDefault().getLanguage()
+        return [
+            Header(text=Z("settings_header")),
+            Switch(key="enabled", text=Z("enable_plugin"), default=True, icon="input_bot2"),
+
+            Header(text=("Холст", "Canvas")[0 if lang.startswith("ru") else 1]),
+            Input(
+                key="image_square_side",
+                text=("Размер квадрата", "Square size")[0 if lang.startswith("ru") else 1],
+                default=self.get_setting("image_square_side", "600"),
+                icon="ic_gallery_background_solar",
+                subtext=("Пиксели (например, 600). Фото будет сжато до N×N без сохранения пропорций",
+                         "Pixels (e.g., 600). Photo will be resized to N×N without keeping aspect")[0 if lang.startswith("ru") else 1],
+            ),
+            Input(
+                key="border_width",
+                text=Z("border_width"),
+                default="20",
+                icon="menu_select_quote",
+                subtext=("Ширина черной рамки", "Black outer frame width")[0 if lang.startswith("ru") else 1],
+            ),
+
+            Header(text=Z("gif_settings")),
+            Input(
+                key="gif_square_side",
+                text=Z("gif_square_side"),
+                default=self.get_setting("gif_square_side", "360"),
+                icon="msg_gif",
+                subtext=("Пиксели. Отдельная настройка для GIF. Меньше — быстрее и меньше размер.",
+                         "Pixels. Separate size for GIF. Smaller is faster and smaller file size.")[0 if lang.startswith("ru") else 1],
+            ),
+            Input(
+                key="gif_fps",
+                text=Z("gif_fps"),
+                default=self.get_setting("gif_fps", "12"),
+                icon="msg_video",
+                subtext=("Рекомендуется 10–15. Ниже — меньше размер, выше — плавнее.", "Recommended 10–15. Lower = smaller size, higher = smoother.")[0 if lang.startswith("ru") else 1],
+            ),
+            Input(
+                key="gif_max_frames",
+                text=Z("gif_max_frames"),
+                default=self.get_setting("gif_max_frames", "120"),
+                icon="menu_feature_hourglass",
+                subtext=("Ограничивает длину GIF (кадры = FPS × секунды)", "Limits GIF length (frames = FPS × seconds)")[0 if lang.startswith("ru") else 1],
+            ),
+            Selector(
+                key="gif_palette_mode",
+                text=Z("gif_palette"),
+                default=self.get_setting("gif_palette_mode", 0),
+                items=[Z("gif_palette_global"), Z("gif_palette_web")],
+                icon="menu_cover_stories",
+            ),
+            Switch(
+                key="gif_subrectangles",
+                text=Z("gif_subrectangles"),
+                default=self.get_setting("gif_subrectangles", True),
+                icon="msg_gif",
+            ),
+
+            Divider(),
+            Text(
+                text=("Шрифты и текст", "Fonts & Text")[0 if lang.startswith("ru") else 1],
+                icon="msg_photo_text_regular",
+                accent=True,
+                create_sub_fragment=self._create_fonts_settings,
+            ),
+
+            Divider(),
+            Text(text=Z("usage_info"), icon="msg_info", on_click=lambda v: self._show_usage()),
+        ]
+
+    def _create_fonts_settings(self):
+        lang = Locale.getDefault().getLanguage()
+        font_names = FONT_NAMES["ru"] if lang.startswith("ru") else FONT_NAMES["en"]
+        return [
+            Header(text=("Текст", "Text")[0 if lang.startswith("ru") else 1]),
+            Input(
+                key="title_font_size",
+                text=Z("font_size_title"),
+                default="48",
+                icon="media_settings",
+                subtext="48",
+            ),
+            Input(
+                key="subtitle_font_size",
+                text=Z("font_size_subtitle"),
+                default="32",
+                icon="media_settings",
+                subtext="32",
+            ),
+            Selector(
+                key="font_family",
+                text=Z("font_family"),
+                default=0,
+                items=font_names,
+                icon="msg_photo_text_regular",
+            ),
+
+            Header(text=("Пользовательский шрифт", "Custom font")[0 if lang.startswith("ru") else 1]),
+            Switch(
+                key="use_custom_font",
+                text=("Использовать свой шрифт", "Use custom font")[0 if lang.startswith("ru") else 1],
+                default=self.get_setting("use_custom_font", False),
+                icon="input_attach_remix",
+            ),
+            Input(
+                key="custom_fonts_dir",
+                text=("Папка со шрифтами", "Fonts folder")[0 if lang.startswith("ru") else 1],
+                default=self.get_setting("custom_fonts_dir", ""),
+                icon="msg2_folder",
+                subtext=("Оставьте пустым для автопоиска; либо укажите путь, чтобы искать только в этой папке",
+                         "Leave empty for auto-scan; or set a path to scan only this folder")[0 if lang.startswith("ru") else 1],
+            ),
+            Text(
+                text=("Сканировать шрифты системы", "Scan system fonts")[0 if lang.startswith("ru") else 1],
+                icon="msg_forward_replace_solar",
+                accent=True,
+                on_click=lambda v: self._choose_font_from_storage(),
+            ),
+            Text(
+                text=("Загрузить стандартные шрифты", "Download standard fonts")[0 if lang.startswith("ru") else 1],
+                icon="msg_download",
+                accent=True,
+                on_click=lambda v: self._ensure_standard_fonts_async(True),
+            ),
+            Text(
+                text=("Сканировать выбранную папку", "Scan selected folder")[0 if lang.startswith("ru") else 1],
+                icon="msg_media_solar",
+                accent=True,
+                on_click=lambda v: self._choose_font_from_storage(True),
+            ),
+            Text(
+                text=("Шрифт: ", "Font: ")[0 if lang.startswith("ru") else 1] + self._get_font_label(lang),
+                icon="msg_current_location",
+                on_click=lambda v: self._show_font_path_dialog(),
+            ),
+        ]
+
+    def _ensure_standard_fonts_async(self, force: bool = False):
+        lang_ru = Locale.getDefault().getLanguage().startswith("ru")
+        self._fonts_cancelled = False
+
+        def show_spinner():
+            try:
+                fragment = get_last_fragment()
+                activity = fragment.getParentActivity() if fragment else None
+                if not activity:
+                    return
+                builder = AlertDialogBuilder(activity, AlertDialogBuilder.ALERT_TYPE_SPINNER)
+                builder.set_title(("Загрузка", "Loading")[0 if lang_ru else 1])
+                builder.set_message(("Загружаю стандартные шрифты…", "Downloading standard fonts…")[0 if lang_ru else 1])
+                builder.set_cancelable(True)
+                builder.set_on_cancel_listener(lambda b: self._on_fonts_cancel())
+                builder.show()
+                self._fonts_progress_dialog = builder
+            except Exception as e:
+                log(f"[Demotiv] Show spinner error: {e}")
+
+        if force:
+            run_on_ui_thread(show_spinner)
+
+        def worker():
+            try:
+                downloaded, errors = self._ensure_standard_fonts(force)
+
+                def finish_ui():
+                    try:
+                        if self._fonts_progress_dialog:
+                            self._fonts_progress_dialog.dismiss()
+                            self._fonts_progress_dialog = None
+                    except Exception:
+                        pass
+                    if self._fonts_cancelled:
+                        BulletinHelper.show_info(("Загрузка отменена", "Download cancelled")[0 if lang_ru else 1])
+                        return
+                    if downloaded:
+                        BulletinHelper.show_success(("Стандартные шрифты готовы", "Standard fonts ready")[0 if lang_ru else 1])
+                    elif not errors:
+                        BulletinHelper.show_info(("Шрифты уже установлены", "Fonts already present")[0 if lang_ru else 1])
+                    if errors:
+                        BulletinHelper.show_error(("Ошибка загрузки шрифтов", "Font download error")[0 if lang_ru else 1])
+
+                run_on_ui_thread(finish_ui)
+            except Exception as e:
+                log(f"[Demotiv] ensure fonts error: {e}\n{traceback.format_exc()}")
+                run_on_ui_thread(lambda: (
+                    self._fonts_progress_dialog.dismiss() if self._fonts_progress_dialog else None,
+                    BulletinHelper.show_error(("Ошибка загрузки шрифтов", "Font download error")[0 if lang_ru else 1])
+                ))
+
+        try:
+            run_on_queue(worker, EXTERNAL_NETWORK_QUEUE)
+        except Exception:
+            run_on_queue(worker)
+
+    def _on_fonts_cancel(self):
+        self._fonts_cancelled = True
+        try:
+            if self._fonts_progress_dialog:
+                self._fonts_progress_dialog.dismiss()
+                self._fonts_progress_dialog = None
+        except Exception:
+            pass
+
+    def _ensure_standard_fonts(self, force: bool = False):
+        try:
+            base_dir = "/storage/emulated/0/Download/exteraGram"
+            try:
+                os.makedirs(base_dir, exist_ok=True)
+            except Exception:
+                pass
+
+            targets = {
+                "TimesNewRoman.ttf": [
+                    "https://raw.githubusercontent.com/mihailkotovski/recources/main/TimesNewRoman.ttf",
+                ],
+                "Roboto.ttf": [
+                    "https://raw.githubusercontent.com/mihailkotovski/recources/main/Roboto.ttf",
+                ],
+                "DroidSans.ttf": [
+                    "https://raw.githubusercontent.com/mihailkotovski/recources/main/DroidSans.ttf",
+                ],
+                "NotoSans.ttf": [
+                    "https://raw.githubusercontent.com/mihailkotovski/recources/main/NotoSans.ttf",
+                ],
+            }
+
+            downloaded_any = False
+            had_errors = False
+            headers = {"User-Agent": "exteraGram-Demotiv/1.0"}
+            for filename, url_candidates in targets.items():
+                dest_path = os.path.join(base_dir, filename)
+                if os.path.exists(dest_path) and os.path.getsize(dest_path) > 0:
+                    continue
+                success = False
+                for url in url_candidates:
+                    try:
+                        resp = requests.get(url, headers=headers, timeout=20)
+                        if resp.status_code == 200 and resp.content:
+                            with open(dest_path, "wb") as f:
+                                f.write(resp.content)
+                            downloaded_any = True
+                            success = True
+                            log(f"[Demotiv] Downloaded font: {filename}")
+                            break
+                    except Exception as e:
+                        log(f"[Demotiv] Download attempt failed for {url}: {e}")
+                if not success:
+                    had_errors = True
+            return downloaded_any, had_errors
+        except Exception as e:
+            log(f"[Demotiv] _ensure_standard_fonts fatal: {e}\n{traceback.format_exc()}")
+            return False, True
+
+    def _show_usage(self):
+        try:
+            fragment = get_last_fragment()
+            ctx = fragment.getParentActivity() if fragment else ApplicationLoader.applicationContext
+            builder = AlertDialogBuilder(ctx, AlertDialogBuilder.ALERT_TYPE_MESSAGE)
+            lang_ru = Locale.getDefault().getLanguage().startswith("ru")
+            builder.set_title(("Использование", "Usage")[0 if lang_ru else 1])
+            builder.set_message(Z("usage_text"))
+            try:
+                builder.set_message_text_view_clickable(True)
+            except Exception:
+                pass
+            builder.set_positive_button("OK", lambda d, w: d.dismiss())
+            builder.set_neutral_button(("Копировать", "Copy")[0 if lang_ru else 1], lambda d, w: self._copy_to_clipboard("usage", Z("usage_text")))
+            builder.show()
+        except Exception as e:
+            log(f"[Demotiv] Usage dialog error: {e}")
+
+    def _get_font_label(self, lang: str) -> str:
+        try:
+            if self.get_setting("use_custom_font", False):
+                p = self.get_setting("custom_font_path", "")
+                if p:
+                    return os.path.basename(p)
+            idx = self.get_setting("font_family", 0)
+            names = FONT_NAMES["ru"] if lang.startswith("ru") else FONT_NAMES["en"]
+            if 0 <= idx < len(names):
+                return names[idx]
+        except Exception:
+            pass
+        return "—"
+
+    def _copy_to_clipboard(self, label: str, text: str):
+        try:
+            fragment = get_last_fragment()
+            ctx = fragment.getContext() if fragment else ApplicationLoader.applicationContext
+            clipboard = ctx.getSystemService(Context.CLIPBOARD_SERVICE)
+            clip = ClipData.newPlainText(label, text)
+            clipboard.setPrimaryClip(clip)
+            BulletinHelper.show_success(("Скопировано", "Copied")[0 if Locale.getDefault().getLanguage().startswith("ru") else 1])
+        except Exception as e:
+            log(f"[Demotiv] Clipboard error: {e}")
+
+    def _show_font_path_dialog(self):
+        try:
+            fragment = get_last_fragment()
+            ctx = fragment.getParentActivity() if fragment else ApplicationLoader.applicationContext
+            b = AlertDialogBuilder(ctx, AlertDialogBuilder.ALERT_TYPE_MESSAGE)
+            lang_ru = Locale.getDefault().getLanguage().startswith("ru")
+            if self.get_setting("use_custom_font", False):
+                p = self.get_setting("custom_font_path", "")
+                if not p:
+                    BulletinHelper.show_info(("Файл шрифта не выбран", "No custom font selected")[0 if lang_ru else 1])
+                    return
+                b.set_title(("Путь к файлу шрифта", "Custom font file path")[0 if lang_ru else 1])
+                b.set_message(p)
+                b.set_positive_button("OK", lambda d, w: d.dismiss())
+                b.set_neutral_button(("Копировать", "Copy")[0 if lang_ru else 1], lambda d, w: self._copy_to_clipboard("font_path", p))
+            else:
+                idx = self.get_setting("font_family", 0)
+                names = FONT_NAMES["ru"] if lang_ru else FONT_NAMES["en"]
+                name = names[idx] if 0 <= idx < len(names) else "Default"
+                path_hint = None
+                if isinstance(idx, int) and idx > 0:
+                    candidates = self._candidate_paths_for_index(idx)
+                    for c in candidates:
+                        if os.path.exists(c):
+                            path_hint = c
+                            break
+                title = ("Системный шрифт", "System font")[0 if lang_ru else 1]
+                if path_hint and os.path.exists(path_hint):
+                    msg = f"{name}\n{path_hint}"
+                    b.set_title(title)
+                    b.set_message(msg)
+                    b.set_positive_button("OK", lambda d, w: d.dismiss())
+                    b.set_neutral_button(("Копировать путь", "Copy path")[0 if lang_ru else 1], lambda d, w: self._copy_to_clipboard("font_path", path_hint))
+                else:
+                    msg = ("Используется встроенный системный шрифт: ", "Using built-in system font: ")[0 if lang_ru else 1] + name
+                    if path_hint:
+                        msg += ("\nПуть не подтверждён на устройстве", "\nPath not verified on device")[0 if lang_ru else 1]
+                    b.set_title(title)
+                    b.set_message(msg)
+                    b.set_positive_button("OK", lambda d, w: d.dismiss())
+            b.show()
+        except Exception as e:
+            log(f"[Demotiv] Show font path dialog error: {e}")
+
+    def _candidate_paths_for_index(self, index: int):
+        try:
+            base = "/storage/emulated/0/Download/exteraGram"
+            if index == 1:
+                return [
+                    os.path.join(base, "TimesNewRoman.ttf"),
+                    "/system/fonts/TimesNewRoman.ttf",
+                ]
+            if index == 2:
+                return [
+                    os.path.join(base, "Roboto.ttf"),
+                    "/system/fonts/Roboto.ttf",
+                ]
+            if index == 3:
+                return [
+                    os.path.join(base, "DroidSans.ttf"),
+                    "/system/fonts/DroidSans.ttf",
+                ]
+            if index == 4:
+                return [
+                    os.path.join(base, "NotoSans.ttf"),
+                    "/system/fonts/NotoSans.ttf",
+                ]
+        except Exception:
+            pass
+        if 0 < index - 1 < len(FONT_PATHS):
+            return [FONT_PATHS[index - 1]]
+        return []
+    def _choose_font_from_storage(self, scan_only_selected_dir: bool = False):
+        def scan_and_show():
+            try:
+                custom_dir = self.get_setting("custom_fonts_dir", "").strip()
+                if scan_only_selected_dir:
+                    if not custom_dir:
+                        run_on_ui_thread(lambda: BulletinHelper.show_info(("Сначала укажите папку со шрифтами", "Please set a fonts folder first")[0 if Locale.getDefault().getLanguage().startswith("ru") else 1]))
+                        return
+                    run_on_ui_thread(lambda: BulletinHelper.show_info(("Сканирование выбранной папки…", "Scanning selected folder…")[0 if Locale.getDefault().getLanguage().startswith("ru") else 1]))
+                    candidates = self._scan_fonts(custom_dir, True)
+                else:
+                    run_on_ui_thread(lambda: BulletinHelper.show_info(("Сканирование системных шрифтов…", "Scanning system fonts…")[0 if Locale.getDefault().getLanguage().startswith("ru") else 1]))
+                    candidates = self._scan_fonts(None, False)
+                if not candidates:
+                    run_on_ui_thread(lambda: BulletinHelper.show_error(("Файлы шрифтов не найдены", "No font files found")[0 if Locale.getDefault().getLanguage().startswith("ru") else 1]))
+                    return
+                run_on_ui_thread(lambda: BulletinHelper.show_success(("Найдено шрифтов: {}", "Fonts found: {}")[0 if Locale.getDefault().getLanguage().startswith("ru") else 1].format(len(candidates))))
+                def show_dialog():
+                    try:
+                        fragment = get_last_fragment()
+                        ctx = fragment.getParentActivity() if fragment else ApplicationLoader.applicationContext
+                        builder = AlertDialogBuilder(ctx, AlertDialogBuilder.ALERT_TYPE_MESSAGE)
+                        builder.set_title(("Выберите шрифт", "Choose a font")[0 if Locale.getDefault().getLanguage().startswith("ru") else 1])
+                        items = [os.path.basename(p) for p in candidates]
+                        def on_item(bld, index):
+                            try:
+                                self.set_setting("custom_font_path", candidates[index])
+                                self.set_setting("use_custom_font", True)
+                                BulletinHelper.show_success(("Шрифт выбран", "Font selected")[0 if Locale.getDefault().getLanguage().startswith("ru") else 1])
+                                bld.dismiss()
+                            except Exception as e:
+                                log(f"[Demotiv] Font select error: {e}")
+                                bld.dismiss()
+                        builder.set_items(items, on_item)
+                        builder.set_negative_button("OK", lambda b, w: b.dismiss())
+                        builder.show()
+                    except Exception as e:
+                        log(f"[Demotiv] Show dialog error: {e}")
+                run_on_ui_thread(show_dialog)
+            except Exception as e:
+                log(f"[Demotiv] Scan fonts error: {e}\n{traceback.format_exc()}")
+                run_on_ui_thread(lambda: BulletinHelper.show_error(str(e)))
+        run_on_queue(scan_and_show)
+
+    def _scan_fonts(self, preferred_root: Optional[str] = None, restrict_to_preferred: bool = False):
+        roots = [
+            "/sdcard/Download",
+            "/storage/emulated/0/Download",
+            "/sdcard/Fonts",
+            "/storage/emulated/0/Fonts",
+            "/sdcard",
+            "/storage/emulated/0",
+            "/system/fonts",
+        ]
+        if preferred_root and os.path.exists(preferred_root):
+            roots = [preferred_root] if restrict_to_preferred else [preferred_root] + roots
+        ex = ApplicationLoader.applicationContext.getExternalFilesDir(None)
+        try:
+            if ex is not None:
+                if not restrict_to_preferred:
+                    roots.insert(0, ex.getAbsolutePath())
+        except Exception:
+            pass
+
+        found = []
+        max_results = 200
+        def safe_walk(base, max_depth=2):
+            try:
+                base_depth = base.count(os.sep)
+                for root, dirs, files in os.walk(base):
+                    depth = root.count(os.sep) - base_depth
+                    if depth > max_depth:
+                        dirs[:] = []
+                        continue
+                    for name in files:
+                        low = name.lower()
+                        if low.endswith((".ttf", ".otf", ".ttc", ".otc")):
+                            found.append(os.path.join(root, name))
+                            if len(found) >= max_results:
+                                return
+            except Exception:
+                return
+        for r in roots:
+            if len(found) >= max_results:
+                break
+            if r and os.path.exists(r):
+                depth = 3 if restrict_to_preferred else (2 if "sdcard" in r or "/storage" in r else 1)
+                safe_walk(r, depth)
+        seen = set(); unique = []
+        for p in found:
+            if p not in seen:
+                unique.append(p); seen.add(p)
+        return unique
+
+    def on_send_message_hook(self, account: int, params: Any) -> HookResult:
+        if not hasattr(params, "message") or not isinstance(params.message, str):
+            return HookResult()
+        if not self.get_setting("enabled", True):
+            return HookResult()
+
+        text = params.message.strip()
+        if not (text.startswith(".demotiv") or text.startswith(".dm") or text.startswith(".demot")):
+            return HookResult()
+
+        if self._processing:
+            run_on_ui_thread(lambda: BulletinHelper.show_error(Z("already_processing")))
+            return HookResult(strategy=HookStrategy.CANCEL)
+
+        if not getattr(params, "replyToMsg", None):
+            run_on_ui_thread(lambda: BulletinHelper.show_error(Z("no_reply")))
+            return HookResult(strategy=HookStrategy.CANCEL)
+
+        reply_msg = params.replyToMsg
+        media_type = self._detect_media_type(reply_msg)
+        if media_type is None:
+            run_on_ui_thread(lambda: BulletinHelper.show_error(Z("no_media")))
+            return HookResult(strategy=HookStrategy.CANCEL)
+
+        cmd, _, payload = text.partition(" ")
+        payload = payload.strip()
+        if not payload:
+            run_on_ui_thread(lambda: BulletinHelper.show_error(Z("no_text")))
+            return HookResult(strategy=HookStrategy.CANCEL)
+
+        run_on_ui_thread(lambda: BulletinHelper.show_info(Z("processing")))
+        threading.Thread(
+            target=self._process_command,
+            args=(params, reply_msg, payload, media_type),
+            daemon=True,
+        ).start()
+        return HookResult(strategy=HookStrategy.CANCEL)
+
+    def _process_command(self, params: Any, reply_msg: MessageObject, payload: str, media_type: Optional[str] = None):
+        self._processing = True
+        try:
+            mtype = media_type or self._detect_media_type(reply_msg)
+            if mtype is None:
+                run_on_ui_thread(lambda: BulletinHelper.show_error(Z("no_media")))
+                return
+
+            if mtype == "gif":
+                src_path = self._get_document_path(reply_msg)
+                if not src_path:
+                    run_on_ui_thread(lambda: BulletinHelper.show_error(Z("download_error")))
+                    return
+                is_mp4 = src_path.lower().endswith('.mp4')
+                try:
+                    doc = MessageObject.getDocument(reply_msg.messageOwner)
+                    if doc and getattr(doc, 'mime_type', '') == 'video/mp4':
+                        is_mp4 = True
+                except Exception:
+                    pass
+                out_gif = self._render_demotivator_mp4_to_gif(src_path, payload) if is_mp4 else self._render_demotivator_gif(src_path, payload)
+                if not out_gif:
+                    run_on_ui_thread(lambda: BulletinHelper.show_error(Z("gif_create_error")))
+                    return
+                self._send_gif_result(params, out_gif)
+                run_on_ui_thread(lambda: BulletinHelper.show_success(Z("success")))
+                return
+
+            if mtype == "sticker_animated":
+                src_path = self._get_document_path(reply_msg)
+                if not src_path:
+                    run_on_ui_thread(lambda: BulletinHelper.show_error(Z("download_error")))
+                    return
+                out_gif = self._render_demotivator_tgs_to_gif(src_path, payload)
+                if not out_gif:
+                    run_on_ui_thread(lambda: BulletinHelper.show_error(Z("gif_create_error")))
+                    return
+                self._send_gif_result(params, out_gif)
+                run_on_ui_thread(lambda: BulletinHelper.show_success(Z("success")))
+                return
+
+            if mtype == "sticker_video":
+                src_path = self._get_document_path(reply_msg)
+                if not src_path:
+                    run_on_ui_thread(lambda: BulletinHelper.show_error(Z("download_error")))
+                    return
+                out_gif = self._render_demotivator_mp4_to_gif(src_path, payload)
+                if not out_gif:
+                    run_on_ui_thread(lambda: BulletinHelper.show_error(Z("gif_create_error")))
+                    return
+                self._send_gif_result(params, out_gif)
+                run_on_ui_thread(lambda: BulletinHelper.show_success(Z("success")))
+                return
+
+            if mtype == "sticker_static":
+                src_path = self._get_document_path(reply_msg)
+            else:
+                src_path = self._get_photo_path(reply_msg)
+
+            if not src_path:
+                run_on_ui_thread(lambda: BulletinHelper.show_error(Z("download_error")))
+                return
+
+            out_path = self._render_demotivator(src_path, payload)
+            if not out_path:
+                run_on_ui_thread(lambda: BulletinHelper.show_error(Z("create_error")))
+                return
+
+            self._send_result(params, out_path)
+            run_on_ui_thread(lambda: BulletinHelper.show_success(Z("success")))
+        except Exception as e:
+            log(f"[Demotiv] Processing error: {e}\n{traceback.format_exc()}")
+            run_on_ui_thread(lambda: BulletinHelper.show_error(Z("error", error=str(e))))
+        finally:
+            self._processing = False
+
+    def _detect_media_type(self, message_obj: MessageObject) -> Optional[str]:
+        try:
+            if not message_obj or not message_obj.messageOwner:
+                return None
+            media = message_obj.messageOwner.media
+            if isinstance(media, TLRPC.TL_messageMediaPhoto) and media.photo is not None:
+                return "photo"
+
+            document = MessageObject.getDocument(message_obj.messageOwner)
+            if not document:
+                return None
+
+            try:
+                if MessageObject.isGifDocument(document):
+                    return "gif"
+            except Exception:
+                pass
+
+            mime = getattr(document, "mime_type", None) or ""
+
+            is_sticker = False
+            try:
+                attrs = getattr(document, "attributes", None)
+                if attrs is not None:
+                    for i in range(attrs.size() if hasattr(attrs, "size") else len(attrs)):
+                        a = attrs.get(i) if hasattr(attrs, "get") else attrs[i]
+                        if isinstance(a, TLRPC.TL_documentAttributeSticker):
+                            is_sticker = True
+                            break
+            except Exception:
+                pass
+
+            if is_sticker:
+                if mime == "image/webp":
+                    return "sticker_static"
+                if mime == "application/x-tgsticker":
+                    return "sticker_animated"
+                if mime == "video/webm":
+                    return "sticker_video"
+                if str(mime).startswith("image/"):
+                    return "sticker_static"
+                return "sticker_animated"
+
+            return None
+        except Exception as e:
+            log(f"[Demotiv] _detect_media_type error: {e}\n{traceback.format_exc()}")
+            return None
+
+    def _get_photo_path(self, message_obj: MessageObject) -> Optional[str]:
+        try:
+            current_account = UserConfig.selectedAccount
+            file_loader = FileLoader.getInstance(current_account)
+
+            file_path_obj = file_loader.getPathToMessage(message_obj.messageOwner)
+            if file_path_obj:
+                abs_path = file_path_obj.getAbsolutePath()
+                if os.path.exists(abs_path) and os.path.getsize(abs_path) > 0:
+                    return abs_path
+
+            media = message_obj.messageOwner.media
+            photo = media.photo if isinstance(media, TLRPC.TL_messageMediaPhoto) else None
+            if not photo or not photo.sizes:
+                return None
+
+            largest, max_dim = None, 0
+            for size in photo.sizes:
+                if isinstance(size, TLRPC.TL_photoSize):
+                    d = max(size.w, size.h)
+                    if d > max_dim:
+                        max_dim = d
+                        largest = size
+            if not largest:
+                largest = photo.sizes[-1]
+
+            file_path_obj = file_loader.getPathToAttach(largest, True)
+            if not file_path_obj:
+                return None
+            abs_path = file_path_obj.getAbsolutePath()
+
+            if os.path.exists(abs_path) and os.path.getsize(abs_path) > 0:
+                return abs_path
+
+            image_location = ImageLocation.getForPhoto(largest, photo)
+            if not image_location:
+                return None
+
+            file_loader.loadFile(image_location, message_obj, "jpg", FileLoader.PRIORITY_HIGH, 1)
+
+            for _ in range(30):
+                if os.path.exists(abs_path) and os.path.getsize(abs_path) > 0:
+                    return abs_path
+                time.sleep(1)
+            return None
+        except Exception as e:
+            log(f"[Demotiv] _get_photo_path error: {e}\n{traceback.format_exc()}")
+            return None
+
+    def _get_document_path(self, message_obj: MessageObject) -> Optional[str]:
+        try:
+            document = MessageObject.getDocument(message_obj.messageOwner)
+            if not document:
+                return None
+
+            file_loader = get_file_loader()
+            file_path_obj = file_loader.getPathToAttach(document, True)
+            if not file_path_obj:
+                return None
+            abs_path = file_path_obj.getAbsolutePath()
+
+            if os.path.exists(abs_path) and os.path.getsize(abs_path) > 0:
+                return abs_path
+
+            try:
+                mime = getattr(document, "mime_type", "") or ""
+            except Exception:
+                mime = ""
+            ext_hint = "tgs" if mime == "application/x-tgsticker" else None
+            file_loader.loadFile(document, ext_hint or "demotiv_media", FileLoader.PRIORITY_HIGH, 1)
+            for _ in range(30):
+                if os.path.exists(abs_path) and os.path.getsize(abs_path) > 0:
+                    return abs_path
+                time.sleep(1)
+            return None
+        except Exception as e:
+            log(f"[Demotiv] _get_document_path error: {e}\n{traceback.format_exc()}")
+            return None
+
+    def _ensure_raster_image(self, path: str) -> str:
+        try:
+            ext = os.path.splitext(path)[1].lower()
+            if ext in (".webp", ".heic", ".heif", ".avif"):
+                bmp = BitmapFactory.decodeFile(path)
+                if bmp is None:
+                    return path
+                out_path = File(self._ensure_temp_dir(), f"raster_{uuid.uuid4()}.png").getAbsolutePath()
+                fos = FileOutputStream(out_path)
+                try:
+                    bmp.compress(Bitmap.CompressFormat.PNG, 100, fos)
+                    fos.flush()
+                finally:
+                    try:
+                        fos.close()
+                    except Exception:
+                        pass
+                    try:
+                        bmp.recycle()
+                    except Exception:
+                        pass
+                return out_path
+        except Exception as e:
+            log(f"[Demotiv] _ensure_raster_image error: {e}")
+        return path
+
+    def _build_bw_preserving_palette(self, palette_image: Image.Image):
+        try:
+            if palette_image.mode != "P":
+                palette_image = palette_image.convert("P")
+            pal = palette_image.getpalette()
+            if pal is None:
+                return palette_image
+            if len(pal) < 256 * 3:
+                pal = pal + [0] * (256 * 3 - len(pal))
+            pal[0:3] = [0, 0, 0]
+            pal[3:6] = [255, 255, 255]
+            new_pal_img = Image.new("P", (1, 1))
+            new_pal_img.putpalette(pal)
+            return new_pal_img
+        except Exception:
+            return palette_image
+
+    def _render_demotivator_gif(self, gif_path: str, payload: str) -> Optional[str]:
+        try:
+            if not os.path.exists(gif_path) or os.path.getsize(gif_path) == 0:
+                return None
+
+            title_font_size = int(self.get_setting("title_font_size", "48"))
+            subtitle_font_size = int(self.get_setting("subtitle_font_size", "32"))
+            border_width = int(self.get_setting("border_width", "20"))
+            title, subtitle = self._split_payload(payload)
+
+            def _get_gif_config():
+                try:
+                    side = int(self.get_setting("gif_square_side", self.get_setting("image_square_side", "600")))
+                except Exception:
+                    side = 360
+                try:
+                    fps = int(self.get_setting("gif_fps", "12"))
+                except Exception:
+                    fps = 12
+                try:
+                    max_frames = int(self.get_setting("gif_max_frames", "120"))
+                except Exception:
+                    max_frames = 120
+                try:
+                    palette_mode = int(self.get_setting("gif_palette_mode", 0))
+                except Exception:
+                    palette_mode = 0
+                subrectangles = bool(self.get_setting("gif_subrectangles", True))
+                if fps <= 0:
+                    fps = 12
+                if side <= 0:
+                    side = 360
+                if max_frames <= 0:
+                    max_frames = 120
+                return side, fps, max_frames, palette_mode, subrectangles
+
+            target_side, fps, max_frames, palette_mode, subrectangles = _get_gif_config()
+
+            src = Image.open(gif_path)
+            title_font = self._load_font(title_font_size)
+            subtitle_font = self._load_font(subtitle_font_size)
+
+            iter_src = ImageSequence.Iterator(src)
+            first_frame = next(iter_src).convert("RGB")
+            first_resized = self._make_square(first_frame, target_side)
+
+            inner_border = 5
+            inner_frame_w = first_resized.width + inner_border * 2
+            inner_frame_h = first_resized.height + inner_border * 2
+            canvas_w = inner_frame_w + border_width * 2
+
+            temp = Image.new("RGB", (canvas_w, 1000), "black")
+            tdraw = ImageDraw.Draw(temp)
+            text_area_h = 40
+            if title:
+                for line in self._wrap_text(tdraw, title, title_font, canvas_w - 40):
+                    bbox = tdraw.textbbox((0, 0), line, font=title_font)
+                    line_h = bbox[3] - bbox[1] if bbox[3] > bbox[1] else title_font_size
+                    text_area_h += line_h + max(5, title_font_size // 10)
+            if subtitle:
+                if title:
+                    text_area_h += max(10, title_font_size // 5)
+                for line in self._wrap_text(tdraw, subtitle, subtitle_font, canvas_w - 40):
+                    bbox = tdraw.textbbox((0, 0), line, font=subtitle_font)
+                    line_h = bbox[3] - bbox[1] if bbox[3] > bbox[1] else subtitle_font_size
+                    text_area_h += line_h + max(3, subtitle_font_size // 12)
+            text_area_h = max(text_area_h + 40, 120)
+            canvas_h = inner_frame_h + border_width * 2 + text_area_h
+
+            base_canvas = Image.new("RGB", (canvas_w, canvas_h), "black")
+            draw = ImageDraw.Draw(base_canvas)
+            y_text = border_width + inner_frame_h + 20
+            if title:
+                for line in self._wrap_text(draw, title, title_font, canvas_w - 40):
+                    bbox = draw.textbbox((0, y_text), line, font=title_font)
+                    x = (canvas_w - (bbox[2] - bbox[0])) // 2
+                    draw.text((x, y_text), line, fill="white", font=title_font)
+                    line_h = bbox[3] - bbox[1] if bbox[3] > bbox[1] else title_font_size
+                    y_text += line_h + max(5, title_font_size // 10)
+            if subtitle:
+                y_text += max(10, title_font_size // 5) if title else 40
+                for line in self._wrap_text(draw, subtitle, subtitle_font, canvas_w - 40):
+                    bbox = draw.textbbox((0, y_text), line, font=subtitle_font)
+                    x = (canvas_w - (bbox[2] - bbox[0])) // 2
+                    draw.text((x, y_text), line, fill="white", font=subtitle_font)
+                    line_h = bbox[3] - bbox[1] if bbox[3] > bbox[1] else subtitle_font_size
+                    y_text += line_h + max(3, subtitle_font_size // 12)
+
+            def compose_rgb(resized_rgb: Image.Image) -> Image.Image:
+                canvas = base_canvas.copy()
+                inner = Image.new("RGB", (inner_frame_w, inner_frame_h), "white")
+                inner.paste(resized_rgb, (inner_border, inner_border))
+                canvas.paste(inner, (border_width, border_width))
+                return canvas
+
+            palette_source = None
+            locked_palette = None
+            try:
+                composed_first = compose_rgb(first_resized)
+                if palette_mode == 0:
+                    palette_source = composed_first.quantize(colors=256, method=Image.FASTOCTREE)
+                    locked_palette = self._build_bw_preserving_palette(palette_source)
+            except Exception:
+                palette_source = None
+                locked_palette = None
+
+            frames = []
+            durations = []
+            interval = max(20, int(1000 / max(1, fps)))
+            accumulator = 0
+
+            src.seek(0)
+            for frame in ImageSequence.Iterator(src):
+                try:
+                    dur = int(frame.info.get("duration", 40))
+                except Exception:
+                    dur = 40
+                accumulator += max(1, dur)
+
+                resized = self._make_square(frame.convert("RGB"), target_side)
+                composed = compose_rgb(resized)
+
+                if palette_mode == 1:
+                    try:
+                        pframe = composed.convert("P", palette=Image.WEB, dither=0)
+                    except Exception:
+                        pframe = composed.convert("P")
+                else:
+                    try:
+                        if locked_palette is not None:
+                            pframe = composed.quantize(colors=256, method=Image.FASTOCTREE, palette=locked_palette, dither=0)
+                        elif palette_source is not None:
+                            pframe = composed.quantize(colors=256, method=Image.FASTOCTREE, palette=palette_source, dither=0)
+                        else:
+                            pframe = composed.quantize(colors=256, method=Image.FASTOCTREE, dither=0)
+                    except Exception:
+                        pframe = composed.convert("P")
+
+                while accumulator >= interval and len(frames) < max_frames:
+                    frames.append(pframe.copy())
+                    durations.append(interval)
+                    accumulator -= interval
+                if len(frames) >= max_frames:
+                    break
+
+            if not frames:
+                frames = [compose_rgb(first_resized).convert("P")]
+                durations = [max(40, interval)]
+
+            out_path = self._make_external_temp_path("gif")
+            try:
+                frames[0].save(
+                    out_path,
+                    save_all=True,
+                    append_images=frames[1:],
+                    duration=durations,
+                    loop=0,
+                    optimize=False,
+                    format="GIF",
+                    disposal=2,
+                    subrectangles=subrectangles,
+                )
+            except TypeError:
+                frames[0].save(
+                    out_path,
+                    save_all=True,
+                    append_images=frames[1:],
+                    duration=durations,
+                    loop=0,
+                    optimize=False,
+                    format="GIF",
+                )
+            return out_path
+        except Exception as e:
+            log(f"[Demotiv] _render_demotivator_gif error: {e}\n{traceback.format_exc()}")
+            return None
+
+    def _render_demotivator_mp4_to_gif(self, mp4_path: str, payload: str) -> Optional[str]:
+        try:
+            if not os.path.exists(mp4_path) or os.path.getsize(mp4_path) == 0:
+                return None
+
+            title_font_size = int(self.get_setting("title_font_size", "48"))
+            subtitle_font_size = int(self.get_setting("subtitle_font_size", "32"))
+            border_width = int(self.get_setting("border_width", "20"))
+            title, subtitle = self._split_payload(payload)
+
+            def _get_gif_config():
+                try:
+                    side = int(self.get_setting("gif_square_side", self.get_setting("image_square_side", "600")))
+                except Exception:
+                    side = 360
+                try:
+                    fps = int(self.get_setting("gif_fps", "12"))
+                except Exception:
+                    fps = 12
+                try:
+                    max_frames = int(self.get_setting("gif_max_frames", "120"))
+                except Exception:
+                    max_frames = 120
+                try:
+                    palette_mode = int(self.get_setting("gif_palette_mode", 0))
+                except Exception:
+                    palette_mode = 0
+                subrectangles = bool(self.get_setting("gif_subrectangles", True))
+                if fps <= 0:
+                    fps = 12
+                if side <= 0:
+                    side = 360
+                if max_frames <= 0:
+                    max_frames = 120
+                return side, fps, max_frames, palette_mode, subrectangles
+
+            target_side, fps, max_frames, palette_mode, subrectangles = _get_gif_config()
+
+            retriever = MediaMetadataRetriever()
+            retriever.setDataSource(mp4_path)
+            try:
+                duration_ms_str = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                duration_ms = int(duration_ms_str) if duration_ms_str else 4000
+            except Exception:
+                duration_ms = 4000
+
+            frame_interval_ms = max(20, int(1000 / max(1, fps)))
+            timestamps = list(range(0, duration_ms, frame_interval_ms))[:max_frames]
+
+            first_bmp = retriever.getFrameAtTime(0, MediaMetadataRetriever.OPTION_CLOSEST)
+            if first_bmp is None:
+                retriever.release()
+                return None
+            baos = ByteArrayOutputStream()
+            first_bmp.compress(Bitmap.CompressFormat.PNG, 100, baos)
+            first_bmp.recycle()
+            data = bytes(baos.toByteArray())
+            try:
+                baos.close()
+            except Exception:
+                pass
+            first_img = Image.open(io.BytesIO(data)).convert("RGB")
+            first_resized = self._make_square(first_img, target_side)
+
+            inner_border = 5
+            inner_frame_w = first_resized.width + inner_border * 2
+            inner_frame_h = first_resized.height + inner_border * 2
+            canvas_w = inner_frame_w + border_width * 2
+
+            title_font = self._load_font(title_font_size)
+            subtitle_font = self._load_font(subtitle_font_size)
+
+            temp = Image.new("RGB", (canvas_w, 1000), "black")
+            tdraw = ImageDraw.Draw(temp)
+            text_area_h = 40
+            if title:
+                for line in self._wrap_text(tdraw, title, title_font, canvas_w - 40):
+                    bbox = tdraw.textbbox((0, 0), line, font=title_font)
+                    line_h = bbox[3] - bbox[1] if bbox[3] > bbox[1] else title_font_size
+                    text_area_h += line_h + max(5, title_font_size // 10)
+            if subtitle:
+                if title:
+                    text_area_h += max(10, title_font_size // 5)
+                for line in self._wrap_text(tdraw, subtitle, subtitle_font, canvas_w - 40):
+                    bbox = tdraw.textbbox((0, 0), line, font=subtitle_font)
+                    line_h = bbox[3] - bbox[1] if bbox[3] > bbox[1] else subtitle_font_size
+                    text_area_h += line_h + max(3, subtitle_font_size // 12)
+            text_area_h = max(text_area_h + 40, 120)
+            canvas_h = inner_frame_h + border_width * 2 + text_area_h
+
+            base_canvas = Image.new("RGB", (canvas_w, canvas_h), "black")
+            draw = ImageDraw.Draw(base_canvas)
+            y = border_width + inner_frame_h + 20
+            if title:
+                for line in self._wrap_text(draw, title, title_font, canvas_w - 40):
+                    bbox = draw.textbbox((0, y), line, font=title_font)
+                    x = (canvas_w - (bbox[2] - bbox[0])) // 2
+                    draw.text((x, y), line, fill="white", font=title_font)
+                    line_h = bbox[3] - bbox[1] if bbox[3] > bbox[1] else title_font_size
+                    y += line_h + max(5, title_font_size // 10)
+            if subtitle:
+                y += max(10, title_font_size // 5) if title else 40
+                for line in self._wrap_text(draw, subtitle, subtitle_font, canvas_w - 40):
+                    bbox = draw.textbbox((0, y), line, font=subtitle_font)
+                    x = (canvas_w - (bbox[2] - bbox[0])) // 2
+                    draw.text((x, y), line, fill="white", font=subtitle_font)
+                    line_h = bbox[3] - bbox[1] if bbox[3] > bbox[1] else subtitle_font_size
+                    y += line_h + max(3, subtitle_font_size // 12)
+
+            frames = []
+            durations = []
+            palette_source = None
+            locked_palette = None
+
+            for t in timestamps:
+                try:
+                    bmp = retriever.getFrameAtTime(t * 1000, MediaMetadataRetriever.OPTION_CLOSEST)
+                    if bmp is None:
+                        continue
+                    baos = ByteArrayOutputStream()
+                    bmp.compress(Bitmap.CompressFormat.PNG, 100, baos)
+                    bmp.recycle()
+                    b = bytes(baos.toByteArray())
+                    try:
+                        baos.close()
+                    except Exception:
+                        pass
+                    img = Image.open(io.BytesIO(b)).convert("RGB")
+                    img = self._make_square(img, target_side)
+
+                    canvas = base_canvas.copy()
+                    inner = Image.new("RGB", (inner_frame_w, inner_frame_h), "white")
+                    inner.paste(img, (inner_border, inner_border))
+                    canvas.paste(inner, (border_width, border_width))
+
+                    if palette_mode == 1:
+                        try:
+                            pframe = canvas.convert("P", palette=Image.WEB, dither=0)
+                        except Exception:
+                            pframe = canvas.convert("P")
+                    else:
+                        try:
+                            if not frames:
+                                palette_source = canvas.quantize(colors=256, method=Image.FASTOCTREE)
+                                locked_palette = self._build_bw_preserving_palette(palette_source)
+                            if locked_palette is not None:
+                                pframe = canvas.quantize(colors=256, method=Image.FASTOCTREE, palette=locked_palette, dither=0)
+                            else:
+                                pframe = canvas.quantize(colors=256, method=Image.FASTOCTREE, palette=palette_source, dither=0)
+                        except Exception:
+                            pframe = canvas.convert("P")
+
+                    frames.append(pframe)
+                    durations.append(frame_interval_ms)
+                except Exception:
+                    continue
+
+            try:
+                retriever.release()
+            except Exception:
+                pass
+
+            if not frames:
+                return None
+
+            out_path = self._make_external_temp_path("gif")
+            try:
+                frames[0].save(
+                    out_path,
+                    save_all=True,
+                    append_images=frames[1:],
+                    duration=durations,
+                    loop=0,
+                    optimize=False,
+                    format="GIF",
+                    disposal=2,
+                    subrectangles=subrectangles,
+                )
+            except TypeError:
+                frames[0].save(
+                    out_path,
+                    save_all=True,
+                    append_images=frames[1:],
+                    duration=durations,
+                    loop=0,
+                    optimize=False,
+                    format="GIF",
+                )
+            return out_path
+        except Exception as e:
+            log(f"[Demotiv] _render_demotivator_mp4_to_gif error: {e}\n{traceback.format_exc()}")
+            return None
+
+    def _render_demotivator_tgs_to_gif(self, tgs_path: str, payload: str) -> Optional[str]:
+        try:
+            if not os.path.exists(tgs_path) or os.path.getsize(tgs_path) == 0:
+                return None
+
+            title_font_size = int(self.get_setting("title_font_size", "48"))
+            subtitle_font_size = int(self.get_setting("subtitle_font_size", "32"))
+            border_width = int(self.get_setting("border_width", "20"))
+            title, subtitle = self._split_payload(payload)
+
+            def _get_gif_config():
+                try:
+                    side = int(self.get_setting("gif_square_side", self.get_setting("image_square_side", "600")))
+                except Exception:
+                    side = 360
+                try:
+                    fps = int(self.get_setting("gif_fps", "12"))
+                except Exception:
+                    fps = 12
+                try:
+                    max_frames = int(self.get_setting("gif_max_frames", "120"))
+                except Exception:
+                    max_frames = 120
+                try:
+                    palette_mode = int(self.get_setting("gif_palette_mode", 0))
+                except Exception:
+                    palette_mode = 0
+                subrectangles = bool(self.get_setting("gif_subrectangles", True))
+                if fps <= 0:
+                    fps = 12
+                if side <= 0:
+                    side = 360
+                if max_frames <= 0:
+                    max_frames = 120
+                return side, fps, max_frames, palette_mode, subrectangles
+
+            target_side, fps, max_frames, palette_mode, subrectangles = _get_gif_config()
+
+            json_str = None
+            try:
+                json_str = ImageLoader.decompressGzip(File(tgs_path))
+                if json_str is not None and len(json_str) == 0:
+                    json_str = None
+            except Exception:
+                json_str = None
+
+            if json_str:
+                lottie = RLottieDrawable(File(tgs_path), json_str, target_side, target_side, None, False, None, 0)
+            else:
+                lottie = RLottieDrawable(File(tgs_path), target_side, target_side, None, False, None, 0)
+
+            try:
+                lottie.setInvalidateOnProgressSet(True)
+                lottie.setAllowDecodeSingleFrame(True)
+            except Exception:
+                pass
+
+            title_font = self._load_font(title_font_size)
+            subtitle_font = self._load_font(subtitle_font_size)
+
+            dummy = Image.new("RGB", (target_side, target_side), "black")
+            inner_border = 5
+            inner_frame_w = dummy.width + inner_border * 2
+            inner_frame_h = dummy.height + inner_border * 2
+            canvas_w = inner_frame_w + border_width * 2
+
+            temp = Image.new("RGB", (canvas_w, 1000), "black")
+            tdraw = ImageDraw.Draw(temp)
+            text_area_h = 40
+            if title:
+                for line in self._wrap_text(tdraw, title, title_font, canvas_w - 40):
+                    bbox = tdraw.textbbox((0, 0), line, font=title_font)
+                    line_h = bbox[3] - bbox[1] if bbox[3] > bbox[1] else title_font_size
+                    text_area_h += line_h + max(5, title_font_size // 10)
+            if subtitle:
+                if title:
+                    text_area_h += max(10, title_font_size // 5)
+                for line in self._wrap_text(tdraw, subtitle, subtitle_font, canvas_w - 40):
+                    bbox = tdraw.textbbox((0, 0), line, font=subtitle_font)
+                    line_h = bbox[3] - bbox[1] if bbox[3] > bbox[1] else subtitle_font_size
+                    text_area_h += line_h + max(3, subtitle_font_size // 12)
+            text_area_h = max(text_area_h + 40, 120)
+            canvas_h = inner_frame_h + border_width * 2 + text_area_h
+
+            base_canvas = Image.new("RGB", (canvas_w, canvas_h), "black")
+            draw = ImageDraw.Draw(base_canvas)
+            y_text = border_width + inner_frame_h + 20
+            if title:
+                for line in self._wrap_text(draw, title, title_font, canvas_w - 40):
+                    bbox = draw.textbbox((0, y_text), line, font=title_font)
+                    x = (canvas_w - (bbox[2] - bbox[0])) // 2
+                    draw.text((x, y_text), line, fill="white", font=title_font)
+                    line_h = bbox[3] - bbox[1] if bbox[3] > bbox[1] else title_font_size
+                    y_text += line_h + max(5, title_font_size // 10)
+            if subtitle:
+                y_text += max(10, title_font_size // 5) if title else 40
+                for line in self._wrap_text(draw, subtitle, subtitle_font, canvas_w - 40):
+                    bbox = draw.textbbox((0, y_text), line, font=subtitle_font)
+                    x = (canvas_w - (bbox[2] - bbox[0])) // 2
+                    draw.text((x, y_text), line, fill="white", font=subtitle_font)
+                    line_h = bbox[3] - bbox[1] if bbox[3] > bbox[1] else subtitle_font_size
+                    y_text += line_h + max(3, subtitle_font_size // 12)
+
+            def compose_rgb(resized_rgb: Image.Image) -> Image.Image:
+                canvas = base_canvas.copy()
+                inner = Image.new("RGB", (inner_frame_w, inner_frame_h), "white")
+                inner.paste(resized_rgb, (inner_border, inner_border))
+                canvas.paste(inner, (border_width, border_width))
+                return canvas
+
+            frames = []
+            durations = []
+            interval = max(20, int(1000 / max(1, fps)))
+            try:
+                total_frames = lottie.getFramesCount()
+                duration_ms = int(lottie.getDuration()) if hasattr(lottie, 'getDuration') else int(total_frames * interval)
+            except Exception:
+                total_frames = 120
+                duration_ms = total_frames * interval
+
+            palette_source = None
+            locked_palette = None
+            try:
+                lottie.setCurrentFrame(0, False, True)
+            except Exception:
+                pass
+            first_bmp = lottie.getAnimatedBitmap()
+            if first_bmp is None:
+                try:
+                    tmp_bitmap = Bitmap.createBitmap(target_side, target_side, Bitmap.Config.ARGB_8888)
+                    res = lottie.getFirstFrame(tmp_bitmap)
+                    if res is None:
+                        return None
+                    baos_ff = ByteArrayOutputStream()
+                    tmp_bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos_ff)
+                    data_ff = bytes(baos_ff.toByteArray())
+                    try:
+                        baos_ff.close()
+                    except Exception:
+                        pass
+                    first_img = Image.open(io.BytesIO(data_ff)).convert("RGB")
+                except Exception:
+                    return None
+            else:
+                baos = ByteArrayOutputStream()
+                first_bmp.compress(Bitmap.CompressFormat.PNG, 100, baos)
+                data = bytes(baos.toByteArray())
+                try:
+                    baos.close()
+                except Exception:
+                    pass
+                first_img = Image.open(io.BytesIO(data)).convert("RGB")
+            first_img = self._make_square(first_img, target_side)
+            composed_first = compose_rgb(first_img)
+            try:
+                if palette_mode == 0:
+                    palette_source = composed_first.quantize(colors=256, method=Image.FASTOCTREE)
+                    locked_palette = self._build_bw_preserving_palette(palette_source)
+            except Exception:
+                palette_source = None
+                locked_palette = None
+
+            t = 0
+            produced = 0
+            while t < duration_ms and produced < max_frames:
+                try:
+                    progress = t / float(duration_ms)
+                    lottie.setProgress(progress, False)
+                except Exception:
+                    pass
+                bmp = lottie.getAnimatedBitmap()
+                if bmp is None:
+                    tries = 6
+                    while bmp is None and tries > 0:
+                        time.sleep(0.01)
+                        bmp = lottie.getAnimatedBitmap()
+                        tries -= 1
+                if bmp is None:
+                    t += interval
+                    continue
+                baos = ByteArrayOutputStream()
+                bmp.compress(Bitmap.CompressFormat.PNG, 100, baos)
+                buf = bytes(baos.toByteArray())
+                try:
+                    baos.close()
+                except Exception:
+                    pass
+                img = Image.open(io.BytesIO(buf)).convert("RGB")
+                img = self._make_square(img, target_side)
+                composed = compose_rgb(img)
+
+                if palette_mode == 1:
+                    try:
+                        pframe = composed.convert("P", palette=Image.WEB, dither=0)
+                    except Exception:
+                        pframe = composed.convert("P")
+                else:
+                    try:
+                        if locked_palette is not None:
+                            pframe = composed.quantize(colors=256, method=Image.FASTOCTREE, palette=locked_palette, dither=0)
+                        elif palette_source is not None:
+                            pframe = composed.quantize(colors=256, method=Image.FASTOCTREE, palette=palette_source, dither=0)
+                        else:
+                            pframe = composed.quantize(colors=256, method=Image.FASTOCTREE, dither=0)
+                    except Exception:
+                        pframe = composed.convert("P")
+
+                frames.append(pframe)
+                durations.append(interval)
+                produced += 1
+                t += interval
+
+            if not frames:
+                try:
+                    total = 0
+                    try:
+                        total = lottie.getFramesCount()
+                    except Exception:
+                        total = 0
+                    if total <= 0:
+                        total = max_frames
+                    step_count = min(max_frames, total)
+                    for i in range(step_count):
+                        try:
+                            frame_index = int(i * (total - 1) / max(step_count - 1, 1))
+                            lottie.setCurrentFrame(frame_index, False, True)
+                        except Exception:
+                            continue
+                        bmp = lottie.getAnimatedBitmap()
+                        if bmp is None:
+                            tries = 6
+                            while bmp is None and tries > 0:
+                                time.sleep(0.01)
+                                bmp = lottie.getAnimatedBitmap()
+                                tries -= 1
+                        if bmp is None:
+                            continue
+                        baos = ByteArrayOutputStream()
+                        bmp.compress(Bitmap.CompressFormat.PNG, 100, baos)
+                        buf = bytes(baos.toByteArray())
+                        try:
+                            baos.close()
+                        except Exception:
+                            pass
+                        img = Image.open(io.BytesIO(buf)).convert("RGB")
+                        img = self._make_square(img, target_side)
+                        composed = compose_rgb(img)
+                        if palette_mode == 1:
+                            try:
+                                pframe = composed.convert("P", palette=Image.WEB, dither=0)
+                            except Exception:
+                                pframe = composed.convert("P")
+                        else:
+                            try:
+                                if locked_palette is not None:
+                                    pframe = composed.quantize(colors=256, method=Image.FASTOCTREE, palette=locked_palette, dither=0)
+                                elif palette_source is not None:
+                                    pframe = composed.quantize(colors=256, method=Image.FASTOCTREE, palette=palette_source, dither=0)
+                                else:
+                                    pframe = composed.quantize(colors=256, method=Image.FASTOCTREE, dither=0)
+                            except Exception:
+                                pframe = composed.convert("P")
+                        frames.append(pframe)
+                        durations.append(interval)
+                except Exception:
+                    pass
+
+            if not frames:
+                try:
+                    single = composed_first.convert("P")
+                    out_path = self._make_external_temp_path("gif")
+                    single.save(out_path, save_all=False, loop=0, format="GIF")
+                    return out_path
+                except Exception:
+                    return None
+
+            out_path = self._make_external_temp_path("gif")
+            try:
+                frames[0].save(
+                    out_path,
+                    save_all=True,
+                    append_images=frames[1:],
+                    duration=durations,
+                    loop=0,
+                    optimize=False,
+                    format="GIF",
+                    disposal=2,
+                    subrectangles=subrectangles,
+                )
+            except TypeError:
+                frames[0].save(
+                    out_path,
+                    save_all=True,
+                    append_images=frames[1:],
+                    duration=durations,
+                    loop=0,
+                    optimize=False,
+                    format="GIF",
+                )
+            return out_path
+        except Exception as e:
+            log(f"[Demotiv] _render_demotivator_tgs_to_gif error: {e}\n{traceback.format_exc()}")
+            return None
+
+    def _make_external_temp_path(self, ext: str) -> str:
+        try:
+            base = "/storage/emulated/0/Download/exteraGram"
+            try:
+                os.makedirs(base, exist_ok=True)
+            except Exception:
+                pass
+            return os.path.join(base, f"demotiv_{uuid.uuid4()}.{ext}")
+        except Exception:
+            return File(self._ensure_temp_dir(), f"demotiv_{uuid.uuid4()}.{ext}").getAbsolutePath()
+
+    def _send_gif_result(self, params: Any, gif_path: str):
+        try:
+            dialog_id = self._get_dialog_id_from_params(params)
+            if dialog_id == 0:
+                try:
+                    frag = get_last_fragment()
+                    if frag and hasattr(frag, "getDialogId"):
+                        dialog_id = frag.getDialogId()
+                except Exception:
+                    pass
+
+            account_instance = get_account_instance()
+
+            def _send_on_ui():
+                SendMessagesHelper.prepareSendingDocument(
+                    account_instance,
+                    gif_path,
+                    gif_path,
+                    None,
+                    None,
+                    "image/gif",
+                    dialog_id,
+                    getattr(params, "replyToMsg", None),
+                    getattr(params, "replyToTopMsg", None),
+                    None,
+                    None,
+                    None,
+                    True,
+                    0,
+                    None,
+                    None,
+                    0,
+                    False,
+                )
+
+            run_on_ui_thread(_send_on_ui)
+            self._delete_file_delayed(gif_path)
+        except Exception as e:
+            err_text = str(e)
+            log(f"[Demotiv] _send_gif_result error: {err_text}\n{traceback.format_exc()}")
+            run_on_ui_thread(lambda: BulletinHelper.show_error(Z("send_error", error=err_text)))
+
+    def _get_dialog_id_from_params(self, params: Any) -> int:
+        try:
+            peer = getattr(params, "peer", None)
+            if not peer:
+                return 0
+            if hasattr(peer, "channel_id") and peer.channel_id != 0:
+                return -peer.channel_id
+            if hasattr(peer, "chat_id") and peer.chat_id != 0:
+                return -peer.chat_id
+            if hasattr(peer, "user_id") and peer.user_id != 0:
+                return peer.user_id
+        except Exception:
+            pass
+        return 0
+
+    def _get_media_path(self, message_obj: MessageObject, media_kind: str) -> Optional[str]:
+        try:
+            current_account = UserConfig.selectedAccount
+            file_loader = FileLoader.getInstance(current_account)
+
+            if media_kind == "photo":
+                return self._get_photo_path(message_obj)
+
+            document = message_obj.messageOwner.media.document
+            file_path_obj = file_loader.getPathToAttach(document, True)
+            if file_path_obj and file_path_obj.exists() and file_path_obj.length() > 0:
+                return file_path_obj.getAbsolutePath()
+
+            image_location = ImageLocation.getForDocument(document)
+            if image_location:
+                ext = "mp4" if media_kind == "gif" else ("webm" if media_kind == "animated_webm" else "tgs")
+                file_loader.loadFile(image_location, message_obj, ext, FileLoader.PRIORITY_HIGH, 1)
+                target = file_loader.getPathToAttach(document, True)
+                abs_path = target.getAbsolutePath() if target else None
+                for _ in range(30):
+                    if abs_path and os.path.exists(abs_path) and os.path.getsize(abs_path) > 0:
+                        return abs_path
+                    time.sleep(1)
+            return None
+        except Exception as e:
+            log(f"[Demotiv] _get_media_path error: {e}\n{traceback.format_exc()}")
+            return None
+
+    def _get_gif_first_frame(self, document: Optional[TLRPC.Document], gif_path: str) -> Optional[str]:
+        try:
+            if document and MessageObject.isNewGifDocument(document):
+                return self._get_video_first_frame(gif_path)
+            ext = os.path.splitext(gif_path)[1].lower()
+            if ext == ".mp4":
+                return self._get_video_first_frame(gif_path)
+            with Image.open(gif_path) as img:
+                img.seek(0)
+                frame = img.convert("RGB")
+                out_path = File(self._ensure_temp_dir(), f"demotiv_gif_{uuid.uuid4()}.png").getAbsolutePath()
+                frame.save(out_path, "PNG")
+                return out_path
+        except Exception as e:
+            log(f"[Demotiv] GIF frame error: {e}")
+            return self._get_video_first_frame(gif_path)
+
+    def _get_video_first_frame(self, video_path: str) -> Optional[str]:
+        retriever = None
+        bitmap = None
+        stream = None
+        try:
+            retriever = MediaMetadataRetriever()
+            retriever.setDataSource(video_path)
+            bitmap = retriever.getFrameAtTime(0, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+            if bitmap is None:
+                bitmap = retriever.getFrameAtTime()
+            if bitmap is None:
+                return None
+            out_path = File(self._ensure_temp_dir(), f"demotiv_anim_{uuid.uuid4()}.png").getAbsolutePath()
+            stream = FileOutputStream(out_path)
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+            return out_path
+        except Exception as e:
+            log(f"[Demotiv] Video frame error: {e}")
+            return None
+        finally:
+            try:
+                if stream:
+                    stream.close()
+            except Exception:
+                pass
+            if bitmap is not None:
+                try:
+                    bitmap.recycle()
+                except Exception:
+                    pass
+            if retriever is not None:
+                try:
+                    retriever.release()
+                except Exception:
+                    pass
+
+    def _render_tgs_frame(self, sticker_path: str) -> Optional[str]:
+        drawable = None
+        bitmap = None
+        stream = None
+        try:
+            drawable = RLottieDrawable(File(sticker_path), 512, 512, None, False)
+            width = drawable.getIntrinsicWidth() or 512
+            height = drawable.getIntrinsicHeight() or 512
+            bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            drawable.getFirstFrame(bitmap)
+            out_path = File(self._ensure_temp_dir(), f"demotiv_tgs_{uuid.uuid4()}.png").getAbsolutePath()
+            stream = FileOutputStream(out_path)
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+            return out_path
+        except Exception as e:
+            log(f"[Demotiv] TGS render error: {e}\n{traceback.format_exc()}")
+            return self._render_tgs_placeholder()
+        finally:
+            try:
+                if stream:
+                    stream.close()
+            except Exception:
+                pass
+            if bitmap is not None:
+                try:
+                    bitmap.recycle()
+                except Exception:
+                    pass
+            if drawable is not None:
+                try:
+                    drawable.recycle()
+                except Exception:
+                    pass
+
+    def _render_demotivator(self, photo_path: str, payload: str) -> Optional[str]:
+        try:
+            if not os.path.exists(photo_path) or os.path.getsize(photo_path) == 0:
+                return None
+
+            title_font_size = int(self.get_setting("title_font_size", "48"))
+            subtitle_font_size = int(self.get_setting("subtitle_font_size", "32"))
+            border_width = int(self.get_setting("border_width", "20"))
+
+            title, subtitle = self._split_payload(payload)
+
+            safe_path = self._ensure_raster_image(photo_path)
+            src_img = Image.open(safe_path).convert("RGB")
+
+            try:
+                target_side = int(self.get_setting("image_square_side", "600"))
+            except Exception:
+                target_side = 600
+            src_img = self._make_square(src_img, target_side)
+
+            inner_border = 5
+            inner_frame_w = src_img.width + inner_border * 2
+            inner_frame_h = src_img.height + inner_border * 2
+            canvas_w = inner_frame_w + border_width * 2
+
+            title_font = self._load_font(title_font_size)
+            subtitle_font = self._load_font(subtitle_font_size)
+
+            temp = Image.new("RGB", (canvas_w, 1000), "black")
+            tdraw = ImageDraw.Draw(temp)
+
+            text_area_h = 40
+            if title:
+                for line in self._wrap_text(tdraw, title, title_font, canvas_w - 40):
+                    bbox = tdraw.textbbox((0, 0), line, font=title_font)
+                    line_h = bbox[3] - bbox[1] if bbox[3] > bbox[1] else title_font_size
+                    text_area_h += line_h + max(5, title_font_size // 10)
+
+            if subtitle:
+                if title:
+                    text_area_h += max(10, title_font_size // 5)
+                for line in self._wrap_text(tdraw, subtitle, subtitle_font, canvas_w - 40):
+                    bbox = tdraw.textbbox((0, 0), line, font=subtitle_font)
+                    line_h = bbox[3] - bbox[1] if bbox[3] > bbox[1] else subtitle_font_size
+                    text_area_h += line_h + max(3, subtitle_font_size // 12)
+
+            text_area_h = max(text_area_h + 40, 120)
+
+            canvas_h = inner_frame_h + border_width * 2 + text_area_h
+            canvas = Image.new("RGB", (canvas_w, canvas_h), "black")
+
+            inner = Image.new("RGB", (inner_frame_w, inner_frame_h), "white")
+            inner.paste(src_img, (inner_border, inner_border))
+            canvas.paste(inner, (border_width, border_width))
+
+            draw = ImageDraw.Draw(canvas)
+            y = border_width + inner_frame_h + 20
+
+            if title:
+                for line in self._wrap_text(draw, title, title_font, canvas_w - 40):
+                    bbox = draw.textbbox((0, y), line, font=title_font)
+                    x = (canvas_w - (bbox[2] - bbox[0])) // 2
+                    draw.text((x, y), line, fill="white", font=title_font)
+                    line_h = bbox[3] - bbox[1] if bbox[3] > bbox[1] else title_font_size
+                    y += line_h + max(5, title_font_size // 10)
+
+            if subtitle:
+                y += max(10, title_font_size // 5) if title else 40
+                for line in self._wrap_text(draw, subtitle, subtitle_font, canvas_w - 40):
+                    bbox = draw.textbbox((0, y), line, font=subtitle_font)
+                    x = (canvas_w - (bbox[2] - bbox[0])) // 2
+                    draw.text((x, y), line, fill="white", font=subtitle_font)
+                    line_h = bbox[3] - bbox[1] if bbox[3] > bbox[1] else subtitle_font_size
+                    y += line_h + max(3, subtitle_font_size // 12)
+
+            out_path = File(self._ensure_temp_dir(), f"demotiv_{uuid.uuid4()}.png").getAbsolutePath()
+            canvas.save(out_path, "PNG")
+            return out_path
+        except Exception as e:
+            log(f"[Demotiv] _render_demotivator error: {e}\n{traceback.format_exc()}")
+            return None
+
+    def _split_payload(self, payload: str):
+        try:
+            normalized = payload.replace("\\n", "\n")
+            if "|" in normalized and "\n" not in normalized:
+                parts = normalized.split("|", 1)
+            else:
+                parts = normalized.split("\n", 1)
+            title = parts[0].strip() if parts else ""
+            subtitle = parts[1].strip() if len(parts) > 1 else ""
+            return title, subtitle
+        except Exception:
+            return payload.strip(), ""
+
+    def _wrap_text(self, draw: ImageDraw.ImageDraw, text: str, font: ImageFont.ImageFont, max_width: int):
+        words = text.split()
+        if not words:
+            return [""]
+        lines = []
+        current = words[0]
+        for w in words[1:]:
+            bbox = draw.textbbox((0, 0), current + " " + w, font=font)
+            if (bbox[2] - bbox[0]) <= max_width:
+                current += " " + w
+            else:
+                lines.append(current)
+                current = w
+        lines.append(current)
+        return lines
+
+    def _send_result(self, params: Any, image_path: str):
+        try:
+            send_helper = get_send_messages_helper()
+            generated_photo = send_helper.generatePhotoSizes(image_path, None)
+            if not generated_photo:
+                run_on_ui_thread(lambda: BulletinHelper.show_error("Image processing failed"))
+                return
+
+            send_message({
+                "peer": params.peer,
+                "photo": generated_photo,
+                "path": image_path,
+                "replyToMsg": params.replyToMsg,
+                "replyToTopMsg": params.replyToTopMsg,
+            })
+            self._delete_file_delayed(image_path)
+        except Exception as e:
+            log(f"[Demotiv] _send_result error: {e}")
+            run_on_ui_thread(lambda: BulletinHelper.show_error(Z("send_error", error=str(e))))
+
+    def _ensure_temp_dir(self) -> File:
+        if not self._temp_dir:
+            self._temp_dir = self._get_temp_dir()
+        return self._temp_dir
+
+    def _get_temp_dir(self) -> Optional[File]:
+        try:
+            base_dir = ApplicationLoader.getFilesDirFixed()
+            if not base_dir:
+                return None
+            temp = File(base_dir, TEMP_DIR_NAME)
+            if not temp.exists() and not temp.mkdirs():
+                return None
+            return temp
+        except Exception as e:
+            log(f"[Demotiv] Temp dir error: {e}")
+            return None
+
+    def _cleanup_old_files(self, max_age_hours: int = 3):
+        try:
+            if not self._temp_dir:
+                return
+            now = time.time()
+            max_age = max_age_hours * 3600
+            for f in self._temp_dir.listFiles():
+                try:
+                    if f.isFile() and now - f.lastModified() / 1000 > max_age:
+                        f.delete()
+                except Exception:
+                    pass
+        except Exception as e:
+            log(f"[Demotiv] Cleanup error: {e}")
+
+    def _delete_file_delayed(self, path: str, delay: int = 30):
+        def action():
+            try:
+                time.sleep(delay)
+                if os.path.exists(path):
+                    os.remove(path)
+                    log(f"[Demotiv] Deleted temp file: {path}")
+            except Exception as e:
+                log(f"[Demotiv] Delete error: {e}")
+
+        threading.Thread(target=action, daemon=True).start()
+
+    def _load_font(self, size: int) -> ImageFont.ImageFont:
+        try:
+            if self.get_setting("use_custom_font", False):
+                custom_path = self.get_setting("custom_font_path", "").strip()
+                if custom_path and os.path.exists(custom_path):
+                    try:
+                        return ImageFont.truetype(custom_path, size)
+                    except Exception as e:
+                        log(f"[Demotiv] Custom font load error: {e}")
+            index = self.get_setting("font_family", 0)
+            if index == 0:
+                try:
+                    tn_path = FONT_PATHS[0]
+                    if os.path.exists(tn_path):
+                        return ImageFont.truetype(tn_path, size)
+                except Exception:
+                    pass
+                return ImageFont.load_default()
+            for p in self._candidate_paths_for_index(index):
+                try:
+                    if os.path.exists(p):
+                        return ImageFont.truetype(p, size)
+                except Exception:
+                    continue
+        except Exception as e:
+            log(f"[Demotiv] Font load error: {e}")
+        return ImageFont.load_default()
+
+    def _make_square(self, img: Image.Image, side: int) -> Image.Image:
+        try:
+            if side <= 0:
+                side = 600
+            return img.resize((side, side), Image.Resampling.LANCZOS)
+        except Exception as e:
+            log(f"[Demotiv] _make_square error: {e}")
+            return img

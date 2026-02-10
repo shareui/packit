@@ -1,0 +1,380 @@
+import os
+import uuid
+import time
+import threading
+import traceback
+import re
+from typing import Any, Optional, Callable, Tuple
+
+try:
+    from PIL import Image, ImageOps, ImageFilter
+except ImportError:
+    raise ImportError("Pillow library is not installed. This plugin requires it.")
+
+from java.io import File
+from org.telegram.messenger import ApplicationLoader, MessageObject, FileLoader, UserConfig, ImageLocation
+from org.telegram.tgnet import TLRPC
+from com.exteragram.messenger.plugins import PluginsController
+from com.exteragram.messenger.plugins.ui import PluginSettingsActivity
+
+from base_plugin import BasePlugin, HookResult, HookStrategy, MenuItemData, MenuItemType
+from client_utils import send_message, get_send_messages_helper, get_last_fragment
+from android_utils import log, run_on_ui_thread
+from ui.bulletin import BulletinHelper
+from ui.settings import Header, Divider, Input
+
+__id__ = "image_fx"
+__name__ = "ImageFX"
+__description__ = "Применяйте множество эффектов к изображениям. Используйте команды в ответе на фото. Список команд и префикс можно настроить в боковом меню -> Настройки ImageFX."
+__author__ = "@aprux"
+__version__ = "1.0"
+__min_version__ = "11.12.0"
+__icon__ = "SpottyEmojiAnim/22"
+
+TEMP_DIR_NAME = "ImageFX_Ultimate_Temp"
+MAX_DIMENSION = 8192
+
+class ImageFXPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self._temp_dir = None
+        self._processing = False
+        self._settings_menu_item = None
+        
+        self.COMMANDS = {
+            # key: (default_name, function, description, example_arg)
+            "crop": ("crop", self.apply_crop, "Обрезать изображение до заданных размеров.", "800x600"),
+            "blur": ("blur", self.apply_blur, "Размыть изображение с указанным радиусом.", "10"),
+            "rotate": ("rotate", self.apply_rotate, "Повернуть изображение на указанное количество градусов.", "90"),
+            "posterize": ("posterize", self.apply_posterize, "Уменьшить количество бит на цветовой канал.", "2"),
+            "solarize": ("solarize", self.apply_solarize, "Инвертировать значения пикселей выше порога.", "192"),
+            "grayscale": ("grayscale", self.apply_grayscale, "Преобразовать в оттенки серого.", None),
+            "invert": ("invert", self.apply_invert, "Инвертировать цвета изображения.", None),
+            "sepia": ("sepia", self.apply_sepia, "Применить эффект сепии.", None),
+            "emboss": ("emboss", self.apply_emboss, "Применить тиснение.", None),
+            "contour": ("contour", self.apply_contour, "Выделить контуры.", None),
+            "sharpen": ("sharpen", self.apply_sharpen, "Увеличить резкость.", None),
+            "flip": ("flip", self.apply_flip, "Отразить по горизонтали.", None),
+            "flop": ("flop", self.apply_flop, "Отразить по вертикали.", None),
+            "edge_enhance": ("edge_enhance", self.apply_edge_enhance, "Усилить края.", None),
+            "find_edges": ("find_edges", self.apply_find_edges, "Найти края.", None),
+            "smooth": ("smooth", self.apply_smooth, "Сгладить изображение.", None),
+            "detail": ("detail", self.apply_detail, "Усилить детализацию.", None),
+        }
+
+    def on_plugin_load(self):
+        self._temp_dir = self._get_temp_dir()
+        if self._temp_dir:
+            self.add_on_send_message_hook()
+            self._add_settings_menu_item()
+            log("[ImageFX+] Plugin loaded successfully.")
+            self._cleanup_old_files()
+        else:
+            log("[ImageFX+] Failed to initialize temp directory.")
+    
+    def on_plugin_unload(self):
+        if self._settings_menu_item:
+            self.remove_menu_item(self._settings_menu_item)
+            self._settings_menu_item = None
+
+    def create_settings(self):
+        prefix = self.get_setting("prefix", ".")
+        
+        help_parts = []
+        for key, (default_name, _, desc, example_arg) in self.COMMANDS.items():
+            current_cmd_name = self.get_setting(f"cmd_{key}", default_name)
+            example = f"{prefix}{current_cmd_name}"
+            if example_arg:
+                example += f" {example_arg}"
+            help_parts.append(f"• {example} - {desc}")
+        
+        help_text = "\n".join(help_parts)
+        
+        settings_list = [
+            Header(text="Настройки ImageFX"),
+            Input(
+                key="prefix",
+                text="Префикс команд",
+                default=".",
+                subtext="Символ, с которого начинаются команды."
+            ),
+            Divider(),
+            Header(text="Названия команд"),
+        ]
+
+        for key, (default_name, _, _, _) in self.COMMANDS.items():
+            settings_list.append(Input(
+                key=f"cmd_{key}",
+                text=f"Команда '{default_name}'",
+                default=default_name
+            ))
+        
+        settings_list.extend([
+            Divider(),
+            Header(text="Справка по командам"),
+            Divider(text=help_text)
+        ])
+        
+        return settings_list
+
+    def _open_settings(self, context):
+        def action():
+            try:
+                fragment = get_last_fragment()
+                if fragment:
+                    java_plugin = PluginsController.getInstance().plugins.get(self.id)
+                    fragment.presentFragment(PluginSettingsActivity(java_plugin))
+            except Exception as e:
+                log(f"[ImageFX+] Error opening settings: {e}\n{traceback.format_exc()}")
+        run_on_ui_thread(action)
+
+    def _add_settings_menu_item(self):
+        if self._settings_menu_item:
+            return
+        self._settings_menu_item = self.add_menu_item(MenuItemData(
+            menu_type=MenuItemType.CHAT_ACTION_MENU,
+            text="Настройки ImageFX",
+            icon="msg_settings_art",
+            on_click=self._open_settings
+        ))
+
+    def _get_temp_dir(self) -> Optional[File]:
+        try:
+            base_dir = ApplicationLoader.getFilesDirFixed()
+            if not base_dir: return None
+            temp_dir = File(base_dir, TEMP_DIR_NAME)
+            if not temp_dir.exists() and not temp_dir.mkdirs(): return None
+            return temp_dir
+        except Exception as e:
+            log(f"[ImageFX+] Error creating temp dir: {e}")
+            return None
+
+    def _cleanup_old_files(self, max_age_hours=1):
+        if not self._temp_dir: return
+        try:
+            now = time.time()
+            max_age_seconds = max_age_hours * 3600
+            for file_obj in self._temp_dir.listFiles():
+                if file_obj.isFile() and now - (file_obj.lastModified() / 1000) > max_age_seconds:
+                    file_obj.delete()
+        except Exception as e:
+            log(f"[ImageFX+] Cleanup error: {e}")
+
+    def _parse_command(self, command_body: str) -> Tuple[Optional[Callable], tuple, Optional[str]]:
+        parts = command_body.split(" ", 1)
+        command_name = parts[0]
+        arg_string = parts[1] if len(parts) > 1 else ""
+
+        # Check commands with arguments first
+        for key, (default_name, func, _, _) in self.COMMANDS.items():
+            setting_cmd_name = self.get_setting(f"cmd_{key}", default_name)
+            if command_name == setting_cmd_name:
+                if key == "crop":
+                    match = re.match(r"(\d+)[xX](\d+)", arg_string)
+                    if match:
+                        width, height = int(match.group(1)), int(match.group(2))
+                        if width > MAX_DIMENSION or height > MAX_DIMENSION:
+                            return None, (), f"Размеры обрезки не могут превышать {MAX_DIMENSION}px."
+                        return func, (width, height), None
+                elif key in ["blur", "rotate", "posterize", "solarize"]:
+                    match = re.match(r"(-?\d+)", arg_string)
+                    if match:
+                        return func, (int(match.group(1)),), None
+                elif self.COMMANDS[key][2] is None: # Simple command
+                     return func, (), None
+
+        # Fallback for simple commands if they were not matched with args
+        for key, (default_name, func, _, _) in self.COMMANDS.items():
+            setting_cmd_name = self.get_setting(f"cmd_{key}", default_name)
+            if command_body == setting_cmd_name:
+                 if key == "blur": return func, (5,), None # Default for blur
+                 return func, (), None
+
+        return None, (), None
+
+    def on_send_message_hook(self, account: int, params: Any) -> HookResult:
+        if not hasattr(params, "message") or not isinstance(params.message, str):
+            return HookResult()
+        
+        if not hasattr(params, "replyToMsg") or not params.replyToMsg:
+            return HookResult()
+
+        message_text = params.message.strip()
+        prefix = self.get_setting("prefix", ".")
+        
+        if not message_text.startswith(prefix):
+            return HookResult()
+
+        command_body = message_text[len(prefix):].lower()
+        filter_func, filter_args, error_message = self._parse_command(command_body)
+
+        if not filter_func:
+            return HookResult()
+            
+        if error_message:
+            run_on_ui_thread(lambda: BulletinHelper.show_error(error_message))
+            return HookResult(strategy=HookStrategy.CANCEL)
+
+        reply_msg = params.replyToMsg
+        if not self._has_photo(reply_msg):
+            return HookResult()
+        
+        if self._processing:
+            run_on_ui_thread(lambda: BulletinHelper.show_error("Уже обрабатывается другое изображение."))
+            return HookResult(strategy=HookStrategy.CANCEL)
+        
+        run_on_ui_thread(lambda: BulletinHelper.show_info("Применение эффекта..."))
+        threading.Thread(target=self._process_image_reply, args=(params, reply_msg, filter_func, *filter_args), daemon=True).start()
+        
+        return HookResult(strategy=HookStrategy.CANCEL)
+
+    def _has_photo(self, message_obj: MessageObject) -> bool:
+        if not message_obj or not message_obj.messageOwner: return False
+        media = message_obj.messageOwner.media
+        return isinstance(media, TLRPC.TL_messageMediaPhoto) and media.photo is not None
+
+    def _process_image_reply(self, params: Any, reply_msg: MessageObject, filter_function: Callable, *args, **kwargs):
+        self._processing = True
+        try:
+            photo_path = self._download_photo_sync(reply_msg)
+            if not photo_path:
+                run_on_ui_thread(lambda: BulletinHelper.show_error("Не удалось загрузить фото."))
+                return
+
+            processed_path = filter_function(photo_path, *args, **kwargs)
+            if not processed_path:
+                run_on_ui_thread(lambda: BulletinHelper.show_error("Не удалось применить эффект."))
+                return
+
+            self._send_processed_image(params, processed_path)
+            run_on_ui_thread(lambda: BulletinHelper.show_success("Эффект успешно применен!"))
+
+        except Exception as e:
+            log(f"[ImageFX+] Error processing image reply: {e}\n{traceback.format_exc()}")
+            run_on_ui_thread(lambda: BulletinHelper.show_error(f"Произошла ошибка: {e}"))
+        finally:
+            self._processing = False
+
+    def _download_photo_sync(self, message_obj: MessageObject) -> Optional[str]:
+        try:
+            media = message_obj.messageOwner.media
+            photo = media.photo
+            largest_size = None
+            max_dim = 0
+            
+            if photo.sizes and not photo.sizes.isEmpty():
+                for i in range(photo.sizes.size()):
+                    size = photo.sizes.get(i)
+                    if isinstance(size, (TLRPC.TL_photoSize, TLRPC.TL_photoSizeProgressive, TLRPC.TL_photoCachedSize)):
+                        current_dim = max(size.w, size.h)
+                        if current_dim > max_dim:
+                            max_dim = current_dim
+                            largest_size = size
+            
+            if not largest_size and photo.sizes and not photo.sizes.isEmpty():
+                largest_size = photo.sizes.get(photo.sizes.size() - 1)
+
+            if not largest_size: return None
+            current_account = UserConfig.selectedAccount
+            file_loader = FileLoader.getInstance(current_account)
+            file_path_obj = file_loader.getPathToAttach(largest_size, True)
+            if not file_path_obj: return None
+            file_path = file_path_obj.getAbsolutePath()
+
+            if os.path.exists(file_path): return file_path
+            image_location = ImageLocation.getForPhoto(largest_size, photo)
+            if not image_location: return None
+
+            file_loader.loadFile(image_location, message_obj, "jpg", FileLoader.PRIORITY_HIGH, 1)
+
+            timeout = 30
+            for _ in range(timeout):
+                if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
+                    return file_path
+                time.sleep(1)
+            return None
+        except Exception as e:
+            log(f"[ImageFX+] Error downloading photo: {e}\n{traceback.format_exc()}")
+            return None
+
+    def _apply_filter_base(self, input_path: str, operation: Callable) -> Optional[str]:
+        try:
+            with Image.open(input_path) as img:
+                processed_img = operation(img)
+                output_path = File(self._temp_dir, f"fx_{uuid.uuid4()}.png").getAbsolutePath()
+                processed_img.save(output_path, "PNG")
+                return output_path
+        except Exception as e:
+            log(f"[ImageFX+] Error applying filter: {e}\n{traceback.format_exc()}")
+            return None
+
+    def apply_grayscale(self, input_path: str) -> Optional[str]:
+        return self._apply_filter_base(input_path, lambda img: ImageOps.grayscale(img).convert("RGB"))
+    def apply_invert(self, input_path: str) -> Optional[str]:
+        return self._apply_filter_base(input_path, lambda img: ImageOps.invert(img.convert("RGB")))
+    def apply_blur(self, input_path: str, radius: int = 5) -> Optional[str]:
+        return self._apply_filter_base(input_path, lambda img: img.filter(ImageFilter.GaussianBlur(radius=radius)))
+    def apply_sepia(self, input_path: str) -> Optional[str]:
+        def sepia_op(img):
+            grayscale = ImageOps.grayscale(img.convert("RGB"))
+            return ImageOps.colorize(grayscale, black="#704214", white="#C2B280")
+        return self._apply_filter_base(input_path, sepia_op)
+    def apply_posterize(self, input_path: str, bits: int = 4) -> Optional[str]:
+        return self._apply_filter_base(input_path, lambda img: ImageOps.posterize(img.convert("RGB"), bits))
+    def apply_solarize(self, input_path: str, threshold: int = 128) -> Optional[str]:
+        return self._apply_filter_base(input_path, lambda img: ImageOps.solarize(img.convert("RGB"), threshold=threshold))
+    def apply_emboss(self, input_path: str) -> Optional[str]:
+        return self._apply_filter_base(input_path, lambda img: img.filter(ImageFilter.EMBOSS))
+    def apply_contour(self, input_path: str) -> Optional[str]:
+        return self._apply_filter_base(input_path, lambda img: img.filter(ImageFilter.CONTOUR))
+    def apply_sharpen(self, input_path: str) -> Optional[str]:
+        return self._apply_filter_base(input_path, lambda img: img.filter(ImageFilter.SHARPEN))
+    def apply_flip(self, input_path: str) -> Optional[str]:
+        return self._apply_filter_base(input_path, lambda img: ImageOps.mirror(img))
+    def apply_flop(self, input_path: str) -> Optional[str]:
+        return self._apply_filter_base(input_path, lambda img: ImageOps.flip(img))
+    def apply_edge_enhance(self, input_path: str) -> Optional[str]:
+        return self._apply_filter_base(input_path, lambda img: img.filter(ImageFilter.EDGE_ENHANCE_MORE))
+    def apply_find_edges(self, input_path: str) -> Optional[str]:
+        return self._apply_filter_base(input_path, lambda img: img.filter(ImageFilter.FIND_EDGES))
+    def apply_smooth(self, input_path: str) -> Optional[str]:
+        return self._apply_filter_base(input_path, lambda img: img.filter(ImageFilter.SMOOTH_MORE))
+    def apply_detail(self, input_path: str) -> Optional[str]:
+        return self._apply_filter_base(input_path, lambda img: img.filter(ImageFilter.DETAIL))
+    def apply_rotate(self, input_path: str, degrees: int) -> Optional[str]:
+        return self._apply_filter_base(input_path, lambda img: img.rotate(degrees, expand=True))
+    def apply_crop(self, input_path: str, width: int, height: int) -> Optional[str]:
+        def crop_op(img):
+            return ImageOps.fit(img, (width, height), Image.Resampling.LANCZOS)
+        return self._apply_filter_base(input_path, crop_op)
+
+    def _send_processed_image(self, params: Any, image_path: str):
+        try:
+            send_helper = get_send_messages_helper()
+            generated_photo = send_helper.generatePhotoSizes(image_path, None)
+            if not generated_photo:
+                run_on_ui_thread(lambda: BulletinHelper.show_error("Failed to generate photo preview."))
+                return
+
+            send_message({
+                "peer": params.peer,
+                "photo": generated_photo,
+                "path": image_path,
+                "replyToMsg": params.replyToMsg,
+                "replyToTopMsg": params.replyToTopMsg
+            })
+            self._delete_file_delayed(image_path)
+        except Exception as e:
+            log(f"[ImageFX+] Error sending image: {e}")
+            run_on_ui_thread(lambda: BulletinHelper.show_error(f"Sending error: {e}"))
+
+    def _delete_file_delayed(self, path: str, delay: int = 15):
+        def action():
+            try:
+                time.sleep(delay)
+                if os.path.exists(path):
+                    os.remove(path)
+                    log(f"[ImageFX+] Deleted temp file: {path}")
+            except Exception as e:
+                log(f"[ImageFX+] Error deleting temp file: {e}")
+        threading.Thread(target=action, daemon=True).start()
