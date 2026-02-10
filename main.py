@@ -400,7 +400,7 @@ def extractMetadata(filePath: str, filename: str) -> Dict[str, any]:
         patterns = {
             "id": r'__id__\s*=\s*["\']([^"\']*)["\']',
             "name": r'__name__\s*=\s*["\']([^"\']*)["\']',
-            "description": r'__description__\s*=\s*["\'](.+?)["\']',
+            "description": r'__description__\s*=\s*["\']([^"\']+?)["\']',
             "author": r'__author__\s*=\s*["\']([^"\']*)["\']',
             "version": r'__version__\s*=\s*["\']([^"\']*)["\']',
             "icon": r'__icon__\s*=\s*["\']([^"\']*)["\']',
@@ -413,15 +413,10 @@ def extractMetadata(filePath: str, filename: str) -> Dict[str, any]:
                 if not value or not value.strip():
                     missingFields.append(key)
                     continue
-                if value and '\n' in value:
-                    if key == "description":
-                        metadata[key] = "MULTILINE_DETECTED"
-                        metadata["_original_description"] = value
-                    else:
-                        value = ' '.join(line.strip() for line in value.split('\n') if line.strip())
-                        metadata[key] = value
-                else:
-                    metadata[key] = value
+                # For non-description fields, collapse multiline to single line
+                if value and '\n' in value and key != "description":
+                    value = ' '.join(line.strip() for line in value.split('\n') if line.strip())
+                metadata[key] = value
             else:
                 missingFields.append(key)
         
@@ -479,38 +474,21 @@ def createPluginEntry(filePath: str, filename: str, config: Dict) -> Dict[str, a
         pluginEntry["about"] = metadata["name"]
     
     if config.get("manualInputDescriptions", False):
-        if metadata["description"] == "MULTILINE_DETECTED":
-            print(f"\n{Colors.YELLOW}⚠ multiline description detected in {filename}{Colors.RESET}")
-            print(f"{Colors.DIM}original description:{Colors.RESET}")
-            originalDesc = metadata.get("_original_description", "")
-            print(f"{Colors.DIM}{originalDesc}{Colors.RESET}")
-            print()
-            print(f"{Colors.CYAN}choose action:{Colors.RESET}")
-            print(f"  {Colors.GREEN}1{Colors.RESET}. skip (use original)")
-            print(f"  {Colors.GREEN}2{Colors.RESET}. enter custom description")
-            
-            choice = input("option: ").strip()
-            
-            if choice == "1":
-                pluginEntry["description"] = originalDesc
-            elif choice == "2":
-                customDesc = input("enter custom description: ").strip()
-                pluginEntry["description"] = customDesc if customDesc else originalDesc
+        print(f"\n{Colors.CYAN}current description for {filename}:{Colors.RESET}")
+        print(f"{Colors.DIM}{metadata['description']}{Colors.RESET}")
+        print()
+        override = input("override description? (y/n): ").strip().lower()
+        if override == 'y':
+            customDesc = input("enter new description: ").strip()
+            if customDesc:
+                # json.dump will automatically escape newlines
+                pluginEntry["description"] = customDesc
             else:
-                print(f"{Colors.YELLOW}invalid option, using original{Colors.RESET}")
-                pluginEntry["description"] = originalDesc
-        else:
-            description = input(f"enter description for {filename}: ").strip()
-            pluginEntry["description"] = description if description else metadata["description"]
-    elif config.get("addDescription", True):
-        if metadata["description"] == "MULTILINE_DETECTED":
-            originalDesc = metadata.get("_original_description", "")
-            print(f"{Colors.YELLOW}⚠ multiline description detected in {filename}{Colors.RESET}")
-            print(f"{Colors.DIM}original: {originalDesc}{Colors.RESET}")
-            print(f"{Colors.CYAN}using original description{Colors.RESET}")
-            pluginEntry["description"] = originalDesc
+                pluginEntry["description"] = metadata["description"]
         else:
             pluginEntry["description"] = metadata["description"]
+    elif config.get("addDescription", True):
+        pluginEntry["description"] = metadata["description"]
     
     if config.get("addHash", True):
         pluginEntry["hash"] = calculateSha256(filePath)
@@ -1113,9 +1091,75 @@ def editConfigValues(config: Dict):
         config[key] = value
 
 
+def resetAllPlugins(config: Dict):
+    configPath = config["configPath"]
+    workingDir = config["workingDir"]
+    backupDir = config["backupDir"]
+    createBackupsEnabled = config.get("createBackups", True)
+    
+    if not os.path.exists(configPath):
+        print(f"{Colors.RED}config file '{configPath}' not found{Colors.RESET}")
+        return
+    
+    if not os.path.exists(workingDir):
+        print(f"{Colors.RED}directory '{workingDir}/' not found{Colors.RESET}")
+        return
+    
+    with open(configPath, 'r', encoding='utf-8') as f:
+        repoConfig = json.load(f)
+    
+    repometa = repoConfig.get("repometa", {})
+    
+    print(f"{Colors.YELLOW}{Colors.BOLD}WARNING: this will overwrite entire config.json{Colors.RESET}")
+    print(f"{Colors.YELLOW}all plugins will be rechecked and rewritten{Colors.RESET}")
+    confirm = input(f"{Colors.CYAN}continue? (y/n): {Colors.RESET}").lower()
+    
+    if confirm != 'y':
+        print(f"{Colors.DIM}reset cancelled{Colors.RESET}")
+        return
+    
+    createBackup(configPath, backupDir, createBackupsEnabled)
+    
+    newPlugins = []
+    filesProcessed = 0
+    
+    for filename in os.listdir(workingDir):
+        filePath = os.path.join(workingDir, filename)
+        
+        if not os.path.isfile(filePath):
+            continue
+        
+        try:
+            pluginEntry = createPluginEntry(filePath, filename, config)
+            newPlugins.append(pluginEntry)
+            filesProcessed += 1
+            print(f"{Colors.GREEN}{filename} processed{Colors.RESET} (id: {Colors.CYAN}{pluginEntry['id']}{Colors.RESET})")
+        except Exception as e:
+            print(f"{Colors.RED}{filename} failed {e}{Colors.RESET}")
+    
+    repoConfig = {
+        "repometa": repometa,
+        "plugins": newPlugins
+    }
+    
+    with open(configPath, 'w', encoding='utf-8') as f:
+        json.dump(repoConfig, f, indent=2, ensure_ascii=False)
+    
+    print()
+    print(f"{Colors.BOLD}reset complete{Colors.RESET}")
+    print(f"{Colors.GREEN}total plugins: {len(newPlugins)}{Colors.RESET}")
+    print(f"{Colors.BLUE}files processed: {filesProcessed}{Colors.RESET}")
+    
+    if config.get("writeLastLog", False):
+        writeLatestLog(newPlugins, [], [], len(newPlugins))
+    
+    if config.get("createForPost", False):
+        writeForPost(newPlugins, [], [], len(newPlugins))
+
+
 def createGitignore():
     gitignorePath = ".gitignore"
-    entries = ["cfg.yml", "forpost.txt", "latest.log"]
+    entries = ["cfg.yml", "forpost.txt", "latest.log", "backups/"]
     
     existingContent = ""
     if os.path.exists(gitignorePath):
@@ -1160,7 +1204,8 @@ def showMenu():
     print(f"{Colors.GREEN}8{Colors.RESET}. edit config values")
     print(f"{Colors.GREEN}9{Colors.RESET}. rewrite script cfg")
     print(f"{Colors.GREEN}10{Colors.RESET}. create .gitignore for cfg.yml")
-    print(f"{Colors.RED}11{Colors.RESET}. exit")
+    print(f"{Colors.YELLOW}11{Colors.RESET}. reset (recheck all files)")
+    print(f"{Colors.RED}12{Colors.RESET}. exit")
     print()
     choice = input(f"{Colors.CYAN}choose option: {Colors.RESET}").strip()
     return choice
@@ -1196,6 +1241,8 @@ if __name__ == "__main__":
         elif choice == "10":
             createGitignore()
         elif choice == "11":
+            resetAllPlugins(config)
+        elif choice == "12":
             print("exit")
             break
         else:

@@ -45,7 +45,7 @@
         "quantahut"
       ],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/UiTweaks.plugin",
-      "description": "Well sometimes you just need to tweak things...",
+      "description": "Well sometimes you just need to tweak things... (requires [QuantaHut](https://t.me/QuantaPlugins/228))",
       "hash": "96d1c2c65c6609154c3838c2efd994626250a13668f67d0a11fc7367ef1509a1"
     },
     {
@@ -71,7 +71,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shexec.plugin",
-      "description": "Execute shell commands, subprocesses, and Junis.",
+      "description": "Execute shell commands, subprocesses, and Junis [.sh/.sproc/.jn]",
       "hash": "d793ba441f8c1e33808809bca8813d9f471ca8d120b80bab5776eb4189be3a4c"
     },
     {
@@ -84,46 +84,46 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/exteraGit.plugin",
-      "description": "Search GitHub and GitLab resources.",
+      "description": "Search GitHub and GitLab resources. Commands in the plugin settings.",
       "hash": "487448f4fcc7e726f0d8846c6d0c9cc5fc5b908d5b730c81e0f49d6f2ba8e40e"
     },
     {
       "id": "shareui_x0",
       "name": "Simple photo link",
-      "author": "@shareui",
+      "author": "@shrdevv",
       "version": "1.0.1",
       "state": "release",
       "icon": "plugin232/12",
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/x0.plugin",
-      "description": "Uploads a media file (photo, video, GIF, document) to the x0.at hosting and sends the resulting link to the chat. To use, reply to the message with the media file using the .x0 command.",
+      "description": "Загружает медиафайл (фото, видео, гиф, документ) на хостинг x0.at и отправляет полученную ссылку в чат. Для использования, ответьте на сообщение с медиафайлом командой .x0",
       "hash": "3a53e686bfbb5ac9f0bf759ebf09d67b7141977362ef58a7e4db0159cd98edca"
     },
     {
       "id": "shareui_modrinth",
       "name": "Modrinth Search",
-      "author": "@shareui",
+      "author": "@shrdevv",
       "version": "1.2.0",
       "state": "release",
       "icon": "plugin232/11",
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/modrinth.plugin",
-      "description": "Looking for something on modrinth",
+      "description": "Unknown",
       "hash": "467c1bd5d0ce0dde3261e8a62d19486915607388c5147ad588aa79d0bf9c6798"
     },
     {
       "id": "requisites_sender",
       "name": "rekvplug",
-      "author": "@shareui",
+      "author": "@shrdevv",
       "version": "2.1.0",
       "state": "release",
       "icon": "plugin232/0",
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/rekvv.plugin",
-      "description": "Sends the specified credentials to the command.",
+      "description": "Отправляет указанные в настройках реквизиты по команде .rekv / обязательно посмотри .helprekv",
       "hash": "9d06a522f2e1d9e30b5c9cd013a2323a50fa0b138a05d9c2b172889d3e4516fe"
     },
     {
@@ -136,7 +136,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/advcalc.plugin",
-      "description": "A calculator with support for a lot of things",
+      "description": "Unknown",
       "hash": "67baabeddd0c0e0c09925f3ab56e40f6646483e580d0bc339f6484c815c8fa95"
     },
     {
@@ -149,7 +149,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/efch.plugin",
-      "description": "Display system info...",
+      "description": "Unknown",
       "hash": "c24422d49e1f39136c95768a042afbce7c16861a3d41d46d10c86923b12363e7"
     },
     {
@@ -168,7 +168,7 @@
     {
       "id": "animated_chat_wallpaper",
       "name": "AnimatedChatWallpaper",
-      "author": "\"",
+      "author": "Unknown",
       "version": "1.1",
       "state": "release",
       "icon": "exteraPlugins/0",
@@ -201,7 +201,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Auto_Reply.plugin",
-      "description": "\"",
+      "description": "Unknown",
       "hash": "d5d2437944059fd9695ca32b5b23f5e227bba93b348de7a5c65b28fcc8af563b"
     },
     {
@@ -240,7 +240,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Bedtime.plugin",
-      "description": "\"",
+      "description": "Unknown",
       "hash": "c58782d84e159d1bd0049a0340b41d75c73de5eb5bcd91e595fa5007c50849d6"
     },
     {
@@ -298,14 +298,14 @@
     {
       "id": "cherry_header",
       "name": "CherryHeader",
-      "author": "\"",
+      "author": "Unknown",
       "version": "1.0",
       "state": "release",
       "icon": "exteraPlugins/0",
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/CherryHeader.plugin",
-      "description": "\"",
+      "description": "Unknown",
       "hash": "f6f758a32533a7dcbb38ec3b87da414d564108aab1cf32dc99e8013ff1fe09c6"
     },
     {
@@ -357,7 +357,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/custom_banner.plugin",
-      "description": "\"",
+      "description": "Unknown",
       "hash": "8a12c9d637a1c13a54a14c95e3050625ede6bc257d0ef1e1d2309ff07be22036"
     },
     {
@@ -526,7 +526,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/gift_id.plugin",
-      "description": "\"",
+      "description": "Unknown",
       "hash": "f87d409fcf3325ce428ebc3d6eb26276772fa5c221e6a7e701f4bbb076373239"
     },
     {
@@ -591,7 +591,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/kangel_plugins_manager.plugin",
-      "description": "\"",
+      "description": "Unknown",
       "hash": "b75baec4e906cf068bdcdbaaa60e5523b2a3ad226dd0abf0adba47261654c4d1"
     },
     {
@@ -877,8 +877,21 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/plugin_creator.plugin",
-      "description": "\"",
+      "description": "Unknown",
       "hash": "7b5e0986149c36e594898e7f4ce69a8631ef8a0ffaa173c66f0978ae8deb3ddb"
+    },
+    {
+      "id": "always-tabs-forums",
+      "name": "Always tabs forums",
+      "author": "@shikaatux | @shikaatuxplugins",
+      "version": "1.0.3",
+      "state": "release",
+      "icon": "shextera_by_fStikBot/0",
+      "suspicious": "false",
+      "dependencies": [],
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/always-tabs-forums.plugin",
+      "description": "Enable tab view in all forums",
+      "hash": "58386f825adabb27b7d4b16c26e8c73d3223cd94d2fea93f55ae6ad87cf56518"
     },
     {
       "id": "ProfileCustomizer",
@@ -1007,7 +1020,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/remover.plugin",
-      "description": "\"",
+      "description": "Unknown",
       "hash": "00288f65e23a9f799a7d0417c62274f4a5d25987887d49e0aec6c2ad6bca49f1"
     },
     {
@@ -1150,7 +1163,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/SFGlobalFont.plugin",
-      "description": "\"",
+      "description": "Unknown",
       "hash": "1e0f77f962de5322f8b00a160d6c63f6fdb1d2beb0c43d30a4c90557863b7cdf"
     },
     {
@@ -1208,14 +1221,14 @@
     {
       "id": "mnd_swagsafe",
       "name": "SwagSafe",
-      "author": "\"",
+      "author": "Unknown",
       "version": "1.2",
       "state": "release",
       "icon": "fingerprint_solar",
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/swag safe.plugin",
-      "description": "\"",
+      "description": "Unknown",
       "hash": "6e82547dc73e3e4ff03d394392138665f432d0333a04f04c37da3ce8f0f23894"
     },
     {
@@ -1228,7 +1241,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/templates.plugin",
-      "description": "\"",
+      "description": "Unknown",
       "hash": "03e7ec96cdd1b356a5b2ad96905bc404d1822079d2c2c7e87469d3143dc126e9"
     },
     {
@@ -1323,17 +1336,17 @@
       "hash": "76bba7450f75d4a3a46b48d0d533fa7ab87e1cfaa9834e26847a5028da601d7c"
     },
     {
-      "id": "misha_unlimited_pins",
+      "id": "Unlimited_Pins",
       "name": "Unlimited Pins",
-      "author": "@mihailkotovski & @mishabotov",
-      "version": "1.0.0",
+      "author": "@MorePlugins",
+      "version": "1.2.0",
       "state": "release",
-      "icon": "EmojiAnimations/12",
+      "icon": "sPluginIDE/14",
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/unlimited_pins.plugin",
-      "description": "Allows pinning any number of chats.",
-      "hash": "9245f2b1f0281fc82fdea30e8135ee9ce295ae10bc7e3bcabd74e595b4ee7e28"
+      "description": "Закрепляйте локально бесконечное количество чатов и каналов, обходя ограничение Telegram.",
+      "hash": "18b6f2206d83dc29560b3034a91b3f2eee944b0175481a87e1e549fc4eaf7701"
     },
     {
       "id": "unread_summary",
@@ -1388,45 +1401,6 @@
       "hash": "4c133bb61223e11e9f51996e532cafb1af5abc5bf7bf760d815825c3c54c1a75"
     },
     {
-      "id": "KNB_Saturn",
-      "name": "🪨✂️🧻",
-      "author": "@Fantom_Plugins",
-      "version": "1.0.0",
-      "state": "release",
-      "icon": "\" __min_version__ =",
-      "suspicious": "false",
-      "dependencies": [],
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/paperrrr.plugin",
-      "description": "Игра Камень-ножницы-бумага с приятным интерфейсом и функционалом. Канал автора: @Fantom_Plugins ",
-      "hash": "d100fd7c430fba32117d35e66bf7bcbfdd2f6b80121763e8c369fc372a981af6"
-    },
-    {
-      "id": "always-tabs-forums",
-      "name": "Always tabs forums",
-      "author": "@shikaatux | @shikaatuxplugins",
-      "version": "1.0.3",
-      "state": "release",
-      "icon": "shextera_by_fStikBot/0",
-      "suspicious": "false",
-      "dependencies": [],
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/always-tabs-forums.plugin",
-      "description": "Enable tab view in all forums",
-      "hash": "58386f825adabb27b7d4b16c26e8c73d3223cd94d2fea93f55ae6ad87cf56518"
-    },
-    {
-      "id": "Unlimited_Pins",
-      "name": "Unlimited Pins",
-      "author": "@MorePlugins",
-      "version": "1.2.0",
-      "state": "release",
-      "icon": "sPluginIDE/14",
-      "suspicious": "false",
-      "dependencies": [],
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/unlimited_pins.plugin",
-      "description": "Закрепляйте локально бесконечное количество чатов и каналов, обходя ограничение Telegram.",
-      "hash": "18b6f2206d83dc29560b3034a91b3f2eee944b0175481a87e1e549fc4eaf7701"
-    },
-    {
       "id": "articleViewerFix",
       "name": "ArticleViewerFix",
       "author": "@bleizix",
@@ -1438,6 +1412,19 @@
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/ArticleViewerFix.plugin",
       "description": "Отключает надоедливый свайп закрытия (слева вправо) в браузере. \\n\\nDisables annoying browser",
       "hash": "5babeeaa2769ce66b9780aa0d9967f2a8e612cbcff09bcbbbd1e00e187bd95e7"
+    },
+    {
+      "id": "KNB_Saturn",
+      "name": "🪨✂️🧻",
+      "author": "@Fantom_Plugins",
+      "version": "1.0.0",
+      "state": "release",
+      "icon": "Unknown",
+      "suspicious": "false",
+      "dependencies": [],
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/paperrrr.plugin",
+      "description": "Игра Камень-ножницы-бумага с приятным интерфейсом и функционалом. Канал автора: @Fantom_Plugins ",
+      "hash": "d100fd7c430fba32117d35e66bf7bcbfdd2f6b80121763e8c369fc372a981af6"
     },
     {
       "id": "autoTranslate",
@@ -1826,7 +1813,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/ai_status.1.0.8.plugin",
-      "description": "\"",
+      "description": "Unknown",
       "hash": "406a2b10142997ac8dbfa8ef04c82abb2de45192a4921ab6b14355c5ca474f3e"
     },
     {
@@ -1969,7 +1956,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/BlackJack.plugin",
-      "description": "\"",
+      "description": "Unknown",
       "hash": "eb5f7e7052e14c19562fe04c0ab445d19ba4a10cf63743f89b1826a18f09bfed"
     },
     {
@@ -2008,7 +1995,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/list of commands.plugin",
-      "description": "\"",
+      "description": "Unknown",
       "hash": "371b9968c9562416e4b250ede8e1457fe2bd21c389ffac6ac3dff4a84ce61935"
     },
     {
@@ -2047,7 +2034,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/MyInfo_1.0.0.plugin",
-      "description": "\"",
+      "description": "Unknown",
       "hash": "700ea8a61f1befbf0540d64f65bba99ae260abc09a3c0fa925c10162b9d7e72b"
     },
     {
@@ -2203,7 +2190,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/nowMediaRn_1.0.3.plugin",
-      "description": "\"",
+      "description": "Unknown",
       "hash": "6f7c970f99fa33e7742dcda0bcfe3a736528ce369d112bcddd76c48cf0e3881d"
     },
     {
@@ -2229,8 +2216,112 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/TGfy.plugin",
-      "description": "\"",
+      "description": "Unknown",
       "hash": "f96dc76bc1c13293c2c4534f4e2d293ea88098dd23aac96a13d2e3e678045618"
+    },
+    {
+      "id": "zwyAdminTools",
+      "name": "AdminTools",
+      "author": "@zwylair",
+      "version": "2.0.1",
+      "state": "release",
+      "icon": "zwyPluginsIcons/4",
+      "suspicious": "false",
+      "dependencies": [],
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/adminTools.plugin",
+      "description": "Lots of useful commands for the administrator (more details in the settings) (requires zwylib)",
+      "hash": "b4f2bce88070172f95be90d7064a8778deba83f3785e5e05a778f1a439395eb4"
+    },
+    {
+      "id": "clearURLs",
+      "name": "ClearURLs",
+      "author": "@zwylair",
+      "version": "1.0.2",
+      "state": "release",
+      "icon": "zwyPluginsIcons/1",
+      "suspicious": "false",
+      "dependencies": [],
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/clearURLs.plugin",
+      "description": "Clear the sent URLs from tracking shit (requires zwylib)",
+      "hash": "7163c0d321b084231519a9fa2706987cd91c1862f6728369b28bc7a2ca536a68"
+    },
+    {
+      "id": "googlethat",
+      "name": "GoogleThat",
+      "author": "@zwylair",
+      "version": "1.0.2",
+      "state": "release",
+      "icon": "zwyPluginsIcons/2",
+      "suspicious": "false",
+      "dependencies": [],
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/googleThat.plugin",
+      "description": "Creates search link [.gt]",
+      "hash": "be08e58086d97bc6360e8cca9a480ab72b041176ad3a8447b07319e488ebb7f2"
+    },
+    {
+      "id": "qrcode",
+      "name": "QR Generator",
+      "author": "@exteraDev",
+      "version": "0.0.0",
+      "state": "release",
+      "icon": "exteraDevPlugins/5",
+      "suspicious": "false",
+      "dependencies": [],
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/qrcode.plugin",
+      "description": "Generate QR codes with .qr command",
+      "hash": "d0a83a0d6f09c7eb6c11e99ab892d738199d9adb9ca1ba437cacf5da426e2fe6"
+    },
+    {
+      "id": "reExtera",
+      "name": "re:extera",
+      "author": "@bleizix",
+      "version": "1.4",
+      "state": "release",
+      "icon": "fuki_dum_pjsk_pack/3",
+      "suspicious": "false",
+      "dependencies": [],
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/re_extera.plugin",
+      "description": "Just a plugin with ToS breaking features.",
+      "hash": "1726a76c8e3b0a50619f3e841d5a4983cb9d0a73dd230a7dcbffa596f42a7823"
+    },
+    {
+      "id": "roleplay_plugin",
+      "name": "RolePlay Commands",
+      "author": "@windukk and @shakyyra",
+      "version": "1.4",
+      "state": "release",
+      "icon": "Pguliptpvrbeng/1",
+      "suspicious": "false",
+      "dependencies": [],
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/rpcmd.plugin",
+      "description": "Плагин для ролевых команд. Больше информации в настройках",
+      "hash": "e3010c8a5ec907006eb19073c461c2ed6fe3b0aa20414e1ff5bc53cded0b522f"
+    },
+    {
+      "id": "wiki_search",
+      "name": "Wikipedia Search",
+      "author": "@exteraDev",
+      "version": "0.0.0",
+      "state": "release",
+      "icon": "exteraDevPlugins/1",
+      "suspicious": "false",
+      "dependencies": [],
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/wiki_search.plugin",
+      "description": "Search Wikipedia with .wiki [term]",
+      "hash": "fb310109eb8312e48edd3f9e181eddb5efd08cc57c3ea23c1bc99acb75cb5e5d"
+    },
+    {
+      "id": "pokedex",
+      "name": "Pokédex",
+      "author": "@itsv1eds",
+      "version": "1.0.2",
+      "state": "release",
+      "icon": "exteraPluginsSup/1",
+      "suspicious": "false",
+      "dependencies": [],
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/pokedex.plugin",
+      "description": "Gets Pokémon information",
+      "hash": "ab695075c94cb34f6cce8854a8d926a28eb5b727115e7ec848ae37cfdf5c9745"
     },
     {
       "id": "point",
@@ -2294,7 +2385,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/2048.plugin",
-      "description": "\"",
+      "description": "Unknown",
       "hash": "158e18b3bc2144986054c9c0a3987e8b1476b6175b17a10ab5a2bb0360fc7b8b"
     },
     {
@@ -2476,7 +2567,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/rule34.plugin",
-      "description": "\"",
+      "description": "Unknown",
       "hash": "dc3d73fa818d1c60b251eafdf65f7c16fe554b468ffa1a51df1e5bdb6b224dc4"
     },
     {
@@ -2489,7 +2580,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_github.plugin",
-      "description": "\"",
+      "description": "Unknown",
       "hash": "430ad0c3a84def6d53af89c144a050b04bb3ce5cac00b29246f9b438f703cf4f"
     },
     {
@@ -2515,7 +2606,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/all_mention.plugin",
-      "description": "\"",
+      "description": "Unknown",
       "hash": "276da633d8fd0cd0c03651428f9b81d56b15ce4cdc904cfc8e94fc3ea48a446c"
     },
     {
@@ -2619,112 +2710,8 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Tetris_game(NEW).plugin",
-      "description": "\"",
+      "description": "Unknown",
       "hash": "7fd24814e1b51b115e467c2c38e168b46f4237a8d4733db95a06a747a6398bfa"
-    },
-    {
-      "id": "zwyAdminTools",
-      "name": "AdminTools",
-      "author": "@zwylair",
-      "version": "2.0.1",
-      "state": "release",
-      "icon": "zwyPluginsIcons/4",
-      "suspicious": "false",
-      "dependencies": [],
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/adminTools.plugin",
-      "description": "Lots of useful commands for the administrator (more details in the settings) (requires zwylib)",
-      "hash": "b4f2bce88070172f95be90d7064a8778deba83f3785e5e05a778f1a439395eb4"
-    },
-    {
-      "id": "clearURLs",
-      "name": "ClearURLs",
-      "author": "@zwylair",
-      "version": "1.0.2",
-      "state": "release",
-      "icon": "zwyPluginsIcons/1",
-      "suspicious": "false",
-      "dependencies": [],
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/clearURLs.plugin",
-      "description": "Clear the sent URLs from tracking shit (requires zwylib)",
-      "hash": "7163c0d321b084231519a9fa2706987cd91c1862f6728369b28bc7a2ca536a68"
-    },
-    {
-      "id": "googlethat",
-      "name": "GoogleThat",
-      "author": "@zwylair",
-      "version": "1.0.2",
-      "state": "release",
-      "icon": "zwyPluginsIcons/2",
-      "suspicious": "false",
-      "dependencies": [],
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/googleThat.plugin",
-      "description": "Creates search link [.gt]",
-      "hash": "be08e58086d97bc6360e8cca9a480ab72b041176ad3a8447b07319e488ebb7f2"
-    },
-    {
-      "id": "qrcode",
-      "name": "QR Generator",
-      "author": "@exteraDev",
-      "version": "0.0.0",
-      "state": "release",
-      "icon": "exteraDevPlugins/5",
-      "suspicious": "false",
-      "dependencies": [],
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/qrcode.plugin",
-      "description": "Generate QR codes with .qr command",
-      "hash": "d0a83a0d6f09c7eb6c11e99ab892d738199d9adb9ca1ba437cacf5da426e2fe6"
-    },
-    {
-      "id": "reExtera",
-      "name": "re:extera",
-      "author": "@bleizix",
-      "version": "1.4",
-      "state": "release",
-      "icon": "fuki_dum_pjsk_pack/3",
-      "suspicious": "false",
-      "dependencies": [],
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/re_extera.plugin",
-      "description": "Just a plugin with ToS breaking features.",
-      "hash": "1726a76c8e3b0a50619f3e841d5a4983cb9d0a73dd230a7dcbffa596f42a7823"
-    },
-    {
-      "id": "roleplay_plugin",
-      "name": "RolePlay Commands",
-      "author": "@windukk and @shakyyra",
-      "version": "1.4",
-      "state": "release",
-      "icon": "Pguliptpvrbeng/1",
-      "suspicious": "false",
-      "dependencies": [],
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/rpcmd.plugin",
-      "description": "Плагин для ролевых команд. Больше информации в настройках",
-      "hash": "e3010c8a5ec907006eb19073c461c2ed6fe3b0aa20414e1ff5bc53cded0b522f"
-    },
-    {
-      "id": "wiki_search",
-      "name": "Wikipedia Search",
-      "author": "@exteraDev",
-      "version": "0.0.0",
-      "state": "release",
-      "icon": "exteraDevPlugins/1",
-      "suspicious": "false",
-      "dependencies": [],
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/wiki_search.plugin",
-      "description": "Search Wikipedia with .wiki [term]",
-      "hash": "fb310109eb8312e48edd3f9e181eddb5efd08cc57c3ea23c1bc99acb75cb5e5d"
-    },
-    {
-      "id": "pokedex",
-      "name": "Pokédex",
-      "author": "@itsv1eds",
-      "version": "1.0.2",
-      "state": "release",
-      "icon": "exteraPluginsSup/1",
-      "suspicious": "false",
-      "dependencies": [],
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/pokedex.plugin",
-      "description": "Gets Pokémon information",
-      "hash": "ab695075c94cb34f6cce8854a8d926a28eb5b727115e7ec848ae37cfdf5c9745"
     },
     {
       "id": "weather",
