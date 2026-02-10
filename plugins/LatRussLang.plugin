@@ -1,0 +1,162 @@
+from base_plugin import BasePlugin, HookStrategy, MenuItemData, MenuItemType, MethodHook, HookResult
+from android_utils import run_on_ui_thread, log
+from client_utils import get_last_fragment
+from ui.alert import AlertDialogBuilder
+from ui.bulletin import BulletinHelper
+from ui.settings import Header, Input, Divider, Switch, Selector, Text
+from org.telegram.messenger import AndroidUtilities, R, MessageObject
+from org.telegram.ui.ActionBar import Theme
+from org.telegram.ui import ChatActivity
+from org.telegram.ui.Cells import ChatMessageCell
+from java.lang import Boolean
+from hook_utils import find_class
+
+from typing import Dict, Any
+
+# Заранее прошу читающего не поливать меня говном за то что всё в
+# одном файле: плагин экстераграм у меня в модули разбить НЕ
+# ПОЛУЧИЛОСЬ! Я сам от такого говна не рад!!! Удачного чтения файла!
+
+__id__ = "LatRussLang"
+__name__ = "Латинский русский"
+__description__ = "Плагин, переводящий исходящие сообщения на лат. русский и обратно. За предоставленную информацию спасибо @russ_lat и @Ventiqu"
+__author__ = "@botaner_1987"
+__version__ = "1.1.0"
+__icon__ = "RestrictedEmoji/59"
+__min_version__ = "11.12.0"
+
+MK_LANG = {
+    "а": "a",
+    "б": "b",
+    "в": "v",
+    "г": "g",
+    "д": "d",
+    "е": "e",
+    "ё": "ö",
+    "ж": "ž",
+    "з": "z",
+    "и": "i",
+    "й": "ĭ",
+    "к": "k",
+    "л": "l",
+    "м": "m",
+    "н": "n",
+    "о": "o",
+    "п": "p",
+    "р": "r",
+    "с": "s",
+    "т": "t",
+    "у": "u",
+    "ф": "f",
+    "х": "x",
+    "ц": "c",
+    "ч": "č",
+    "ш": "š",
+    "щ": "ß",  # lowercase sharp S
+    "Щ": "ẞ",  # uppercase sharp S
+    "ъ": "ъ",
+    "ы": "y",
+    "ь": "í",
+    "э": "æ",
+    "ю": "ü",
+    "я": "ä",
+}
+
+def convert_using(text: str, d: Dict[str, str], invert_dict=False):
+    if invert_dict:
+        d = {v: k for k, v in d.items()}
+
+    o = text
+    sd = {k: v for k, v in sorted(d.items(), key=lambda x: len(x[0]), reverse=True)}
+
+    for k, v in sd.items():
+        # Check if there's an explicit uppercase mapping
+        upper_k = k.upper()
+        upper_v = d.get(upper_k, v.upper())  # Use explicit uppercase if available
+        o = o.replace(upper_k, upper_v)
+        o = o.replace(k, v)
+
+    return o
+
+class MyPlugin(BasePlugin):
+    def create_settings(self):
+        from org.telegram.messenger import LocaleController
+
+        lang = LocaleController.getInstance().getCurrentLocale().getLanguage()
+
+        strings = {
+            "ru": {
+                "title": "Латрусский переводчик",
+                "latin_rus_on": "Включить перевод русский -> Латрусский"
+            },
+            "en": {
+                "title": "Latrussian translator",
+                "latin_rus_on": "Enable translation russian -> latrussian",
+            }
+        }  # разные фразы для разных языков.
+
+        langkey = "ru" if lang.startswith("ru") else "en"
+
+        s = strings[langkey]
+
+        return [Header(text=s["title"]), Switch(key="latin_rus_on", text=s["latin_rus_on"], default=True, icon="msg_link")]
+
+    def handle_translate_click(self, context: Dict[str, Any]):
+        message = context.get("message")
+        if message is not None:
+            msg_id = message.getId()
+            text = message.messageText.toString()
+            if not text:
+                return  # похуй
+
+            if msg_id in self.orig_storage and get_last_fragment() == self.orig_storage[msg_id][1]:
+                new_text = self.orig_storage[msg_id][0]
+                del self.orig_storage[msg_id]
+            else:
+                new_text = convert_using(text, MK_LANG, invert_dict=True)
+                self.orig_storage[msg_id] = (text, get_last_fragment())
+
+            run_on_ui_thread(lambda: self.update_message_text_locally(message=message, text=new_text))
+
+    def update_message_text_locally(self, message, text):
+        msg_id = message.getId()
+
+        if not text or not isinstance(text, str) or not text.strip():
+            BulletinHelper.show_error("Не удалось перевести сообщение.")
+        message.applyNewText(text)
+        message.forceUpdate = True
+
+        fragment = get_last_fragment()
+        if isinstance(fragment, ChatActivity):
+            cell = fragment.findMessageCell(msg_id, False)
+            if cell:
+                cell.getMessageObject().applyNewText(text)
+                cell.getMessageObject().forceUpdate = True
+                cell.invalidate()
+
+                BulletinHelper.show_success("Перевод успешен!")
+                return
+
+    def on_plugin_load(self):
+        self.orig_storage = {}  # айди и оригинальный текст измененных сообщений
+        self.add_menu_item(
+            MenuItemData(
+                menu_type=MenuItemType.MESSAGE_CONTEXT_MENU,
+                text="Перевести / вернуть оригинал",
+                on_click=self.handle_translate_click,
+                icon="msg_translate"
+            )
+        )
+
+        self.add_on_send_message_hook()
+
+    def on_send_message_hook(self, account: int, params: Any) -> HookResult:
+        if not self.get_setting("latin_rus_on", True):
+            return HookResult(strategy=HookStrategy.DEFAULT)  # если выключен перевод то похуй
+
+        if not params.message:
+            return
+
+        params.message = convert_using(params.message, MK_LANG)
+
+        return HookResult(strategy=HookStrategy.MODIFY, params=params)

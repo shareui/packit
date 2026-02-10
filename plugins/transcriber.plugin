@@ -1,0 +1,458 @@
+__id__ = "whisper_transcribe"
+__name__ = "Transcriber"
+__description__ = "Replaces Telegram's transcription service with free state-of-the-art alternatives."
+__author__ = "@ginqusPlugins"
+__version__ = "2.0.0"
+__icon__ = "ginqusExteraPlugins/1"
+__min_version__ = "12.0.1"
+
+
+import requests
+import time
+from client_utils import run_on_queue, get_user_config, get_last_fragment, get_messages_controller
+from hook_utils import find_class, get_private_field, set_private_field
+from base_plugin import BasePlugin, MethodReplacement, MethodHook
+from ui.settings import Header, Input, Divider, Text, Selector
+from android_utils import run_on_ui_thread, log
+from java.util import HashMap, Objects, Locale
+from ui.alert import AlertDialogBuilder
+from ui.bulletin import BulletinHelper
+from android.content import Intent
+from android.net import Uri
+
+
+class LocalizationManager:  # Credits for the logic: Command List plugin by @mihailkotovski
+    strings = {
+        "en": {
+            "header_settings": "Plugin settings",
+            "header_warning": "Warning",
+            "header_info": "Information",
+            "header_other": "Other",
+            "settings_provider": "Provider",
+            "settings_token": "Token",
+            "warning_mistral_phone": "You need a phone number to get the Mistral token.",
+            "info_usage": "Plugin usage",
+            "info_provider_choice": "What provider do I choose?",
+            "info_pricing": "Pricing",
+            "info_get_token": "Get token",
+            "pricing_assemblyai": "Free up to 185 hours total, then $0.15/hour.\n\nhttps://www.assemblyai.com/pricing",
+            "pricing_deepgram": "Free up to ~300 hours total, then $4.8/hour.\n\nhttps://deepgram.com/pricing",
+            "pricing_mistral": "Free. Has a rate limit of 1 request per second.\n\nhttps://mistral.ai/pricing",
+            "other_open_channel": "Open channel",
+            "alert_close": "Close",
+            "alert_open": "Open",
+            "alert_provider_choice": "I recommend either AssemblyAI or Mistral. Quality is more or less the same, though from my testing AssemblyAI is a tiny bit better. Mistral, however, is slightly faster. Deepgram is the fastest provider in the world, but the quality is the worst of all three.",
+            "alert_provider_choice_title": "Provider choice",
+            "alert_usage_title": "Usage",
+            "alert_usage": "To transcribe an audio/video message, just tap the transcribe button next to it. No commands needed.",
+            "error_get_audio_path": "Failed to get audio path: ",
+            "error_transcribing": "Transcription error: ",
+            "error_no_token": "Please specify your token in plugin settings.",
+            "error_load_file_timeout": "Couldn't load file: timed out.",
+        },
+        "ru": {
+            "header_settings": "Настройки плагина",
+            "header_warning": "Предупреждение",
+            "header_info": "Информация",
+            "header_other": "Другое",
+            "settings_provider": "Провайдер",
+            "settings_token": "Токен",
+            "warning_mistral_phone": "Для получения токена Mistral нужен номер телефона. Подойдет и российский.",
+            "info_usage": "Использование плагина",
+            "info_provider_choice": "Какого провайдера выбрать?",
+            "info_pricing": "Стоимость",
+            "info_get_token": "Получить токен",
+            "pricing_assemblyai": "Бесплатно первые 185 часов аудио, затем 0,15$/час.\n\nhttps://www.assemblyai.com/pricing",
+            "pricing_deepgram": "Бесплатно первые ~300 часов аудио, затем 4,8$/час.\n\nhttps://deepgram.com/pricing",
+            "pricing_mistral": "Бесплатно. Максимум 1 запрос в секунду.\n\nhttps://mistral.ai/pricing",
+            "other_open_channel": "Открыть канал",
+            "alert_close": "Закрыть",
+            "alert_open": "Открыть",
+            "alert_provider_choice": "Рекомендую либо AssemblyAI, либо Mistral. По качеству примерно одинаковые, хотя из личного тестирования AssemblyAI немного качественнее Mistral, а вот у Mistral немного выше скорость. Deepgram быстрейший в мире, но качество хромает.",
+            "alert_provider_choice_title": "Выбор провайдера",
+            "alert_usage_title": "Использование",
+            "alert_usage": "Чтобы расшифровать аудио/видеосообщение, просто нажмите на кнопку расшифровки рядом с ним. Никаких команд.",
+            "error_get_audio_path": "Ошибка при скачивании аудиофайла: ",
+            "error_get_audio_path": "Ошибка при скачивании файла: ",
+            "error_transcribing": "Ошибка при расшифровке: ",
+            "error_no_token": "Пожалуйста, укажите токен в настройках плагина.",
+            "error_load_file_timeout": "Не удалось загрузить файл: время ожидания истекло.",
+        },
+    }
+
+    def __init__(self):
+        self.language = Locale.getDefault().getLanguage()
+        self.language = self.language if self.language in self.strings else "en"
+
+    def get_string(self, key):
+        return self.strings[self.language].get(key, self.strings["en"].get(key, key))
+
+
+localization = LocalizationManager()
+
+
+class TestPlugin(BasePlugin):
+    def on_plugin_load(self):
+        TranscribeButton = find_class("org.telegram.ui.Components.TranscribeButton")
+        ChatMessageCell = find_class("org.telegram.ui.Cells.ChatMessageCell")
+
+        if TranscribeButton is not None:
+            on_tap_method = TranscribeButton.getClass().getDeclaredMethod("onTap")
+            update_waveform_method = ChatMessageCell.getClass().getDeclaredMethod("updateWaveform")
+        self.hook_method(on_tap_method, self.CreateTranscribeButtonHook(self))
+        self.hook_method(update_waveform_method, self.CreateUpdateWaveformHook())
+
+        return super().on_plugin_load()
+
+    def open_pricing_alert(self, view):
+        try:
+            provider = self.get_setting("provider", 0)
+
+            match provider:
+                case 0:
+                    text = localization.get_string("pricing_assemblyai")
+                    title = "AssemblyAI"
+                case 1:
+                    text = localization.get_string("pricing_deepgram")
+                    title = "Deepgram"
+                case _:
+                    text = localization.get_string("pricing_mistral")
+                    title = "Mistral"
+            current_fragment = get_last_fragment()
+            if not current_fragment or not current_fragment.getParentActivity():
+                return
+            context = current_fragment.getParentActivity()
+            builder = AlertDialogBuilder(context, AlertDialogBuilder.ALERT_TYPE_MESSAGE)
+            builder.set_title(title)
+            builder.set_message(text)
+            builder.set_positive_button(localization.get_string("alert_close"), lambda b, w: b.dismiss())
+            builder.set_neutral_button(localization.get_string("alert_open"), self.open_pricing_page)
+            builder.show()
+        except Exception as e:
+            log(f"Error showing pricing alert: {e}")
+
+    def open_model_choice_alert(self, view):
+        try:
+            current_fragment = get_last_fragment()
+            if not current_fragment or not current_fragment.getParentActivity():
+                return
+            context = current_fragment.getParentActivity()
+            builder = AlertDialogBuilder(context, AlertDialogBuilder.ALERT_TYPE_MESSAGE)
+            builder.set_title(localization.get_string("alert_provider_choice_title"))
+            builder.set_message(localization.get_string("alert_provider_choice"))
+            builder.set_positive_button(localization.get_string("alert_close"), lambda b, w: b.dismiss())
+            builder.show()
+        except Exception as e:
+            log(f"Error showing model choice alert: {e}")
+
+    def open_usage_alert(self, view):
+        try:
+            current_fragment = get_last_fragment()
+            if not current_fragment or not current_fragment.getParentActivity():
+                return
+            context = current_fragment.getParentActivity()
+            builder = AlertDialogBuilder(context, AlertDialogBuilder.ALERT_TYPE_MESSAGE)
+            builder.set_title(localization.get_string("alert_usage_title"))
+            builder.set_message(localization.get_string("alert_usage"))
+            builder.set_positive_button(localization.get_string("alert_close"), lambda b, w: b.dismiss())
+            builder.show()
+        except Exception as e:
+            log(f"Error showing usage alert: {e}")
+
+    def open_pricing_page(self, view, idk):
+        provider = self.get_setting("provider", 0)
+
+        current_fragment = get_last_fragment()
+        if not current_fragment or not current_fragment.getParentActivity():
+            return
+        context = current_fragment.getParentActivity()
+        match provider:
+            case 0:
+                uri = "https://www.assemblyai.com/pricing"
+            case 1:
+                uri = "https://deepgram.com/pricing"
+            case _:
+                uri = "https://mistral.ai/pricing"
+        intent = Intent(Intent.ACTION_VIEW, Uri.parse(uri))
+        context.startActivity(intent)
+
+    def open_token_page(self, view):
+        provider = self.get_setting("provider", 0)
+
+        current_fragment = get_last_fragment()
+        if not current_fragment or not current_fragment.getParentActivity():
+            return
+        context = current_fragment.getParentActivity()
+        match provider:
+            case 0:
+                uri = "https://www.assemblyai.com/dashboard/api-keys"
+            case 1:
+                uri = "https://console.deepgram.com"
+            case _:
+                uri = "https://console.mistral.ai/api-keys"
+        intent = Intent(Intent.ACTION_VIEW, Uri.parse(uri))
+        context.startActivity(intent)
+
+    def open_channel(self, view):
+        mc = get_messages_controller()
+        current_fragment = get_last_fragment()
+        if not current_fragment or not current_fragment.getParentActivity():
+            return
+        if mc and hasattr(mc, "openByUserName"):
+            mc.openByUserName("ginqusPlugins", current_fragment, 0)
+
+    def create_settings(self):
+        provider = self.get_setting("provider", 0)
+        settings = [
+            Header(text=localization.get_string("header_settings")),
+            Selector(key="provider", text=localization.get_string("settings_provider"), default=4, items=["AssemblyAI", "Deepgram", "Mistral"], icon="menu_feature_voice"),
+        ]
+        match provider:
+            case 0:
+                settings.append(Input(key="token_assemblyai", text=localization.get_string("settings_token"), icon="menu_privacy" if len(self.get_setting("token_assemblyai", "")) > 0 else "menu_unlock"))
+            case 1:
+                settings.append(Input(key="token_deepgram", text=localization.get_string("settings_token"), icon="menu_privacy" if len(self.get_setting("token_deepgram", "")) > 0 else "menu_unlock"))
+            case _:
+                settings.append(Input(key="token_mistral", text=localization.get_string("settings_token"), icon="menu_privacy" if len(self.get_setting("token_mistral", "")) > 0 else "menu_unlock"))
+        if provider == 2:
+            settings.extend([
+                Header(text=localization.get_string("header_warning")),
+                Text(text=localization.get_string("warning_mistral_phone"), icon="msg_report", accent=True, on_click=lambda _: run_on_ui_thread(BulletinHelper.show_info(localization.get_string("warning_mistral_phone")))),
+            ])
+        settings.extend([
+            Header(text=localization.get_string("header_info")),
+            Text(text=localization.get_string("info_usage"), icon="msg_help", on_click=self.open_usage_alert),
+            Text(text=localization.get_string("info_provider_choice"), icon="msg_replace", on_click=self.open_model_choice_alert),
+            Text(text=localization.get_string("info_pricing"), icon="menu_feature_paid", on_click=self.open_pricing_alert),
+            Text(text=localization.get_string("info_get_token"), icon="msg_openin", on_click=self.open_token_page, accent=True),
+            Header(text=localization.get_string("header_other")),
+            Text(text=localization.get_string("other_open_channel"), icon="msg_discuss", on_click=self.open_channel, accent=True),
+        ])
+        return settings
+
+    class CreateTranscribeButtonHook(MethodReplacement):
+        def __init__(self, plugin_instance):
+            super().__init__()
+            self.plugin = plugin_instance
+
+        def replace_hooked_method(self, param):
+            run_on_queue(lambda: self.onTap(param))
+
+        # The logic is mostly identical to TranscribeButton.java but with minor changes
+        def onTap(self, param):
+            this = param.thisObject
+
+            parent = get_private_field(this, "parent")
+            shouldBeOpen = get_private_field(this, "shouldBeOpen")
+            loading = get_private_field(this, "loading")
+
+            if parent == None:
+                return
+            set_private_field(this, "clickedToOpen", False)
+            processClick = not shouldBeOpen
+            toOpen = not shouldBeOpen
+            if not shouldBeOpen:
+                processClick = not loading
+                this.setLoading(True, True)
+            else:
+                processClick = True
+                this.setOpen(False, True)
+                this.setLoading(False, True)
+            set_private_field(this, "pressed", False)
+            if processClick:
+                if toOpen:
+                    set_private_field(this, "clickedToOpen", True)
+                self.transcribePressed(param, parent.getMessageObject(), toOpen)
+
+        # The logic is mostly identical to TranscribeButton.java but with minor changes
+        def transcribePressed(self, param, messageObject, open):
+            provider = self.plugin.get_setting("provider", 0)
+            match provider:
+                case 0:
+                    token = self.plugin.get_setting("token_assemblyai", "")
+                case 1:
+                    token = self.plugin.get_setting("token_deepgram", "")
+                case _:
+                    token = self.plugin.get_setting("token_mistral", "")
+
+            if token == "":
+                run_on_ui_thread(lambda: BulletinHelper.show_error(localization.get_string("error_no_token")))
+                return
+
+            TranscribeButton = find_class("org.telegram.ui.Components.TranscribeButton")
+            MessagesStorage = find_class("org.telegram.messenger.MessagesStorage")
+            DialogObject = find_class("org.telegram.messenger.DialogObject")
+            MessagesController = find_class("org.telegram.messenger.MessagesController")
+            NotificationCenter = find_class("org.telegram.messenger.NotificationCenter")
+
+            this = param.thisObject
+            transcribeOperationsByDialogPosition = get_private_field(this, "transcribeOperationsByDialogPosition")
+            transcribeOperationsById = get_private_field(this, "transcribeOperationsById")
+
+            if messageObject == None or messageObject.messageOwner == None or not messageObject.isSent():
+                return
+
+            account = messageObject.currentAccount
+            peer = MessagesController.getInstance(account).getInputPeer(messageObject.messageOwner.peer_id)
+            dialogId = DialogObject.getPeerDialogId(peer)
+            messageId = messageObject.messageOwner.id
+            if open:
+                if messageObject.messageOwner.voiceTranscription != None and messageObject.messageOwner.voiceTranscriptionFinal:
+                    TranscribeButton.openVideoTranscription(messageObject)
+                    messageObject.messageOwner.voiceTranscriptionOpen = True
+                    MessagesStorage.getInstance(account).updateMessageVoiceTranscriptionOpen(dialogId, messageId, messageObject.messageOwner)
+                    run_on_ui_thread(lambda: NotificationCenter.getInstance(account).postNotificationName(NotificationCenter.voiceTranscriptionUpdate, messageObject, None, None, True, True))
+                else:
+                    id = messageId  # Not ideal, but good enough
+                    text = ""
+                    if transcribeOperationsByDialogPosition == None:
+                        set_private_field(this, "transcribeOperationsByDialogPosition", HashMap())
+
+                    transcribeOperationsByDialogPosition = get_private_field(this, "transcribeOperationsByDialogPosition")
+                    transcribeOperationsByDialogPosition.put(int(self.reqInfoHash(messageObject)), messageObject)
+
+                    if transcribeOperationsById == None:
+                        set_private_field(this, "transcribeOperationsById", HashMap())
+
+                    transcribeOperationsById = get_private_field(this, "transcribeOperationsById")
+                    transcribeOperationsById.put(int(self.reqInfoHash(messageObject)), messageObject)
+
+                    messageObject.messageOwner.voiceTranscriptionId = id
+
+                    # Transcription logic
+                    path = self.get_audio_path(messageObject)
+                    if path is Exception:
+                        run_on_ui_thread(lambda: BulletinHelper.show_error(f"{localization.get_string('error_get_audio_path')}: {path}"))
+                        log(path)
+                        return
+
+                    text = self.transcribe(path)
+                    if text is Exception:
+                        run_on_ui_thread(lambda: BulletinHelper.show_error(f"{localization.get_string('error_transcribing')}: {text}"))
+                        log(path)
+                        return
+
+                    finalText = text
+                    finalId = id
+                    TranscribeButton.openVideoTranscription(messageObject)
+                    messageObject.messageOwner.voiceTranscriptionOpen = True
+                    messageObject.messageOwner.voiceTranscriptionFinal = True
+                    MessagesStorage.getInstance(account).updateMessageVoiceTranscription(dialogId, messageId, finalText, messageObject.messageOwner)
+                    run_on_ui_thread(lambda: this.finishTranscription(messageObject, finalId, finalText))
+                    transcribeOperationsByDialogPosition.remove(self.reqInfoHash(messageObject))
+            else:
+                if transcribeOperationsByDialogPosition != None:
+                    transcribeOperationsByDialogPosition.remove(int(self.reqInfoHash(messageObject)))
+                messageObject.messageOwner.voiceTranscriptionOpen = False
+                MessagesStorage.getInstance(account).updateMessageVoiceTranscriptionOpen(dialogId, messageId, messageObject.messageOwner)
+                run_on_ui_thread(lambda: NotificationCenter.getInstance(account).postNotificationName(NotificationCenter.voiceTranscriptionUpdate, messageObject, None, None, False, None))
+
+        # Identical to TranscribeButton.java
+        def reqInfoHash(self, messageObject):
+            if messageObject == None:
+                return 0
+            return Objects.hash(messageObject.currentAccount, messageObject.getDialogId(), messageObject.getId())
+
+        def get_audio_path(self, msg):
+            try:
+                UserConfig = find_class("org.telegram.messenger.UserConfig")
+                FileLoader = find_class("org.telegram.messenger.FileLoader")
+
+                current_account = UserConfig.selectedAccount
+                file_loader = FileLoader.getInstance(current_account)
+                file_path_obj = file_loader.getPathToMessage(msg.messageOwner)
+
+                if not file_path_obj.exists():
+                    document = msg.messageOwner.media.document
+                    file_loader.loadFile(document, msg, 1, 0)
+
+                for _ in range(20):
+                    if not file_path_obj.exists():
+                        time.sleep(1)
+                    else:
+                        break
+                else:
+                    raise TimeoutError(localization.get_string("error_load_file_timeout"))
+
+                return str(file_path_obj.getAbsolutePath())
+
+            except Exception as e:
+                return e
+
+        def transcribe(self, path):
+            provider = self.plugin.get_setting("provider", 0)
+            match provider:
+                case 0:
+                    token = self.plugin.get_setting("token_assemblyai", "")
+                case 1:
+                    token = self.plugin.get_setting("token_deepgram", "")
+                case _:
+                    token = self.plugin.get_setting("token_mistral", "")
+            try:
+                match provider:
+                    case 0:  # AssemblyAI
+                        base_url = "https://api.assemblyai.com"
+                        headers = {"authorization": token}
+
+                        with open(path, "rb") as f:
+                            response = requests.post(base_url + "/v2/upload", headers=headers, data=f)
+                            if response.status_code != 200:
+                                raise RuntimeError(f"Failed to upload file: {response.status_code}, Response: {response.text}")
+                            upload_url = response.json()["upload_url"]
+
+                        data = {"audio_url": upload_url, "language_detection": True}
+                        response = requests.post(base_url + "/v2/transcript", headers=headers, json=data)
+
+                        if response.status_code != 200:
+                            raise RuntimeError(f"Failed to start transcription: {response.status_code}, Response: {response.text}")
+
+                        transcript_id = response.json()["id"]
+                        polling_endpoint = f"{base_url}/v2/transcript/{transcript_id}"
+
+                        for _ in range(60):
+                            transcript = requests.get(polling_endpoint, headers=headers).json()
+                            if transcript["status"] == "completed":
+                                return str(transcript["text"])
+                            elif transcript["status"] == "error":
+                                raise RuntimeError(f"{transcript['error']}")
+                            else:
+                                time.sleep(1)
+                        else:
+                            raise TimeoutError("Timed out")
+
+                    case 1:  # Doxgram ☠️☠️
+                        url = "https://api.deepgram.com/v1/listen?model=nova-3-general&punctuate=true&detect_language=true"
+                        headers = {
+                            "Authorization": f"Token {token}",
+                            "Content-Type": "audio/*",
+                        }
+                        with open(path, "rb") as audio_file:
+                            response = requests.post(url, headers=headers, data=audio_file)
+
+                        if response.status_code != 200:
+                            raise RuntimeError(f"{response.status_code}, Response: {response.text}")
+
+                        result = response.json()["results"]["channels"][0]["alternatives"][0]["transcript"]
+                        return str(result)
+
+                    case _:  # Mistral
+                        url = "https://api.mistral.ai/v1/audio/transcriptions"
+                        headers = {"x-api-key": token}
+                        files = {
+                            "file": open(path, "rb"),
+                            "model": (None, "voxtral-mini-2507"),
+                        }
+                        response = requests.post(url, headers=headers, files=files)
+
+                        if response.status_code != 200:
+                            raise RuntimeError(f"{response.status_code}, Response: {response.text}")
+
+                        transcription = response.json()["text"]
+                        return str(transcription)
+            except Exception as e:
+                return e
+
+    class CreateUpdateWaveformHook(MethodHook):
+        def after_hooked_method(self, param):
+            this = param.thisObject
+            set_private_field(this, "useTranscribeButton", True)

@@ -1,0 +1,182 @@
+__id__ = "html_formatter"
+__name__ = "HTML Formatter"
+__author__ = "@fr1zeeDev"
+__version__ = "1.1.0"
+__description__ = "Преобразует HTML-разметку в Telegram форматирование"
+
+import re
+from base_plugin import BasePlugin, HookResult, HookStrategy
+from ui.settings import Header, Divider, Text, Input
+from markdown_utils import parse_markdown
+from java.util import ArrayList
+
+__min_version__ = "11.9.0"
+__icon__ = "msg_edit"
+
+class HTMLFormatterPlugin(BasePlugin):
+    def on_plugin_load(self):
+        self.add_on_send_message_hook()
+
+    def create_settings(self):
+        settings_list = [
+            Header(text="HTML Formatter"),
+            Input(
+                key="command_prefix",
+                text="Префикс команды",
+                default=".html",
+                icon="msg_edit"
+            ),
+            Divider(),
+            Divider(text="[ ? ] • Доступные теги:"),
+            Divider(text="<b> - Жирный\n<i> - Курсив\n<u> - Подчёркнутый\n<s> - Зачёркнутый\n<code> - Моноширинный\n<sp> - Спойлер (скрытый)\n<a href='url'> - Сcылка\n<pre> - Блок кода (язык - первая строка / код - вторая строка)\n<h1> - Encoded (англ. язык)\n<m> - Typewriter (англ. язык)\n<quote> - Цитата\n<quote exp> - Сворачиваемая цитата"),
+            Divider(),
+            Divider(text="[ ! ] • Теги можно закрывать через </>"),
+            Divider(),
+            Divider(text="~ Примеры:\n<b><i>текст</></>\n<a href='https://t.me/fr1zeeDev'>Ссылка на профиль</>\n<quote><b>цитата</></>"),
+            Divider(text="[ © ] • Создатель: @fr1zeeDev [telegram]"),
+        ]
+        return settings_list
+
+    def on_send_message_hook(self, account, params):
+        if not hasattr(params, 'message') or not isinstance(params.message, str):
+            return HookResult()
+        
+        message = params.message.strip()
+        command_prefix = self.get_setting("command_prefix", ".html")
+        
+        if not message.startswith(command_prefix + ' '):
+            return HookResult()
+       
+        html_content = message[len(command_prefix) + 1:].strip()
+        
+        if not html_content:
+            return HookResult()
+        
+        formatted_text = self._convert_html_to_telegram(html_content)
+        parsed = parse_markdown(formatted_text)
+        params.message = parsed.text
+        
+        if hasattr(params, 'entities'):
+            params.entities.clear()
+        else:
+            params.entities = ArrayList()
+            
+        for ent in parsed.entities:
+            params.entities.add(ent.to_tlrpc_object())
+            
+        return HookResult(strategy=HookStrategy.MODIFY, params=params)
+
+    def _convert_html_to_telegram(self, html_text):
+        text = self._process_special_tags(html_text)
+        text = self._process_quotes(text)
+        text = self._process_spoilers(text)
+        text = self._process_all_tags_recursive(text)
+        
+        return text
+
+    def _process_all_tags_recursive(self, text):
+        previous_text = ""
+        
+        while previous_text != text:
+            previous_text = text
+            text = self._process_links(text)
+            text = self._process_single_tag_pass(text)
+        return text
+    def _process_single_tag_pass(self, text):
+        tag_map = [
+            ('b', '*', '*'),
+            ('i', '_', '_'),
+            ('u', '__', '__'),
+            ('s', '~', '~'),
+            ('code', '`', '`'),
+            ('pre', '```', '```')
+        ]
+        for tag_name, open_md, close_md in tag_map:  # Исправлено: tag_map вместо tags
+            pattern_full = f'<{tag_name}>(.*?)</{tag_name}>'
+            pattern_short = f'<{tag_name}>(.*?)</>'
+            
+            def replace_tag(match):
+                content = match.group(1)
+                return f"{open_md}{content}{close_md}"
+            
+            text = re.sub(pattern_full, replace_tag, text, flags=re.IGNORECASE | re.DOTALL)
+            text = re.sub(pattern_short, replace_tag, text, flags=re.IGNORECASE | re.DOTALL)
+        
+        return text
+
+    def _process_special_tags(self, text):
+        """2"""
+        def encoded_replace(match):
+            content = match.group(1)
+            fullwidth_map = {
+                'A': 'Ａ', 'B': 'Ｂ', 'C': 'Ｃ', 'D': 'Ｄ', 'E': 'Ｅ', 'F': 'Ｆ', 'G': 'Ｇ',
+                'H': 'Ｈ', 'I': 'Ｉ', 'J': 'Ｊ', 'K': 'Ｋ', 'L': 'Ｌ', 'M': 'Ｍ', 'N': 'Ｎ',
+                'O': 'Ｏ', 'P': 'Ｐ', 'Q': 'Ｑ', 'R': 'Ｒ', 'S': 'Ｓ', 'T': 'Ｔ', 'U': 'Ｕ',
+                'V': 'Ｖ', 'W': 'Ｗ', 'X': 'Ｘ', 'Y': 'Ｙ', 'Z': 'Ｚ',
+                'a': 'ａ', 'b': 'ｂ', 'c': 'ｃ', 'd': 'ｄ', 'e': 'ｅ', 'f': 'ｆ', 'g': 'ｇ',
+                'h': 'ｈ', 'i': 'ｉ', 'j': 'ｊ', 'k': 'ｋ', 'l': 'ｌ', 'm': 'ｍ', 'n': 'ｎ',
+                'o': 'ｏ', 'p': 'ｐ', 'q': 'ｑ', 'r': 'ｒ', 's': 'ｓ', 't': 'ｔ', 'u': 'ｕ',
+                'v': 'ｖ', 'w': 'ｗ', 'x': 'ｘ', 'y': 'ｙ', 'z': 'ｚ',
+                '0': '０', '1': '１', '2': '２', '3': '３', '4': '４', '5': '５', '6': '６',
+                '7': '７', '8': '８', '9': '９', ' ': '　'
+            }
+            result = ''.join(fullwidth_map.get(c, c) for c in content)
+            return result
+            
+        def typewriter_replace(match):
+            content = match.group(1)
+            math_map = {
+                'A': '𝙰', 'B': '𝙱', 'C': '𝙲', 'D': '𝙳', 'E': '𝙴', 'F': '𝙵', 'G': '𝙶',
+                'H': '𝙷', 'I': '𝙸', 'J': '𝙹', 'K': '𝙺', 'L': '𝙻', 'M': '𝙼', 'N': '𝙽',
+                'O': '𝙾', 'P': '𝙿', 'Q': '𝚀', 'R': '𝚁', 'S': '𝚂', 'T': '𝚃', 'U': '𝚄',
+                'V': '𝚅', 'W': '𝚆', 'X': '𝚇', 'Y': '𝚈', 'Z': '𝚉',
+                'a': '𝚊', 'b': '𝚋', 'c': '𝚌', 'd': '𝚍', 'e': '𝚎', 'f': '𝚏', 'g': '𝚐',
+                'h': '𝚑', 'i': '𝚒', 'j': '𝚓', 'k': '𝚔', 'l': '𝚕', 'm': '𝚖', 'n': '𝚗',
+                'o': '𝚘', 'p': '𝚙', 'q': '𝚚', 'r': '𝚛', 's': '𝚜', 't': '𝚝', 'u': '𝚞',
+                'v': '𝚟', 'w': '𝚠', 'x': '𝚡', 'y': '𝚢', 'z': '𝚣'
+            }
+            result = ''.join(math_map.get(c, c) for c in content)
+            return result
+
+        text = re.sub(r'<h1>(.*?)</h1>', encoded_replace, text, flags=re.IGNORECASE | re.DOTALL)
+        text = re.sub(r'<h1>(.*?)</>', encoded_replace, text, flags=re.IGNORECASE | re.DOTALL)
+        
+        text = re.sub(r'<m>(.*?)</m>', typewriter_replace, text, flags=re.IGNORECASE | re.DOTALL)
+        text = re.sub(r'<m>(.*?)</>', typewriter_replace, text, flags=re.IGNORECASE | re.DOTALL)
+
+        return text
+
+    def _process_links(self, text):
+        """Обрабатываеи ссылки"""
+        def link_replace(match):
+            url = match.group(1)
+            link_text = match.group(2)
+            return f"[{link_text}]({url})"
+        
+        # Улучшенное регулярное выражение для ссылок
+        text = re.sub(r"<a\s+href=['\"]([^'\"]+)['\"]>([^<]+)</a>", link_replace, text, flags=re.IGNORECASE | re.DOTALL)
+        text = re.sub(r"<a\s+href=['\"]([^'\"]+)['\"]>([^<]+)</>", link_replace, text, flags=re.IGNORECASE | re.DOTALL)
+        return text
+
+    def _process_quotes(self, text):
+        """Обрабатывает цитаты"""
+        def quote_replace(match):
+            content = match.group(1)
+            return f"> {content}"
+        def expandable_quote_replace(match):
+            content = match.group(1)
+            return f"```\n{content}\n```"
+        text = re.sub(r'<quote>(.*?)</quote>', quote_replace, text, flags=re.IGNORECASE | re.DOTALL)
+        text = re.sub(r'<quote>(.*?)</>', quote_replace, text, flags=re.IGNORECASE | re.DOTALL)
+        text = re.sub(r'<quote\s+exp>(.*?)</quote\s+exp>', expandable_quote_replace, text, flags=re.IGNORECASE | re.DOTALL)
+        text = re.sub(r'<quote\s+exp>(.*?)</>', expandable_quote_replace, text, flags=re.IGNORECASE | re.DOTALL)
+        return text
+
+    def _process_spoilers(self, text):
+        """Обрабаттввает спойлеры"""
+        def spoiler_replace(match):
+            content = match.group(1)
+            return f"||{content}||"
+        text = re.sub(r'<sp>(.*?)</sp>', spoiler_replace, text, flags=re.IGNORECASE | re.DOTALL)
+        text = re.sub(r'<sp>(.*?)</>', spoiler_replace, text, flags=re.IGNORECASE | re.DOTALL)
+        return text

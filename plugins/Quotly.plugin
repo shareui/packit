@@ -1,0 +1,305 @@
+# -*- coding: utf-8 -*-
+# --- Standard Library Imports ---
+import traceback
+import threading
+import time
+import weakref
+import queue
+
+# --- Chaquopy & Java Imports ---
+from java.chaquopy import dynamic_proxy
+from java.lang import Runnable, Integer
+from java.util import ArrayList
+
+# --- Base Plugin and UI Imports ---
+from base_plugin import BasePlugin, HookResult, HookStrategy
+from ui.bulletin import BulletinHelper
+from ui.settings import Header, Input
+
+# --- Android & Chaquopy Imports ---
+from android_utils import log, run_on_ui_thread
+from android.os import Handler, Looper
+
+# --- Telegram & Client Utilities ---
+from org.telegram.messenger import NotificationCenter, MessageObject, UserConfig, SendMessagesHelper, Utilities
+from org.telegram.tgnet import TLRPC
+from client_utils import (
+    get_messages_controller,
+    get_send_messages_helper,
+    get_account_instance,
+    get_user_config,
+    send_request,
+    run_on_queue,
+    RequestCallback
+)
+
+# --- Plugin Metadata ---
+__id__ = "quotly_plugin"
+__name__ = "Quotly Plugin"
+__description__ = "Generates a quote sticker from a message or text using @QuotLyBot."
+__author__ = "@Shadow_Mona_rch"
+__version__ = "1.0"
+__min_version__ = "11.9.1"
+__icon__ = "fuki_dum_pjsk_pack/29"
+
+# --- Configuration Constants ---
+QUOTLY_BOT_USERNAME = "QuotLyBot"
+DEFAULT_COMMAND = ".q"
+
+# --- Help Text ---
+__help_text__ = """
+**Quotly Plugin v1.0**
+> Generates a quote sticker from a message or text using @QuotLyBot.
+
+**Usage**
+> `{command}` (reply to a message) - Creates a sticker of the replied message.
+> `{command} <text>` - Creates a sticker from the provided text.
+
+**Note**
+• The command is customizable in the plugin settings.
+• The plugin relies on @QuotLyBot. Make sure the bot is not blocked.
+"""
+
+def to_signed_32(n):
+    n = n & 0xFFFFFFFF
+    return n if n < 0x80000000 else n - 0x100000000
+
+class RunnableProxy(dynamic_proxy(Runnable)):
+    def __init__(self, callback):
+        super().__init__()
+        self.callback = callback
+    def run(self):
+        try:
+            self.callback()
+        except Exception:
+            log(f"[{__id__}] Error in RunnableProxy: {traceback.format_exc()}")
+
+class QuoterPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self.id = __id__
+        self.bot_id = 0
+        self.task_queue = queue.Queue()
+        self.worker_thread = None
+        self.stop_worker = threading.Event()
+        self.message_listener = None
+        self.handler = Handler(Looper.getMainLooper())
+        self.task_lock = threading.RLock()
+        self.pending_task = None
+
+    def get_help_text(self):
+        command = self.get_setting("command", DEFAULT_COMMAND)
+        return __help_text__.format(command=command)
+
+    def create_settings(self):
+        return [
+            Header(text="Quotly Settings"),
+            Input(
+                key="command",
+                text="Command",
+                icon="msg_edit_solar",
+                default=DEFAULT_COMMAND,
+                subtext="The command to trigger the quote generation."
+            ),
+        ]
+
+    def on_plugin_load(self):
+        self.stop_worker.clear()
+        if self.worker_thread is None or not self.worker_thread.is_alive():
+            self.worker_thread = threading.Thread(target=self._worker_loop)
+            self.worker_thread.daemon = True
+            self.worker_thread.start()
+        
+        self.add_on_send_message_hook()
+        self._register_observer()
+        run_on_queue(self._resolve_bot_id)
+
+    def on_plugin_unload(self):
+        self.stop_worker.set()
+        self.task_queue.put(None) 
+        if self.worker_thread and self.worker_thread.is_alive():
+            self.worker_thread.join(timeout=2)
+        self._unregister_observer()
+
+    def on_send_message_hook(self, account, params):
+        message_text = getattr(params, 'message', '')
+        command = self.get_setting("command", DEFAULT_COMMAND).lower()
+        if not message_text or not message_text.lower().startswith(command):
+            return HookResult()
+
+        with self.task_lock:
+            if self.pending_task:
+                run_on_ui_thread(lambda: BulletinHelper.show_error("A quote is already in progress. Please wait."))
+                return HookResult(strategy=HookStrategy.CANCEL)
+
+        if self.bot_id == 0:
+            run_on_ui_thread(lambda: BulletinHelper.show_error(
+                f"@{QUOTLY_BOT_USERNAME} not found. Please start the bot or ensure it's in your chats, then restart the app."
+            ))
+            return HookResult(strategy=HookStrategy.CANCEL)
+
+        original_chat_id = 0
+        peer = params.peer
+        if isinstance(peer, int): original_chat_id = peer
+        elif isinstance(peer, TLRPC.TL_inputPeerChannel): original_chat_id = to_signed_32(-1000000000000 - peer.channel_id)
+        elif isinstance(peer, TLRPC.TL_inputPeerUser): original_chat_id = peer.user_id
+        elif isinstance(peer, TLRPC.TL_inputPeerChat): original_chat_id = -peer.chat_id
+        elif isinstance(peer, TLRPC.TL_inputPeerSelf): original_chat_id = get_user_config().getClientUserId()
+        
+        replied_message_object = getattr(params, "replyToMsg", None)
+        text_to_quote = message_text[len(command):].strip()
+
+        task = {
+            "chat_id": original_chat_id,
+            "reply_to_id": replied_message_object.messageOwner.id if replied_message_object else 0,
+            "text": text_to_quote,
+            "replied_msg_obj": replied_message_object
+        }
+        self.task_queue.put(task)
+        
+        return HookResult(strategy=HookStrategy.CANCEL)
+
+    def _worker_loop(self):
+        while not self.stop_worker.is_set():
+            try:
+                task = self.task_queue.get(timeout=1)
+                if task is None:
+                    continue
+                
+                with self.task_lock:
+                    self.pending_task = task
+                
+                timeout_task = RunnableProxy(lambda: self._on_task_timeout(task))
+                self.handler.postDelayed(timeout_task, 30000)
+                task["timeout_runnable"] = timeout_task
+
+                self._execute_task(task)
+                
+            except queue.Empty:
+                continue
+            except Exception:
+                log(f"[{self.id}] ERROR in worker thread: {traceback.format_exc()}")
+
+    def _execute_task(self, task):
+        def action():
+            text = task.get("text")
+            replied_msg_obj = task.get("replied_msg_obj")
+            
+            if text:
+                send_params = SendMessagesHelper.SendMessageParams.of(text, self.bot_id)
+                get_send_messages_helper().sendMessage(send_params)
+            elif replied_msg_obj:
+                req = TLRPC.TL_messages_forwardMessages()
+                req.from_peer = get_messages_controller().getInputPeer(task["chat_id"])
+                req.to_peer = get_messages_controller().getInputPeer(self.bot_id)
+                id_list = ArrayList()
+                id_list.add(Integer(replied_msg_obj.messageOwner.id))
+                req.id = id_list
+                req.random_id = ArrayList()
+                req.random_id.add(Utilities.random.nextLong())
+                send_request(req, RequestCallback(lambda r, e: None))
+            else:
+                run_on_ui_thread(lambda: BulletinHelper.show_error("Please reply to a message or provide text to quote."))
+                self._clear_pending_task(task)
+        
+        run_on_ui_thread(action) if task.get("text") else run_on_queue(action)
+
+    def _clear_pending_task(self, task):
+        with self.task_lock:
+            if self.pending_task == task:
+                self.pending_task = None
+        
+        timeout_runnable = task.get("timeout_runnable")
+        if timeout_runnable:
+            self.handler.removeCallbacks(timeout_runnable)
+
+    def _on_task_timeout(self, task):
+        with self.task_lock:
+            if self.pending_task == task:
+                self.pending_task = None
+                run_on_ui_thread(lambda: BulletinHelper.show_error(f"Quote timed out. @{QUOTLY_BOT_USERNAME} did not respond."))
+        
+        timeout_runnable = task.get("timeout_runnable")
+        if timeout_runnable:
+            self.handler.removeCallbacks(timeout_runnable)
+
+    class MessageListener(dynamic_proxy(NotificationCenter.NotificationCenterDelegate)):
+        def __init__(self, plugin):
+            super().__init__()
+            self.plugin_ref = weakref.ref(plugin)
+
+        def didReceivedNotification(self, id, account, args):
+            plugin = self.plugin_ref()
+            if not plugin or id != NotificationCenter.didReceiveNewMessages:
+                return
+
+            if not plugin.pending_task:
+                return
+
+            messages_list = args[1]
+            for i in range(messages_list.size()):
+                msg_obj = messages_list.get(i)
+                if msg_obj and hasattr(msg_obj, 'messageOwner'):
+                    from_id = getattr(getattr(msg_obj.messageOwner, 'peer_id', None), 'user_id', 0)
+                    if from_id == plugin.bot_id:
+                        if msg_obj.isSticker():
+                            plugin._handle_bot_response(msg_obj)
+                            return
+    
+    def _handle_bot_response(self, message_object):
+        task = None
+        with self.task_lock:
+            if self.pending_task:
+                task = self.pending_task
+        
+        if not task:
+            return
+        
+        self._clear_pending_task(task)
+
+        def send_final_sticker():
+            if message_object.isSticker():
+                sticker_document = message_object.messageOwner.media.document
+                reply_to_message = self._get_reply_message_object(task["chat_id"], task["reply_to_id"])
+                
+                params = SendMessagesHelper.SendMessageParams.of(
+                    sticker_document, None, None, task["chat_id"], reply_to_message,
+                    None, None, None, None, None, True, 0, 0, None, None, True
+                )
+                
+                get_send_messages_helper().sendMessage(params)
+            else:
+                error_text = message_object.messageOwner.message or "Quoting failed. The bot did not return a sticker."
+                BulletinHelper.show_error(error_text)
+
+        run_on_ui_thread(send_final_sticker)
+
+    def _get_reply_message_object(self, dialog_id, message_id):
+        if message_id == 0:
+            return None
+        try:
+            return get_messages_controller().getMessageObject(dialog_id, message_id, False, 0, False)
+        except Exception:
+            return None
+
+    def _register_observer(self):
+        if not self.message_listener:
+            self.message_listener = self.MessageListener(self)
+            run_on_ui_thread(lambda: get_account_instance().getNotificationCenter().addObserver(
+                self.message_listener, NotificationCenter.didReceiveNewMessages
+            ))
+
+    def _unregister_observer(self):
+        if self.message_listener:
+            run_on_ui_thread(lambda: get_account_instance().getNotificationCenter().removeObserver(
+                self.message_listener, NotificationCenter.didReceiveNewMessages
+            ))
+            self.message_listener = None
+        
+    def _resolve_bot_id(self):
+        try:
+            bot_entity = get_messages_controller().getUserOrChat(QUOTLY_BOT_USERNAME)
+            if bot_entity and isinstance(bot_entity, TLRPC.TL_user):
+                self.bot_id = bot_entity.id
+        except Exception:
+            log(f"[{self.id}] Exception while resolving bot ID: {traceback.format_exc()}")
