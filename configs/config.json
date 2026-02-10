@@ -881,19 +881,6 @@
       "hash": "7b5e0986149c36e594898e7f4ce69a8631ef8a0ffaa173c66f0978ae8deb3ddb"
     },
     {
-      "id": "plugin_creator",
-      "name": "Plugin creator",
-      "author": "@mr_Vestr",
-      "version": "2.0",
-      "state": "release",
-      "icon": "mr_vestr/12",
-      "suspicious": "false",
-      "dependencies": [],
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/plugin_creator (1).plugin",
-      "description": "\"",
-      "hash": "7b5e0986149c36e594898e7f4ce69a8631ef8a0ffaa173c66f0978ae8deb3ddb"
-    },
-    {
       "id": "ProfileCustomizer",
       "name": "Profile Customizer",
       "author": "@gemeguardian",

@@ -4,7 +4,7 @@ import os
 import json
 import hashlib
 import re
-import yaml # pip install pyyaml
+import yaml
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -398,18 +398,21 @@ def extractMetadata(filePath: str, filename: str) -> Dict[str, any]:
             content = f.read()
         
         patterns = {
-            "id": r'__id__\s*=\s*["\'](.+?)["\']',
-            "name": r'__name__\s*=\s*["\'](.+?)["\']',
+            "id": r'__id__\s*=\s*["\']([^"\']*)["\']',
+            "name": r'__name__\s*=\s*["\']([^"\']*)["\']',
             "description": r'__description__\s*=\s*["\'](.+?)["\']',
-            "author": r'__author__\s*=\s*["\'](.+?)["\']',
-            "version": r'__version__\s*=\s*["\'](.+?)["\']',
-            "icon": r'__icon__\s*=\s*["\'](.+?)["\']',
+            "author": r'__author__\s*=\s*["\']([^"\']*)["\']',
+            "version": r'__version__\s*=\s*["\']([^"\']*)["\']',
+            "icon": r'__icon__\s*=\s*["\']([^"\']*)["\']',
         }
         
         for key, pattern in patterns.items():
             match = re.search(pattern, content, re.DOTALL)
             if match:
                 value = match.group(1)
+                if not value or not value.strip():
+                    missingFields.append(key)
+                    continue
                 if value and '\n' in value:
                     if key == "description":
                         metadata[key] = "MULTILINE_DETECTED"
@@ -429,7 +432,8 @@ def extractMetadata(filePath: str, filename: str) -> Dict[str, any]:
             metadata["dependencies"] = deps
             
         if missingFields:
-            print(f"{Colors.YELLOW}{filename}{Colors.RESET} missing {Colors.RED}{', '.join(missingFields)}{Colors.RESET}")
+            missingStr = ', '.join(missingFields)
+            print(f"{Colors.YELLOW}{filename}{Colors.RESET} missing {Colors.RED}{missingStr}{Colors.RESET} {Colors.DIM}(set to Unknown){Colors.RESET}")
             
     except Exception as e:
         print(f"{Colors.RED}{filename} failed {e}{Colors.RESET}")
@@ -1145,7 +1149,7 @@ def createGitignore():
 
 def showMenu():
     print()
-    print(f"{Colors.BOLD}{Colors.CYAN}    Menu    {Colors.RESET}")
+    print(f"{Colors.BOLD}{Colors.CYAN}=== plugin manager ==={Colors.RESET}")
     print(f"{Colors.GREEN}1{Colors.RESET}. add files")
     print(f"{Colors.GREEN}2{Colors.RESET}. change file")
     print(f"{Colors.GREEN}3{Colors.RESET}. delete files")
