@@ -18,7 +18,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/FullScreenTextEditor.plugin",
       "description": "Full-screen text editor for long messages with formatting & emoji support.",
-      "hash": "45a9f92828ed24f65fb07a3cd1cc1e98abce1479c38c08bc455e68f8e7d47f94"
+      "about": [
+        "Full-screen text editor for long messages with formatting & emoji support.",
+        "Full-screen text editor for long messages with formatting & emoji support."
+      ],
+      "hash": "45a9f92828ed24f65fb07a3cd1cc1e98abce1479c38c08bc455e68f8e7d47f94",
+      "tag": "Media"
     },
     {
       "id": "quantahut",
@@ -31,7 +36,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/QuantaHut.plugin",
       "description": "Library for Quanta plugins",
-      "hash": "013d3bbc59895161469c48713c2819920e71966d16d213966ea014e12468aba6"
+      "about": [
+        "Library for Quanta plugins",
+        "Library for Quanta plugins."
+      ],
+      "hash": "013d3bbc59895161469c48713c2819920e71966d16d213966ea014e12468aba6",
+      "tag": "Library"
     },
     {
       "id": "ui_tweaks",
@@ -46,7 +56,12 @@
       ],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/UiTweaks.plugin",
       "description": "Well sometimes you just need to tweak things...",
-      "hash": "96d1c2c65c6609154c3838c2efd994626250a13668f67d0a11fc7367ef1509a1"
+      "about": [
+        "Well sometimes you just need to tweak things...",
+        "Набор небольших улучшений и твиков."
+      ],
+      "hash": "96d1c2c65c6609154c3838c2efd994626250a13668f67d0a11fc7367ef1509a1",
+      "tag": "Utility"
     },
     {
       "id": "shareui_exterium",
@@ -58,8 +73,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_exterium.plugin",
-      "description": "Minor optimization: When the app is in the background, it disables plugins and enables them upon login. [You can add exceptions by ID.]",
-      "hash": "8718a383566c3478f34debf0f181d054a2ef9685c7dd41b7bda6c0b2ce32b6f9"
+      "description": "Disable plugins while the app is in the background.",
+      "about": [
+        "Disable plugins while the app is in the background.",
+        "Отключает plugins while the app is in the background."
+      ],
+      "hash": "8718a383566c3478f34debf0f181d054a2ef9685c7dd41b7bda6c0b2ce32b6f9",
+      "tag": "Utility"
     },
     {
       "id": "shareui_sh",
@@ -72,7 +92,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shexec.plugin",
       "description": "Execute shell commands, subprocesses, and Junis.",
-      "hash": "d793ba441f8c1e33808809bca8813d9f471ca8d120b80bab5776eb4189be3a4c"
+      "about": [
+        "Execute shell commands, subprocesses, and Junis.",
+        "Execute shell commands, subprocesses, and Junis."
+      ],
+      "hash": "d793ba441f8c1e33808809bca8813d9f471ca8d120b80bab5776eb4189be3a4c",
+      "tag": "Fun"
     },
     {
       "id": "shareui_exteragit",
@@ -84,8 +109,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/exteraGit.plugin",
-      "description": "Search GitHub and GitLab resources. Commands in the plugin settings.",
-      "hash": "487448f4fcc7e726f0d8846c6d0c9cc5fc5b908d5b730c81e0f49d6f2ba8e40e"
+      "description": "Search GitHub and GitLab.",
+      "about": [
+        "Search GitHub and GitLab.",
+        "Ищет GitHub and GitLab."
+      ],
+      "hash": "487448f4fcc7e726f0d8846c6d0c9cc5fc5b908d5b730c81e0f49d6f2ba8e40e",
+      "tag": "Utility"
     },
     {
       "id": "shareui_x0",
@@ -97,8 +127,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/x0.plugin",
-      "description": "Uploads a media file (photo, video, GIF, document) to x0.at hosting and sends the resulting link to the chat. To use, reply to the message with the media file using the .x0 command.",
-      "hash": "3a53e686bfbb5ac9f0bf759ebf09d67b7141977362ef58a7e4db0159cd98edca"
+      "description": "Upload media to x0.at and send the link.",
+      "about": [
+        "Upload media to x0.at and send the link.",
+        "Загружает media to x0.at and send the link."
+      ],
+      "hash": "3a53e686bfbb5ac9f0bf759ebf09d67b7141977362ef58a7e4db0159cd98edca",
+      "tag": "Media"
     },
     {
       "id": "shareui_modrinth",
@@ -111,7 +146,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/modrinth.plugin",
       "description": "Searching of things on modrinth",
-      "hash": "467c1bd5d0ce0dde3261e8a62d19486915607388c5147ad588aa79d0bf9c6798"
+      "about": [
+        "Searching of things on modrinth",
+        "Searching of things on modrinth."
+      ],
+      "hash": "467c1bd5d0ce0dde3261e8a62d19486915607388c5147ad588aa79d0bf9c6798",
+      "tag": "Utility"
     },
     {
       "id": "requisites_sender",
@@ -123,8 +163,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/rekvv.plugin",
-      "description": "Sends the details specified in the settings on command",
-      "hash": "9d06a522f2e1d9e30b5c9cd013a2323a50fa0b138a05d9c2b172889d3e4516fe"
+      "description": "Send configured details on demand.",
+      "about": [
+        "Send configured details on demand.",
+        "Send configured details on demand."
+      ],
+      "hash": "9d06a522f2e1d9e30b5c9cd013a2323a50fa0b138a05d9c2b172889d3e4516fe",
+      "tag": "Utility"
     },
     {
       "id": "shareui_advcalc",
@@ -137,7 +182,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/advcalc.plugin",
       "description": "Just advanced calculator...",
-      "hash": "67baabeddd0c0e0c09925f3ab56e40f6646483e580d0bc339f6484c815c8fa95"
+      "about": [
+        "Just advanced calculator...",
+        "Продвинутый калькулятор."
+      ],
+      "hash": "67baabeddd0c0e0c09925f3ab56e40f6646483e580d0bc339f6484c815c8fa95",
+      "tag": "Utility"
     },
     {
       "id": "shareui_efch",
@@ -150,7 +200,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/efch.plugin",
       "description": "Display sys info",
-      "hash": "c24422d49e1f39136c95768a042afbce7c16861a3d41d46d10c86923b12363e7"
+      "about": [
+        "Display sys info",
+        "Показывает информацию о системе."
+      ],
+      "hash": "c24422d49e1f39136c95768a042afbce7c16861a3d41d46d10c86923b12363e7",
+      "tag": "Utility"
     },
     {
       "id": "account_stats",
@@ -163,7 +218,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/account_stats.plugin",
       "description": "Shows statistics for all chats in the account.",
-      "hash": "13e4b888991048f9bee53cd913ad713db379a38a0c5fda08d10008a399d04ab2"
+      "about": [
+        "Shows statistics for all chats in the account.",
+        "Показывает statistics for all chats in the account."
+      ],
+      "hash": "13e4b888991048f9bee53cd913ad713db379a38a0c5fda08d10008a399d04ab2",
+      "tag": "Admin"
     },
     {
       "id": "animated_chat_wallpaper",
@@ -176,7 +236,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/AnimatedChatWallpaper.plugin",
       "description": "Set MP4 URL as animated chat wallpaper",
-      "hash": "5a7221ea11ceadfa709bdee79357c5ef6ba56af605beb80daa3934d2c944ef50"
+      "about": [
+        "Set MP4 URL as animated chat wallpaper",
+        "Устанавливает ссылку на MP4 as animated chat wallpaper."
+      ],
+      "hash": "5a7221ea11ceadfa709bdee79357c5ef6ba56af605beb80daa3934d2c944ef50",
+      "tag": "Media"
     },
     {
       "id": "anti_spoiler",
@@ -189,7 +254,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/anti_spoiler.plugin",
       "description": "Automatically removes spoilers from text and media.",
-      "hash": "090d24eebc02b6c2d0b7ff85e9c22bf5e09e705b38930cc47fd9be748bb060f4"
+      "about": [
+        "Automatically removes spoilers from text and media.",
+        "Automatically removes spoilers from text and media."
+      ],
+      "hash": "090d24eebc02b6c2d0b7ff85e9c22bf5e09e705b38930cc47fd9be748bb060f4",
+      "tag": "Media"
     },
     {
       "id": "Auto_Reply",
@@ -202,7 +272,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Auto_Reply.plugin",
       "description": "Unknown",
-      "hash": "d5d2437944059fd9695ca32b5b23f5e227bba93b348de7a5c65b28fcc8af563b"
+      "about": [
+        "Unknown",
+        "Unknown"
+      ],
+      "hash": "d5d2437944059fd9695ca32b5b23f5e227bba93b348de7a5c65b28fcc8af563b",
+      "tag": "Unknown"
     },
     {
       "id": "user_manager",
@@ -214,8 +289,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/ban_deleted_users.plugin",
-      "description": "Плагин для управления участниками чатов/каналов с быстрым доступом через меню чата и команду .bandel.\n\nДоступные действия:\n• Удалить удалённые аккаунты\n• Удалить ботов\n• Удалить неактивных пользователей\n• Удалить онлайн пользователей\n• Удалить оффлайн пользователей\n• Удалить новых пользователей (рейды)\n\nИспользуйте меню (3 точки) в чате для быстрого доступа или команду .bandel.",
-      "hash": "ec138451f2e83f1114698bbde440fd67dd927a26e34a742c27b906dbaf73fd62"
+      "description": "Manage chat/channel members and bulk-remove users by criteria.",
+      "about": [
+        "Manage chat/channel members and bulk-remove users by criteria.",
+        "Управляет chat/channel members and bulk-remove users by criteria."
+      ],
+      "hash": "ec138451f2e83f1114698bbde440fd67dd927a26e34a742c27b906dbaf73fd62",
+      "tag": "Admin"
     },
     {
       "id": "timeGuA",
@@ -228,7 +308,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Bedtime.plugin",
       "description": "Unknown",
-      "hash": "c58782d84e159d1bd0049a0340b41d75c73de5eb5bcd91e595fa5007c50849d6"
+      "about": [
+        "Unknown",
+        "Unknown"
+      ],
+      "hash": "c58782d84e159d1bd0049a0340b41d75c73de5eb5bcd91e595fa5007c50849d6",
+      "tag": "Unknown"
     },
     {
       "id": "bot_login",
@@ -240,8 +325,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/bot_login.plugin",
-      "description": "Log into Telegram as a bot using its API token.\nUse the button on the login screen or in the plugin settings.",
-      "hash": "6c8a1a7acdb7a53028e8ca6b60add40a2deda99587f7d7c61ef8f4b415c00d38"
+      "description": "Log in as a bot using an API token.",
+      "about": [
+        "Log in as a bot using an API token.",
+        "Log in as a bot using an API-токен."
+      ],
+      "hash": "6c8a1a7acdb7a53028e8ca6b60add40a2deda99587f7d7c61ef8f4b415c00d38",
+      "tag": "Utility"
     },
     {
       "id": "chatInputLines",
@@ -254,7 +344,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/chat_input_lines.plugin",
       "description": "Adjusts max lines of the chat input field",
-      "hash": "02f88ea6dcf6bc4c16e1c7824a7694af69711e36d61707596df16c6731fd1eb4"
+      "about": [
+        "Adjusts max lines of the chat input field",
+        "Adjusts max lines of the поле ввода чата."
+      ],
+      "hash": "02f88ea6dcf6bc4c16e1c7824a7694af69711e36d61707596df16c6731fd1eb4",
+      "tag": "Utility"
     },
     {
       "id": "chatexport",
@@ -267,7 +362,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/chatexport.plugin",
       "description": "Export chats to HTML/JSON/TXT with Telegram Desktop style and media.",
-      "hash": "6006e9c85965b0652201f44d3da63bea502040fc5f276b6fadfc8c26035857c8"
+      "about": [
+        "Export chats to HTML/JSON/TXT with Telegram Desktop style and media.",
+        "Export chats to HTML/JSON/TXT with Telegram Desktop style and media."
+      ],
+      "hash": "6006e9c85965b0652201f44d3da63bea502040fc5f276b6fadfc8c26035857c8",
+      "tag": "Media"
     },
     {
       "id": "Cherry_Badges",
@@ -280,7 +380,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Cherry Badges.plugin",
       "description": "Integration of Cherrygram badges into exteraGram.",
-      "hash": "82ce59035cbdf064b000f3a7c0de85ef67f64faac60f24d0dc45e118ccff7fea"
+      "about": [
+        "Integration of Cherrygram badges into exteraGram.",
+        "Integration of Cherrygram badges into exteraGram."
+      ],
+      "hash": "82ce59035cbdf064b000f3a7c0de85ef67f64faac60f24d0dc45e118ccff7fea",
+      "tag": "Customization"
     },
     {
       "id": "cherry_header",
@@ -293,7 +398,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/CherryHeader.plugin",
       "description": "Unknown",
-      "hash": "f6f758a32533a7dcbb38ec3b87da414d564108aab1cf32dc99e8013ff1fe09c6"
+      "about": [
+        "Unknown",
+        "Unknown"
+      ],
+      "hash": "f6f758a32533a7dcbb38ec3b87da414d564108aab1cf32dc99e8013ff1fe09c6",
+      "tag": "Unknown"
     },
     {
       "id": "currency_converter",
@@ -305,8 +415,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Converter.plugin",
-      "description": "Конвертирует фиатные и криптовалюты с актуальными курсами\n\nИспользование: .conv <из> to <в> <сумма>\n\nПримеры:\n• .conv usd to rub 100\n• .conv btc to usd 1\n• .conv eth to rub 5\n\nПоддержка фиата и 20 криптовалют (BTC, ETH, USDT, BNB, SOL, XRP, USDC, ADA, DOGE, TRX, TON, LINK, MATIC, DOT, DAI, LTC, SHIB, BCH, AVAX, UNI)",
-      "hash": "8735b1d35b5004669de0efd674b995744291c61606669e28bdde4533de6db320"
+      "description": "Convert between fiat and cryptocurrencies using live exchange rates.",
+      "about": [
+        "Convert between fiat and cryptocurrencies using live exchange rates.",
+        "Конвертирует between fiat and cryptocurrencies using live exchange rates."
+      ],
+      "hash": "8735b1d35b5004669de0efd674b995744291c61606669e28bdde4533de6db320",
+      "tag": "Utility"
     },
     {
       "id": "Crypter",
@@ -318,8 +433,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/CrypterClean.plugin",
-      "description": "Простенький шифратор текста с паролем. Пример работы: Шифрование: .cip [password] [text] Расшифрование: контекст. меню -> плагины -> расшифровать",
-      "hash": "4d8d65811b4592720e4f66ac9d15f4babe44388e723fb1f414efb9bb57a53342"
+      "description": "Encrypt and decrypt text with a password.",
+      "about": [
+        "Encrypt and decrypt text with a password.",
+        "Шифрует and decrypt text with a password."
+      ],
+      "hash": "4d8d65811b4592720e4f66ac9d15f4babe44388e723fb1f414efb9bb57a53342",
+      "tag": "Utility"
     },
     {
       "id": "crypto_analiz",
@@ -331,8 +451,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/crypto_analiz.plugin",
-      "description": "Плагин отслеживает курс криптовалюты .crypthelp",
-      "hash": "f21f77fc364bbbeb2233373629ed8f3f0684bbc8f04cd579b78b396df61f5828"
+      "description": "Track cryptocurrency exchange rates.",
+      "about": [
+        "Track cryptocurrency exchange rates.",
+        "Отслеживает cryptocurrency exchange rates."
+      ],
+      "hash": "f21f77fc364bbbeb2233373629ed8f3f0684bbc8f04cd579b78b396df61f5828",
+      "tag": "Utility"
     },
     {
       "id": "custom_top_banner",
@@ -345,7 +470,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/custom_banner.plugin",
       "description": "Unknown",
-      "hash": "8a12c9d637a1c13a54a14c95e3050625ede6bc257d0ef1e1d2309ff07be22036"
+      "about": [
+        "Unknown",
+        "Unknown"
+      ],
+      "hash": "8a12c9d637a1c13a54a14c95e3050625ede6bc257d0ef1e1d2309ff07be22036",
+      "tag": "Unknown"
     },
     {
       "id": "dinorunner",
@@ -357,8 +487,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Dino Runner.plugin",
-      "description": "Игра google динозаврик с препятствиями, рекордами и кастомизацией.",
-      "hash": "e7ea9807f59f46d87d291a9ca74a693ac98e52df0162bc62b7c8e6c4fcf2aa8c"
+      "description": "Play the Chrome dinosaur runner game.",
+      "about": [
+        "Play the Chrome dinosaur runner game.",
+        "Запускает игру: the Chrome dinosaur runner game."
+      ],
+      "hash": "e7ea9807f59f46d87d291a9ca74a693ac98e52df0162bc62b7c8e6c4fcf2aa8c",
+      "tag": "Game"
     },
     {
       "id": "dotastats",
@@ -370,8 +505,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/dotastats.plugin",
-      "description": "Информация о твоих последних матчах или о конкретном матче. Гайд в настройках\nProvides information about your last dota matches or about specific match. Guide in settings",
-      "hash": "af903ca73e4b368e475de381db8d4c4607c904118d160718e962d9c0ded80cb8"
+      "description": "Show Dota match history and match details.",
+      "about": [
+        "Show Dota match history and match details.",
+        "Показывает Dota match history and match details."
+      ],
+      "hash": "af903ca73e4b368e475de381db8d4c4607c904118d160718e962d9c0ded80cb8",
+      "tag": "Utility"
     },
     {
       "id": "emoji_downloader",
@@ -384,7 +524,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/emoji_downloader.plugin",
       "description": "Easily download emojis and stickers by long-pressing on them in the context menu.",
-      "hash": "4eea189e42874f26f5333c1ac3b61c657ebb3829c7ba0f0349d9fb64c1c35d75"
+      "about": [
+        "Easily download emojis and stickers by long-pressing on them in the context menu.",
+        "Easily download emojis and stickers by long-pressing on them in the контекстном меню."
+      ],
+      "hash": "4eea189e42874f26f5333c1ac3b61c657ebb3829c7ba0f0349d9fb64c1c35d75",
+      "tag": "Media"
     },
     {
       "id": "epicgames",
@@ -396,8 +541,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Epic_Games.plugin",
-      "description": "🎮 Shows current game on Epic Games\n\n📋 Commands:\n• [.nowepic/.enp] — current game\n• [.elibrary] — games library\n• [.eflibrary] — full library\n\n🎨 Design - @reNightly, @qmrrchh THANKS",
-      "hash": "7ba633a8e8a7f73de8e4011bb3fe46c72e79862389be3714f5edc68f21cd5ee2"
+      "description": "Show your current Epic Games game and library.",
+      "about": [
+        "Show your current Epic Games game and library.",
+        "Показывает your current Epic Games game and library."
+      ],
+      "hash": "7ba633a8e8a7f73de8e4011bb3fe46c72e79862389be3714f5edc68f21cd5ee2",
+      "tag": "Library"
     },
     {
       "id": "extera_rpc",
@@ -410,7 +560,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/extera_rpc.plugin",
       "description": "Allows you to set custom ",
-      "hash": "f9ed34b4f907fee4ecd2f6d72edd554a5ddb2587c9511ec0adf4e0188a112514"
+      "about": [
+        "Allows you to set custom ",
+        "Allows you to set custom."
+      ],
+      "hash": "f9ed34b4f907fee4ecd2f6d72edd554a5ddb2587c9511ec0adf4e0188a112514",
+      "tag": "Utility"
     },
     {
       "id": "ex_tool",
@@ -422,8 +577,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/ExTool.plugin",
-      "description": "Небольшие модификации для Telegram от Ex",
-      "hash": "7d4b85f7662d7f5ee59a7d6aa0b24eaf4fa23a6b6da313046c2aef213824e685"
+      "description": "Add small Telegram UI/behavior tweaks.",
+      "about": [
+        "Add small Telegram UI/behavior tweaks.",
+        "Добавляет small Telegram UI/behavior tweaks."
+      ],
+      "hash": "7d4b85f7662d7f5ee59a7d6aa0b24eaf4fa23a6b6da313046c2aef213824e685",
+      "tag": "Customization"
     },
     {
       "id": "feel_rich",
@@ -436,7 +596,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/feel_rich.plugin",
       "description": "*Locally* modify stars balance in your profile",
-      "hash": "30b848816c4aa5b0e9d5a0be847037cd3d9809c4e5f5d6b8c01f3d8abce1dc83"
+      "about": [
+        "*Locally* modify stars balance in your profile",
+        "*Locally* modify stars balance in your profile."
+      ],
+      "hash": "30b848816c4aa5b0e9d5a0be847037cd3d9809c4e5f5d6b8c01f3d8abce1dc83",
+      "tag": "Utility"
     },
     {
       "id": "file_viewer_editor_pg",
@@ -448,8 +613,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/FileViewer.plugin",
-      "description": "Просматривайте и редактируйте текстовые файлы (.py, .json, .csv и др.) прямо в Telegram. Используйте команду `.openfile` в ответ на сообщение с файлом.",
-      "hash": "a37a8ddf588e612b96411e86e783a65ecebace7d4cffc842fbd24ac2b989f5ca"
+      "description": "View and edit text files inside Telegram.",
+      "about": [
+        "View and edit text files inside Telegram.",
+        "View and edit text files inside Telegram."
+      ],
+      "hash": "a37a8ddf588e612b96411e86e783a65ecebace7d4cffc842fbd24ac2b989f5ca",
+      "tag": "Utility"
     },
     {
       "id": "fix_endpoint_gooey",
@@ -461,8 +631,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/fix_endpoint_gooey.plugin",
-      "description": "изменяет конечную точку аватарки в профиле",
-      "hash": "d9b82c797ad0a6e2ba30b9f9297668c20b7e0ac5de75b786b194d0e87c36a7ae"
+      "description": "Change the profile avatar endpoint.",
+      "about": [
+        "Change the profile avatar endpoint.",
+        "Change the profile avatar endpoint."
+      ],
+      "hash": "d9b82c797ad0a6e2ba30b9f9297668c20b7e0ac5de75b786b194d0e87c36a7ae",
+      "tag": "Utility"
     },
     {
       "id": "forceedge2edge",
@@ -475,7 +650,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/forceedge2edge.plugin",
       "description": "Forces the app to be always on the edge",
-      "hash": "1b8d4a82c7e4f30e884a7bfaa85c82c791dda3a22658b0c71925838f0389b01c"
+      "about": [
+        "Forces the app to be always on the edge",
+        "Forces the app to be always on the edge."
+      ],
+      "hash": "1b8d4a82c7e4f30e884a7bfaa85c82c791dda3a22658b0c71925838f0389b01c",
+      "tag": "Utility"
     },
     {
       "id": "fake_stars",
@@ -488,7 +668,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/FuckPayments.plugin",
       "description": "Simulate Stars balance and payments.",
-      "hash": "a04422678b8621411daf5a3fc05b30f2ae11277994ee3eb52f7a95bbd443c15a"
+      "about": [
+        "Simulate Stars balance and payments.",
+        "Simulate Stars balance and payments."
+      ],
+      "hash": "a04422678b8621411daf5a3fc05b30f2ae11277994ee3eb52f7a95bbd443c15a",
+      "tag": "Utility"
     },
     {
       "id": "fullscreen_music_player",
@@ -500,8 +685,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/fullscreen_music_player.plugin",
-      "description": "Full screen music player. Если вы обновляете плагин, перезапустите Telegram.",
-      "hash": "9a6f2c15a52901f36b30a6922ac84aa07612f67af45d8144b88e55a10437b5a8"
+      "description": "Full-screen music player.",
+      "about": [
+        "Full-screen music player.",
+        "Full-screen music player."
+      ],
+      "hash": "9a6f2c15a52901f36b30a6922ac84aa07612f67af45d8144b88e55a10437b5a8",
+      "tag": "Media"
     },
     {
       "id": "gift_id",
@@ -514,7 +704,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/gift_id.plugin",
       "description": "Unknown",
-      "hash": "f87d409fcf3325ce428ebc3d6eb26276772fa5c221e6a7e701f4bbb076373239"
+      "about": [
+        "Unknown",
+        "Unknown"
+      ],
+      "hash": "f87d409fcf3325ce428ebc3d6eb26276772fa5c221e6a7e701f4bbb076373239",
+      "tag": "Unknown"
     },
     {
       "id": "html_formatter",
@@ -526,8 +721,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/HTML Formatter.plugin",
-      "description": "Преобразует HTML-разметку в Telegram форматирование",
-      "hash": "5331ed0f0a03f3cf83031432ecbb46c49f32b8239ea6d15a44c30eb7b7955835"
+      "description": "Convert HTML markup to Telegram formatting.",
+      "about": [
+        "Convert HTML markup to Telegram formatting.",
+        "Конвертирует HTML markup to Telegram formatting."
+      ],
+      "hash": "5331ed0f0a03f3cf83031432ecbb46c49f32b8239ea6d15a44c30eb7b7955835",
+      "tag": "Utility"
     },
     {
       "id": "imitator_plugin_enhanced",
@@ -539,8 +739,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/imitator.plugin",
-      "description": "Имитирует активность в чате\n\nКоманды:\n.im - открыть меню\n.im <режим> - быстрый запуск\n.imstop - остановить в чате\n.imstopall - остановить везде\n\nРежимы: typing, voice, video, game, photo, round, audio, document, location, contact, sticker, mixed",
-      "hash": "6be16c6fbe4ccfc36d2ca63705b61bfb2d34772a386b802fa453138d78da9373"
+      "description": "Simulate chat activity statuses (e.g., typing, voice, recording).",
+      "about": [
+        "Simulate chat activity statuses (e.g., typing, voice, recording).",
+        "Simulate chat activity statuses (e.g., typing, voice, recording)."
+      ],
+      "hash": "6be16c6fbe4ccfc36d2ca63705b61bfb2d34772a386b802fa453138d78da9373",
+      "tag": "Network"
     },
     {
       "id": "in_app_notifications",
@@ -552,8 +757,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/in_app_notifications.plugin",
-      "description": "Плагин с гибкими настройками отображающий уведомления Telegram локально внутри приложения.",
-      "hash": "443a0fc813b6c4398f48e577071b7d970e8576f816766d8c40a53cc4a54ae1fc"
+      "description": "Show Telegram notifications locally inside the app.",
+      "about": [
+        "Show Telegram notifications locally inside the app.",
+        "Показывает Telegram notifications locally inside the app."
+      ],
+      "hash": "443a0fc813b6c4398f48e577071b7d970e8576f816766d8c40a53cc4a54ae1fc",
+      "tag": "Customization"
     },
     {
       "id": "ios_like_selection",
@@ -565,8 +775,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/ios_like_selection.plugin",
-      "description": "Recreates the effect of selecting a message by tapping like on **IOS**",
-      "hash": "1ca104ce6e10ece42f8f6f6fa0020808361b6aaa41ded5c72b0e7793149f1fe8"
+      "description": "Select a message by double-tapping like on iOS.",
+      "about": [
+        "Select a message by double-tapping like on iOS.",
+        "Выбирает a message by double-tapping like on iOS."
+      ],
+      "hash": "1ca104ce6e10ece42f8f6f6fa0020808361b6aaa41ded5c72b0e7793149f1fe8",
+      "tag": "Network"
     },
     {
       "id": "kangel_plugins_manager",
@@ -579,7 +794,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/kangel_plugins_manager.plugin",
       "description": "Unknown",
-      "hash": "b75baec4e906cf068bdcdbaaa60e5523b2a3ad226dd0abf0adba47261654c4d1"
+      "about": [
+        "Unknown",
+        "Unknown"
+      ],
+      "hash": "b75baec4e906cf068bdcdbaaa60e5523b2a3ad226dd0abf0adba47261654c4d1",
+      "tag": "Unknown"
     },
     {
       "id": "KWFilter",
@@ -592,7 +812,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/KWFilter.plugin",
       "description": "Hiding messages by keywords",
-      "hash": "0a1a416eaac905fa1dbcc3341f46f68caff504f8bdaa6233fc973c962a74e38e"
+      "about": [
+        "Hiding messages by keywords",
+        "Скрывает messages by keywords."
+      ],
+      "hash": "0a1a416eaac905fa1dbcc3341f46f68caff504f8bdaa6233fc973c962a74e38e",
+      "tag": "Utility"
     },
     {
       "id": "LatRussLang",
@@ -604,8 +829,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/LatRussLang.plugin",
-      "description": "Плагин, переводящий исходящие сообщения на лат. русский и обратно. За предоставленную информацию спасибо @russ_lat и @Ventiqu",
-      "hash": "1c4ef450fcb7b214a4b7def109bfd2fa787ba07649e64e274729a2cd99a1dc8e"
+      "description": "Transliterate outgoing messages between Cyrillic and Latin Russian.",
+      "about": [
+        "Transliterate outgoing messages between Cyrillic and Latin Russian.",
+        "Транслитерирует исходящие сообщения between Cyrillic and Latin Russian."
+      ],
+      "hash": "1c4ef450fcb7b214a4b7def109bfd2fa787ba07649e64e274729a2cd99a1dc8e",
+      "tag": "Utility"
     },
     {
       "id": "listen_message_tts",
@@ -617,8 +847,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/listen_message_tts.plugin",
-      "description": "Добавляет пункт в контекстное меню сообщения: Прослушать. Использует системный TextToSpeech (Google, если установлен), без внешних API.",
-      "hash": "35fb9eba473ce4ee8f35c49579dd5cb9aaa862c9670cd84c56524df0a0bcac8f"
+      "description": "Read message text aloud using system text-to-speech.",
+      "about": [
+        "Read message text aloud using system text-to-speech.",
+        "Озвучивает message text aloud using system синтез речи."
+      ],
+      "hash": "35fb9eba473ce4ee8f35c49579dd5cb9aaa862c9670cd84c56524df0a0bcac8f",
+      "tag": "Utility"
     },
     {
       "id": "local_chat_cleaner",
@@ -630,8 +865,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Local_Chat_Cleaner.plugin",
-      "description": "🗑️ Скрывайте спам от пользователей локально! Клик на сообщение → Плагин → Скрыть пользователя",
-      "hash": "c3980504822900ea6321917ae0e41b71b4869df5fb85b9b766024e2cbe8c1f9e"
+      "description": "Hide messages from selected users locally.",
+      "about": [
+        "Hide messages from selected users locally.",
+        "Скрывает messages from selected users locally."
+      ],
+      "hash": "c3980504822900ea6321917ae0e41b71b4869df5fb85b9b766024e2cbe8c1f9e",
+      "tag": "Utility"
     },
     {
       "id": "local_db_analysis",
@@ -643,8 +883,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/local_db_analysis.plugin",
-      "description": "Инструмент анализа базы данных: сканирование, поиск, идентификация, экспорт [.localdb]",
-      "hash": "b4fb07831af63e7fd8beba4367830356de793359d58aa34efadcca23deaf464a"
+      "description": "Analyze the local database (scan, search, identify, export).",
+      "about": [
+        "Analyze the local database (scan, search, identify, export).",
+        "Анализирует the local database (scan, search, identify, export)."
+      ],
+      "hash": "b4fb07831af63e7fd8beba4367830356de793359d58aa34efadcca23deaf464a",
+      "tag": "Utility"
     },
     {
       "id": "lyrics",
@@ -656,8 +901,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/lyrics.plugin",
-      "description": "Displays lyrics for your music directly in Telegram.\nAdds a ",
-      "hash": "134faa2db4c11abf3af396ac110a9c178000d8781118a55cd76c32dd08960632"
+      "description": "Display song lyrics in Telegram.",
+      "about": [
+        "Display song lyrics in Telegram.",
+        "Display song lyrics в Telegram."
+      ],
+      "hash": "134faa2db4c11abf3af396ac110a9c178000d8781118a55cd76c32dd08960632",
+      "tag": "Media"
     },
     {
       "id": "lyrics_genius",
@@ -669,8 +919,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/lyrics_genius.plugin",
-      "description": "Adds genuis.com as a provider for lyrics for the Reach Text plugin",
-      "hash": "b97ca78ef14e85fabe6b06a05092dec8a9d74e351e12a90dad26a96855906628"
+      "description": "Add Genius as a lyrics provider for Reach Text.",
+      "about": [
+        "Add Genius as a lyrics provider for Reach Text.",
+        "Добавляет Genius as a lyrics provider for Reach Text."
+      ],
+      "hash": "b97ca78ef14e85fabe6b06a05092dec8a9d74e351e12a90dad26a96855906628",
+      "tag": "Media"
     },
     {
       "id": "mathplug",
@@ -682,8 +937,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/math.plugin",
-      "description": "Используй .math для вычислений",
-      "hash": "f8e913279ddd1330011626bae81a0b21faf2f39c426810439f43bea9fc0e085b"
+      "description": "Evaluate math expressions.",
+      "about": [
+        "Evaluate math expressions.",
+        "Вычисляет math expressions."
+      ],
+      "hash": "f8e913279ddd1330011626bae81a0b21faf2f39c426810439f43bea9fc0e085b",
+      "tag": "Utility"
     },
     {
       "id": "mediaupl",
@@ -695,8 +955,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Media_UPL.plugin",
-      "description": "Добавляет кнопку ",
-      "hash": "9476e3e9449e23a3260d51d2c607c42354c47bae1314f4d9035297008a9e5ca3"
+      "description": "Add a media upload button.",
+      "about": [
+        "Add a media upload button.",
+        "Добавляет a media upload button."
+      ],
+      "hash": "9476e3e9449e23a3260d51d2c607c42354c47bae1314f4d9035297008a9e5ca3",
+      "tag": "Media"
     },
     {
       "id": "MessageAnalyzer",
@@ -708,8 +973,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/message_analyzer.plugin",
-      "description": "Анализирует последние сообщения пользователей (без ограничений) и создает сводки с помощью Gemini AI [.analyze, .summary, .report]",
-      "hash": "d17951253f20dcc2f1288dbdcc88aad445f57228287243b7cff4384579919bc4"
+      "description": "Analyze recent messages and generate summaries using AI.",
+      "about": [
+        "Analyze recent messages and generate summaries using AI.",
+        "Анализирует recent messages and generate summaries using ИИ."
+      ],
+      "hash": "d17951253f20dcc2f1288dbdcc88aad445f57228287243b7cff4384579919bc4",
+      "tag": "Utility"
     },
     {
       "id": "MessageForwarder",
@@ -721,8 +991,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/MessageForwarder_V1.1.0.plugin",
-      "description": "Пересылает все сообщения из одного чата в другой, с сохранением авторства или без, частями и с задержками.\n\n*Примечание:\nНе работает в каналах где запрещена пересылка.\n\nЧто добавили в 1.1.0?\n1. Совместимость с новой версией\n2. Пофикшена нерабочий переключатель для скрытия имя отправителя\n3. Исправление множества прочих багов\n\n\n⛔️ВНИМАНИЕ!!!⛔️\n⚠️ При пересылке большого количества сообщений возможен бан аккаунта!",
-      "hash": "597eb2324034be0d9b87dc49952855c01f9cfcd4a2ecb0cbfcac1eef1b3c337c"
+      "description": "Forward messages from one chat to another with optional attribution, batching, and delays.",
+      "about": [
+        "Forward messages from one chat to another with optional attribution, batching, and delays.",
+        "Forward messages from one chat to another with optional attribution, batching, and delays."
+      ],
+      "hash": "597eb2324034be0d9b87dc49952855c01f9cfcd4a2ecb0cbfcac1eef1b3c337c",
+      "tag": "Utility"
     },
     {
       "id": "mikoto_nikki",
@@ -734,8 +1009,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/mikoto_nikki.plugin",
-      "description": "Адапцатия новвелы 2013 года внутри ЭКСТЕРАГРАМ",
-      "hash": "339073fb67ddf706f650aed318bd8133008d89425d1755a487cb477b3db7ab5c"
+      "description": "Read a visual novel inside Telegram.",
+      "about": [
+        "Read a visual novel inside Telegram.",
+        "Озвучивает a visual novel inside Telegram."
+      ],
+      "hash": "339073fb67ddf706f650aed318bd8133008d89425d1755a487cb477b3db7ab5c",
+      "tag": "Utility"
     },
     {
       "id": "music_stats_v2",
@@ -747,8 +1027,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/music_stats_v2.plugin",
-      "description": "Detailed music statistics: time tracking, top tracks and artists. Customizable daily goal.\n\nПодробная статистика прослушивания музыки, плеер: время, топ треков и исполнителей. \nНастраиваемая ежедневная цель.",
-      "hash": "fddabb45ea52c1d13b2140f40cf580393dcb562512a8fda9ad8f8bb66ef737e3"
+      "description": "Track music listening stats (time, top tracks/artists) and a daily goal.",
+      "about": [
+        "Track music listening stats (time, top tracks/artists) and a daily goal.",
+        "Отслеживает music listening stats (time, top tracks/artists) and a daily goal."
+      ],
+      "hash": "fddabb45ea52c1d13b2140f40cf580393dcb562512a8fda9ad8f8bb66ef737e3",
+      "tag": "Media"
     },
     {
       "id": "nanoCL",
@@ -760,8 +1045,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/nanoCL.plugin",
-      "description": "календарь с напоминаниями (.cal)",
-      "hash": "4dc79fd8f430fbbde72576c085018cb97243632c63a055cb2f1748a3a0a3bf21"
+      "description": "Calendar with reminders.",
+      "about": [
+        "Calendar with reminders.",
+        "Calendar with reminders."
+      ],
+      "hash": "4dc79fd8f430fbbde72576c085018cb97243632c63a055cb2f1748a3a0a3bf21",
+      "tag": "Utility"
     },
     {
       "id": "nanoGS",
@@ -773,8 +1063,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/nanoGS.plugin",
-      "description": "ищет информацию в google и открывает результаты во встроенном браузере тг по команде .gl, картинки по команде .pic, карты по команде .map и маршруты по команде .route",
-      "hash": "b15775b3d19d719c96f4eaad6ee4b49340671db950582a7f39b95c16e47fac8f"
+      "description": "Search Google and open results in Telegram's built-in browser.",
+      "about": [
+        "Search Google and open results in Telegram's built-in browser.",
+        "Ищет Google and open results в Telegram's built-in browser."
+      ],
+      "hash": "b15775b3d19d719c96f4eaad6ee4b49340671db950582a7f39b95c16e47fac8f",
+      "tag": "Customization"
     },
     {
       "id": "no_more_blur",
@@ -786,8 +1081,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/no_more_blur.plugin",
-      "description": "Убирает весь блюр на%¥1. \nFully removes blur from the app.",
-      "hash": "934d77fd51ce5cccb166192b0443bdecee8b2be820ac2f24d873124806e01be0"
+      "description": "Remove blur effects from the app.",
+      "about": [
+        "Remove blur effects from the app.",
+        "Убирает blur effects from the app."
+      ],
+      "hash": "934d77fd51ce5cccb166192b0443bdecee8b2be820ac2f24d873124806e01be0",
+      "tag": "Customization"
     },
     {
       "id": "fuck_gifts",
@@ -799,8 +1099,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/NoGifts.plugin",
-      "description": "убирает кнопки дарения подарков из чатов и каналов (сосать капитализм)",
-      "hash": "ad4c04264a8a66b23ee999f7d8da1e33a59e2cc9673b2e41a7cfb99e3981ad3a"
+      "description": "Hide gift buttons in chats and channels.",
+      "about": [
+        "Hide gift buttons in chats and channels.",
+        "Скрывает gift buttons in chats and channels."
+      ],
+      "hash": "ad4c04264a8a66b23ee999f7d8da1e33a59e2cc9673b2e41a7cfb99e3981ad3a",
+      "tag": "Media"
     },
     {
       "id": "nyashnosti",
@@ -812,8 +1117,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/nyashnosti.plugin",
-      "description": "18+ плагин Няшности \nдля @fergntye\n[ .nsfw .sfw .femboy .loli ]",
-      "hash": "d263e0a3975d1fc77b20f0ae4d1e57be16963ae014afa57e009783644edde52d"
+      "description": "NSFW content commands.",
+      "about": [
+        "NSFW content commands.",
+        "NSFW content commands."
+      ],
+      "hash": "d263e0a3975d1fc77b20f0ae4d1e57be16963ae014afa57e009783644edde52d",
+      "tag": "Fun"
     },
     {
       "id": "osu_mur_stats",
@@ -825,8 +1135,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/osu! Search.plugin",
-      "description": "Добавляет возможность поиска карт и профилей из сайта ",
-      "hash": "55a72b787096a92b3524a6f70cc048462974a9b9773a2c67ac616117ff409e98"
+      "description": "Search osu! beatmaps and user profiles.",
+      "about": [
+        "Search osu! beatmaps and user profiles.",
+        "Ищет osu! beatmaps and user profiles."
+      ],
+      "hash": "55a72b787096a92b3524a6f70cc048462974a9b9773a2c67ac616117ff409e98",
+      "tag": "Utility"
     },
     {
       "id": "panic_passcode_pro",
@@ -838,8 +1153,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/panic_passcode_pro.plugin",
-      "description": "✅ Universal panic passcode for all Telegram forks",
-      "hash": "95ea766f6501d0e6bc118fa62d48ad52cc5885f1a7677ae9efb86baecb2c36cf"
+      "description": "Universal panic passcode for Telegram forks",
+      "about": [
+        "Universal panic passcode for Telegram forks",
+        "Universal panic passcode for Telegram forks."
+      ],
+      "hash": "95ea766f6501d0e6bc118fa62d48ad52cc5885f1a7677ae9efb86baecb2c36cf",
+      "tag": "Utility"
     },
     {
       "id": "phrase",
@@ -851,8 +1171,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/phrase.plugin",
-      "description": "ИИ исправление, Анти-Мат, Анти-Капс, Точка в конце и многое другое (смотреть настройки плагина).",
-      "hash": "a4993bd0e1d3344450c78b35baca0dee67aae9b4953f8cf8f591722eec835edd"
+      "description": "Improve outgoing text (spelling, casing, punctuation) using AI.",
+      "about": [
+        "Improve outgoing text (spelling, casing, punctuation) using AI.",
+        "Improve outgoing text (spelling, casing, punctuation) using ИИ."
+      ],
+      "hash": "a4993bd0e1d3344450c78b35baca0dee67aae9b4953f8cf8f591722eec835edd",
+      "tag": "Utility"
     },
     {
       "id": "plugin_creator",
@@ -865,7 +1190,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/plugin_creator.plugin",
       "description": "Unknown",
-      "hash": "7b5e0986149c36e594898e7f4ce69a8631ef8a0ffaa173c66f0978ae8deb3ddb"
+      "about": [
+        "Unknown",
+        "Unknown"
+      ],
+      "hash": "7b5e0986149c36e594898e7f4ce69a8631ef8a0ffaa173c66f0978ae8deb3ddb",
+      "tag": "Unknown"
     },
     {
       "id": "always-tabs-forums",
@@ -878,7 +1208,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/always-tabs-forums.plugin",
       "description": "Enable tab view in all forums",
-      "hash": "58386f825adabb27b7d4b16c26e8c73d3223cd94d2fea93f55ae6ad87cf56518"
+      "about": [
+        "Enable tab view in all forums",
+        "Включает tab view in all forums."
+      ],
+      "hash": "58386f825adabb27b7d4b16c26e8c73d3223cd94d2fea93f55ae6ad87cf56518",
+      "tag": "Utility"
     },
     {
       "id": "ProfileCustomizer",
@@ -891,7 +1226,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/ProfileCustomizerOld.plugin",
       "description": "Unknown",
-      "hash": "abb25cb3133a92d9a7fe66ce83c30b5590f75ff885668e40f6428a344fdfe8d8"
+      "about": [
+        "Unknown",
+        "Unknown"
+      ],
+      "hash": "abb25cb3133a92d9a7fe66ce83c30b5590f75ff885668e40f6428a344fdfe8d8",
+      "tag": "Unknown"
     },
     {
       "id": "Profile_Plugin",
@@ -903,8 +1243,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Prоfile_Plugin.plugin",
-      "description": "Create a user profile command .profile",
-      "hash": "c97b1e50a2eec17e8c26d6d334edac380c0de9eaaaac6f2089170545ceded7f1"
+      "description": "Show user profiles.",
+      "about": [
+        "Show user profiles.",
+        "Показывает user profiles."
+      ],
+      "hash": "c97b1e50a2eec17e8c26d6d334edac380c0de9eaaaac6f2089170545ceded7f1",
+      "tag": "Utility"
     },
     {
       "id": "QuickReplies",
@@ -916,8 +1261,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/quickreplies.plugin",
-      "description": "Плагин для быстрой отправки предустановленных ответов",
-      "hash": "ce35de80f2cf469c223e0072470404ed0c5d45d917866dce50355e4b9e654261"
+      "description": "Send predefined quick replies.",
+      "about": [
+        "Send predefined quick replies.",
+        "Send predefined quick replies."
+      ],
+      "hash": "ce35de80f2cf469c223e0072470404ed0c5d45d917866dce50355e4b9e654261",
+      "tag": "Customization"
     },
     {
       "id": "quotecreate",
@@ -929,8 +1279,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/quotecreate.plugin",
-      "description": "Создает пиксельно-точные цитаты из выбранных сообщений, используя нативный рендеринг.\nCreate pixel-perfect quotes from selected messages using native rendering.",
-      "hash": "d0d21c942272d91cd463e7e16d1f272bbbbc9fe91feafe718f70ffa5a6eef58f"
+      "description": "Create pixel-perfect quotes from selected messages.",
+      "about": [
+        "Create pixel-perfect quotes from selected messages.",
+        "Создает pixel-perfect quotes from selected messages."
+      ],
+      "hash": "d0d21c942272d91cd463e7e16d1f272bbbbc9fe91feafe718f70ffa5a6eef58f",
+      "tag": "Utility"
     },
     {
       "id": "quotly_plugin",
@@ -943,7 +1298,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Quotly.plugin",
       "description": "Generates a quote sticker from a message or text using @QuotLyBot.",
-      "hash": "64964aaab330ca767ee70c2a0ee83b612f39dcf3ebc0b5f02dde1e49403d0b8c"
+      "about": [
+        "Generates a quote sticker from a message or text using @QuotLyBot.",
+        "Generates a quote sticker from a message or text using @QuotLyBot."
+      ],
+      "hash": "64964aaab330ca767ee70c2a0ee83b612f39dcf3ebc0b5f02dde1e49403d0b8c",
+      "tag": "Media"
     },
     {
       "id": "random_number_generator_pg",
@@ -955,8 +1315,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Random.plugin",
-      "description": "Генерирует случайное число.\n\n**Команды:**\n• `.random <число1> <число2>` - выбор из диапазона.\n• `.trandom <числа через пробел>` - выбор из списка.\n\n\nКанал разработчика\nhttps://t.me/Plugin20345",
-      "hash": "b7846424f8b28d3cd50ca59143b02dda6d85bc6453d6b3e141de742989521a1b"
+      "description": "Generate random numbers.",
+      "about": [
+        "Generate random numbers.",
+        "Генерирует random numbers."
+      ],
+      "hash": "b7846424f8b28d3cd50ca59143b02dda6d85bc6453d6b3e141de742989521a1b",
+      "tag": "Utility"
     },
     {
       "id": "re_extera_dex",
@@ -969,7 +1334,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/re_extera_dex.plugin",
       "description": "Enable ghost mode, save deleted messages and more!",
-      "hash": "9522f7afeb0336f8fafa25afb8b258dd297530a5eab83c02eb0af369abc71ca3"
+      "about": [
+        "Enable ghost mode, save deleted messages and more!",
+        "Включает ghost mode, save deleted messages and more!"
+      ],
+      "hash": "9522f7afeb0336f8fafa25afb8b258dd297530a5eab83c02eb0af369abc71ca3",
+      "tag": "Utility"
     },
     {
       "id": "relative_last_seen",
@@ -982,7 +1352,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/relative_last_seen.plugin",
       "description": "TDesktop-like relative time display.",
-      "hash": "14ccc28ef9ec5f0c8e93457134beefa489ef973ccee70f90b25190ccc0b81115"
+      "about": [
+        "TDesktop-like relative time display.",
+        "TDesktop-like relative time display."
+      ],
+      "hash": "14ccc28ef9ec5f0c8e93457134beefa489ef973ccee70f90b25190ccc0b81115",
+      "tag": "Utility"
     },
     {
       "id": "reminder",
@@ -994,8 +1369,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/reminder.plugin",
-      "description": "Draw a remind in chat\nUsage: .dr {time} | {text} / .rdr",
-      "hash": "30eb43a7c2e22bc61a4b77457a92b2454b782f73c5d3b798b4985a963bf7f81c"
+      "description": "Create reminders.",
+      "about": [
+        "Create reminders.",
+        "Создает reminders."
+      ],
+      "hash": "30eb43a7c2e22bc61a4b77457a92b2454b782f73c5d3b798b4985a963bf7f81c",
+      "tag": "Utility"
     },
     {
       "id": "remover",
@@ -1008,7 +1388,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/remover.plugin",
       "description": "Unknown",
-      "hash": "00288f65e23a9f799a7d0417c62274f4a5d25987887d49e0aec6c2ad6bca49f1"
+      "about": [
+        "Unknown",
+        "Unknown"
+      ],
+      "hash": "00288f65e23a9f799a7d0417c62274f4a5d25987887d49e0aec6c2ad6bca49f1",
+      "tag": "Unknown"
     },
     {
       "id": "rename_sessions",
@@ -1021,7 +1406,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/rename_sessions.plugin",
       "description": "Local names for active devices (long press on session)",
-      "hash": "7e4f1ebaa49adc16bd715ecb3d6a6586a7593c3b1e6c9c81d84aab697298fcfa"
+      "about": [
+        "Local names for active devices (long press on session)",
+        "Local names for active devices (long press on session)."
+      ],
+      "hash": "7e4f1ebaa49adc16bd715ecb3d6a6586a7593c3b1e6c9c81d84aab697298fcfa",
+      "tag": "Utility"
     },
     {
       "id": "ReplacingCharacters",
@@ -1033,8 +1423,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/ReplacingCharacters.plugin",
-      "description": "Автоматически заменяет указанные символы или слова в ваших сообщениях перед отправкой, с возможностью добавлять и удалять правила, а также импортировать/экспортировать их.",
-      "hash": "fbbf120c0d2dd44c5e8861b15ae54904b2b109d9d7fca0b7216496bf70628f66"
+      "description": "Automatically replace configured text patterns before sending messages.",
+      "about": [
+        "Automatically replace configured text patterns before sending messages.",
+        "Automatically replace configured text patterns before sending messages."
+      ],
+      "hash": "fbbf120c0d2dd44c5e8861b15ae54904b2b109d9d7fca0b7216496bf70628f66",
+      "tag": "Utility"
     },
     {
       "id": "reswag",
@@ -1046,8 +1441,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/reSwaga.plugin",
-      "description": "Плагин для отправки карточки/аудио файла текущего трека для музыкальных сервисов.",
-      "hash": "b47b8e0fa78ba18e4f11e2c69f929cb89d08a8b8487bc1e57417d79627500922"
+      "description": "Share the current track as an audio file or track card.",
+      "about": [
+        "Share the current track as an audio file or track card.",
+        "Share the current track as an audio file or track card."
+      ],
+      "hash": "b47b8e0fa78ba18e4f11e2c69f929cb89d08a8b8487bc1e57417d79627500922",
+      "tag": "Media"
     },
     {
       "id": "ripple_touch",
@@ -1060,7 +1460,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/ripple_touch.plugin",
       "description": "Triggers Ripple on each UI touch",
-      "hash": "1d0e2bf24278cc316c0d41b6422ab4f8f013e2438f0dbe02a146fe21e2843f33"
+      "about": [
+        "Triggers Ripple on each UI touch",
+        "Triggers Ripple on each UI touch."
+      ],
+      "hash": "1d0e2bf24278cc316c0d41b6422ab4f8f013e2438f0dbe02a146fe21e2843f33",
+      "tag": "Network"
     },
     {
       "id": "rounder",
@@ -1073,7 +1478,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/rounder.plugin",
       "description": "Allows you to send videos as round videos and music",
-      "hash": "976485f92865bab8a999e9921162135e08482b15ec0dd1759d1a1146812c2433"
+      "about": [
+        "Allows you to send videos as round videos and music",
+        "Allows you to send videos as round videos and music."
+      ],
+      "hash": "976485f92865bab8a999e9921162135e08482b15ec0dd1759d1a1146812c2433",
+      "tag": "Media"
     },
     {
       "id": "rounds_manager",
@@ -1085,8 +1495,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/rounds_manager.plugin",
-      "description": "Позволяет редактировать кружок перед отправкой, также добавляет функции по типу отключения блюра при записи",
-      "hash": "8475aefe251b29d45aeb71db9374f69b71121e7ed510216ace51e31c86e1d519"
+      "description": "Edit video messages before sending.",
+      "about": [
+        "Edit video messages before sending.",
+        "Редактирует видеосообщениях before sending."
+      ],
+      "hash": "8475aefe251b29d45aeb71db9374f69b71121e7ed510216ace51e31c86e1d519",
+      "tag": "Media"
     },
     {
       "id": "saved_cleaner_ultimate",
@@ -1098,8 +1513,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/saved_cleaner_ultimate.plugin",
-      "description": "Удаление дубликатов из Избранного",
-      "hash": "5687fb4e6b528ed7c4a12742f04d518fdf20c2bcd9bb64beccf2cdfadac4ba54"
+      "description": "Remove duplicate messages from Saved Messages.",
+      "about": [
+        "Remove duplicate messages from Saved Messages.",
+        "Убирает duplicate messages from Избранном."
+      ],
+      "hash": "5687fb4e6b528ed7c4a12742f04d518fdf20c2bcd9bb64beccf2cdfadac4ba54",
+      "tag": "Utility"
     },
     {
       "id": "second_voice",
@@ -1111,8 +1531,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/second_voice.plugin",
-      "description": "Заменяет стандартный таймер у голосовых сообщений на формат ",
-      "hash": "f919af6dbb8f2caed73b51a5426ed1c1429f418b81c3e06730a2e48664536037"
+      "description": "Show elapsed and total time for voice messages.",
+      "about": [
+        "Show elapsed and total time for voice messages.",
+        "Показывает elapsed and total time for голосовых сообщениях."
+      ],
+      "hash": "f919af6dbb8f2caed73b51a5426ed1c1429f418b81c3e06730a2e48664536037",
+      "tag": "Media"
     },
     {
       "id": "sender",
@@ -1124,8 +1549,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/sender.plugin",
-      "description": "Re-send messages from **another devices** with **plugins**.\n**Usage**: `.send [message]` | `.ping`\n**Note**: Enable **Keep-Alive Service** and **Background Connection** for better experience.",
-      "hash": "848667ae56b4594475745e0f4fb026b1960f430fe4b2ff08d2a57d204b31c0e6"
+      "description": "Re-send messages from another device.",
+      "about": [
+        "Re-send messages from another device.",
+        "Повторно отправляет messages from another device."
+      ],
+      "hash": "848667ae56b4594475745e0f4fb026b1960f430fe4b2ff08d2a57d204b31c0e6",
+      "tag": "Utility"
     },
     {
       "id": "send_sound_on_message",
@@ -1137,8 +1567,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/SendSound.Plugin",
-      "description": "Кастомные звуки и картинки при отправке сообщения",
-      "hash": "8173a0854111aab031457a005312a0feaf9dddfe1f622c9e8f7c5562d701ca8d"
+      "description": "Add custom send sounds and images.",
+      "about": [
+        "Add custom send sounds and images.",
+        "Добавляет custom send sounds and images."
+      ],
+      "hash": "8173a0854111aab031457a005312a0feaf9dddfe1f622c9e8f7c5562d701ca8d",
+      "tag": "Media"
     },
     {
       "id": "mnd_global_sf_font",
@@ -1151,7 +1586,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/SFGlobalFont.plugin",
       "description": "Unknown",
-      "hash": "1e0f77f962de5322f8b00a160d6c63f6fdb1d2beb0c43d30a4c90557863b7cdf"
+      "about": [
+        "Unknown",
+        "Unknown"
+      ],
+      "hash": "1e0f77f962de5322f8b00a160d6c63f6fdb1d2beb0c43d30a4c90557863b7cdf",
+      "tag": "Unknown"
     },
     {
       "id": "shazam_by_audio_pg",
@@ -1163,8 +1603,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shazam_by_audio_pg.plugin",
-      "description": "Определяет музыку по аудиофайлу или голосовому сообщению (.shazam в ответ). Результат в диалоге с подробной информацией и ссылками. Точность зависит от качества аудио (для голосовых сообщений может быть ниже).",
-      "hash": "b4c7f6663d392bfcd762843c57c9e78559804ebfc47778512308fa73d60544ca"
+      "description": "Identify music from an audio file or voice message.",
+      "about": [
+        "Identify music from an audio file or voice message.",
+        "Определяет music from an audio file or voice message."
+      ],
+      "hash": "b4c7f6663d392bfcd762843c57c9e78559804ebfc47778512308fa73d60544ca",
+      "tag": "Media"
     },
     {
       "id": "BarcodeLang",
@@ -1176,8 +1621,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Shtrix.Plugin",
-      "description": "|lIl|IlIl|IlI|lIl|IlIl|IlI 😭🙏🙏",
-      "hash": "b5109c225147423fee7efd070983b02b2a2a6a3b709dedaf60e9a758deaa9c59"
+      "description": "|lIl|IlIl|IlI|lIl|IlIl|IlI",
+      "about": [
+        "|lIl|IlIl|IlI|lIl|IlIl|IlI",
+        "|lIl|IlIl|IlI|lIl|IlIl|IlI"
+      ],
+      "hash": "b5109c225147423fee7efd070983b02b2a2a6a3b709dedaf60e9a758deaa9c59",
+      "tag": "Utility"
     },
     {
       "id": "speedtest",
@@ -1189,8 +1639,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/speedtest.plugin",
-      "description": "Плагин для тестирования скорости интернета [.speedtest]",
-      "hash": "5023b70711f054334cf16cd0610fb8d748eb53e6a8e050ccf8460eb8d1d06d60"
+      "description": "Test your internet speed.",
+      "about": [
+        "Test your internet speed.",
+        "Test your internet speed."
+      ],
+      "hash": "5023b70711f054334cf16cd0610fb8d748eb53e6a8e050ccf8460eb8d1d06d60",
+      "tag": "Utility"
     },
     {
       "id": "spoiler_remover",
@@ -1202,8 +1657,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/spoiler_remover.plugin",
-      "description": "Убирает спойлеры с текста и медиа. Имеет два режима: визуальный (обратимый) и перманентный (необратимый).",
-      "hash": "4779c2d285587d81a2a8837c110f50bbac31c11a1ef3562327c316159facdddd"
+      "description": "Remove spoilers from text and media.",
+      "about": [
+        "Remove spoilers from text and media.",
+        "Убирает spoilers from text and media."
+      ],
+      "hash": "4779c2d285587d81a2a8837c110f50bbac31c11a1ef3562327c316159facdddd",
+      "tag": "Media"
     },
     {
       "id": "mnd_swagsafe",
@@ -1216,7 +1676,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/swag safe.plugin",
       "description": "Unknown",
-      "hash": "6e82547dc73e3e4ff03d394392138665f432d0333a04f04c37da3ce8f0f23894"
+      "about": [
+        "Unknown",
+        "Unknown"
+      ],
+      "hash": "6e82547dc73e3e4ff03d394392138665f432d0333a04f04c37da3ce8f0f23894",
+      "tag": "Unknown"
     },
     {
       "id": "templates",
@@ -1229,7 +1694,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/templates.plugin",
       "description": "Unknown",
-      "hash": "03e7ec96cdd1b356a5b2ad96905bc404d1822079d2c2c7e87469d3143dc126e9"
+      "about": [
+        "Unknown",
+        "Unknown"
+      ],
+      "hash": "03e7ec96cdd1b356a5b2ad96905bc404d1822079d2c2c7e87469d3143dc126e9",
+      "tag": "Unknown"
     },
     {
       "id": "text_animation",
@@ -1242,7 +1712,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/text_animation.plugin",
       "description": "Animation of text appearance with Blur, Slide, Scale, Rotate, Thanos effects + Liquid cursor + Spoilers",
-      "hash": "93d3fb937083a1c63765418982e5dc3eaab6c0ada0e59fa5d55b5902852bcae0"
+      "about": [
+        "Animation of text appearance with Blur, Slide, Scale, Rotate, Thanos effects + Liquid cursor + Spoilers",
+        "Animation of text appearance with Blur, Slide, Scale, Rotate, Thanos effects + Liquid cursor + Spoilers."
+      ],
+      "hash": "93d3fb937083a1c63765418982e5dc3eaab6c0ada0e59fa5d55b5902852bcae0",
+      "tag": "Customization"
     },
     {
       "id": "TextReplacement",
@@ -1254,8 +1729,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/TextReplacement.plugin",
-      "description": "Меняет стиль ваших сообщений",
-      "hash": "1708edc148e1530ce85154d927d52b311c4a47a3ed9dc2ccee4b4b0c5d172cd3"
+      "description": "Change the style of your messages.",
+      "about": [
+        "Change the style of your messages.",
+        "Change the style of your messages."
+      ],
+      "hash": "1708edc148e1530ce85154d927d52b311c4a47a3ed9dc2ccee4b4b0c5d172cd3",
+      "tag": "Utility"
     },
     {
       "id": "whisper_transcribe",
@@ -1268,7 +1748,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/transcriber.plugin",
       "description": "Replaces Telegram",
-      "hash": "63f9ff18b7a6f7e4d500b9d2c2eb63e1fe58605e0dcfb2dad136ce63f23d161a"
+      "about": [
+        "Replaces Telegram",
+        "Replaces Telegram."
+      ],
+      "hash": "63f9ff18b7a6f7e4d500b9d2c2eb63e1fe58605e0dcfb2dad136ce63f23d161a",
+      "tag": "Utility"
     },
     {
       "id": "translatica",
@@ -1281,7 +1766,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/translatica.plugin",
       "description": "Unknown",
-      "hash": "dff1a11bb06623261b0b58636b7a29e154437665b26f08246a6044077a411371"
+      "about": [
+        "Unknown",
+        "Unknown"
+      ],
+      "hash": "dff1a11bb06623261b0b58636b7a29e154437665b26f08246a6044077a411371",
+      "tag": "Unknown"
     },
     {
       "id": "translatorplus",
@@ -1294,7 +1784,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/translatorplus.plugin",
       "description": "Ultra-fast multi-provider translation for Telegram with in-message support",
-      "hash": "2d5d7e6fb5caf3025a70e31be05633615f0d336d61ab0f6860f773d281cec240"
+      "about": [
+        "Ultra-fast multi-provider translation for Telegram with in-message support",
+        "Ultra-fast multi-provider translation for Telegram with in-message support."
+      ],
+      "hash": "2d5d7e6fb5caf3025a70e31be05633615f0d336d61ab0f6860f773d281cec240",
+      "tag": "Utility"
     },
     {
       "id": "favstickers",
@@ -1307,7 +1802,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/unlim_favorite_stickers.plugin",
       "description": "Remove limits on adding stickers to favorites",
-      "hash": "fd190d8feea3af69794da712ced7794ce66cb3b4eee083dc12f31e983022acc7"
+      "about": [
+        "Remove limits on adding stickers to favorites",
+        "Убирает limits on adding stickers to favorites."
+      ],
+      "hash": "fd190d8feea3af69794da712ced7794ce66cb3b4eee083dc12f31e983022acc7",
+      "tag": "Media"
     },
     {
       "id": "Unlimited_GIFs",
@@ -1320,7 +1820,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Unlimited_GIFs.plugin",
       "description": "Removes the limit on the number of Saved GIFs via Xposed hooks",
-      "hash": "76bba7450f75d4a3a46b48d0d533fa7ab87e1cfaa9834e26847a5028da601d7c"
+      "about": [
+        "Removes the limit on the number of Saved GIFs via Xposed hooks",
+        "Removes the limit on the number of Saved GIFs via Xposed hooks."
+      ],
+      "hash": "76bba7450f75d4a3a46b48d0d533fa7ab87e1cfaa9834e26847a5028da601d7c",
+      "tag": "Media"
     },
     {
       "id": "Unlimited_Pins",
@@ -1332,8 +1837,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/unlimited_pins.plugin",
-      "description": "Закрепляйте локально бесконечное количество чатов и каналов, обходя ограничение Telegram.",
-      "hash": "18b6f2206d83dc29560b3034a91b3f2eee944b0175481a87e1e549fc4eaf7701"
+      "description": "Pin unlimited chats and channels locally.",
+      "about": [
+        "Pin unlimited chats and channels locally.",
+        "Закрепляет unlimited chats and channels locally."
+      ],
+      "hash": "18b6f2206d83dc29560b3034a91b3f2eee944b0175481a87e1e549fc4eaf7701",
+      "tag": "Utility"
     },
     {
       "id": "unread_summary",
@@ -1346,7 +1856,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/unread_summary.plugin",
       "description": "Summarize unread messages with AI providers by clicking the unread badge",
-      "hash": "734b7f9c1981ec39937e6c9d9472b103c85e3bdc946c754a44ee00a2b14a51e3"
+      "about": [
+        "Summarize unread messages with AI providers by clicking the unread badge",
+        "Суммирует unread messages with ИИ providers by clicking the бейдж непрочитанного."
+      ],
+      "hash": "734b7f9c1981ec39937e6c9d9472b103c85e3bdc946c754a44ee00a2b14a51e3",
+      "tag": "AI"
     },
     {
       "id": "voice_timing",
@@ -1358,8 +1873,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/voice_timing.plugin",
-      "description": "Автоматически добавляет тайминг при ответе на голосовые/видео/музыку.\nAutomatically adds timing when replying to voice messages, video messages, and music.",
-      "hash": "19d27fa56cba0e39a3aa7bdfa5c919fa24a772e7242ac53333fb097f718935de"
+      "description": "Automatically add timestamps when replying to media messages.",
+      "about": [
+        "Automatically add timestamps when replying to media messages.",
+        "Automatically add timestamps when replying to media messages."
+      ],
+      "hash": "19d27fa56cba0e39a3aa7bdfa5c919fa24a772e7242ac53333fb097f718935de",
+      "tag": "Media"
     },
     {
       "id": "voice_search_pro_v2",
@@ -1371,8 +1891,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/vsprov2.plugin",
-      "description": "✅ Universal voice transcription search with UI",
-      "hash": "5d37361cd08ff666455eef86667b7d4ac0a9966259429cc2fbddaf770396dff4"
+      "description": "Universal voice transcription search with UI",
+      "about": [
+        "Universal voice transcription search with UI",
+        "Universal voice transcription search with UI."
+      ],
+      "hash": "5d37361cd08ff666455eef86667b7d4ac0a9966259429cc2fbddaf770396dff4",
+      "tag": "Network"
     },
     {
       "id": "web_file_manager",
@@ -1385,7 +1910,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Web-Files-Manager.plugin",
       "description": "Unknown",
-      "hash": "4c133bb61223e11e9f51996e532cafb1af5abc5bf7bf760d815825c3c54c1a75"
+      "about": [
+        "Unknown",
+        "Unknown"
+      ],
+      "hash": "4c133bb61223e11e9f51996e532cafb1af5abc5bf7bf760d815825c3c54c1a75",
+      "tag": "Unknown"
     },
     {
       "id": "articleViewerFix",
@@ -1397,12 +1927,17 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/ArticleViewerFix.plugin",
-      "description": "Отключает надоедливый свайп закрытия (слева вправо) в браузере. \n\nDisables annoying browser",
-      "hash": "5babeeaa2769ce66b9780aa0d9967f2a8e612cbcff09bcbbbd1e00e187bd95e7"
+      "description": "Disable the swipe-to-close gesture in the in-app browser.",
+      "about": [
+        "Disable the swipe-to-close gesture in the in-app browser.",
+        "Отключает the swipe-to-close gesture во встроенном браузере."
+      ],
+      "hash": "5babeeaa2769ce66b9780aa0d9967f2a8e612cbcff09bcbbbd1e00e187bd95e7",
+      "tag": "Network"
     },
     {
       "id": "KNB_Saturn",
-      "name": "🪨✂️🧻",
+      "name": "Rock Paper Scissors",
       "author": "@Fantom_Plugins",
       "version": "1.0.0",
       "state": "release",
@@ -1410,8 +1945,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/paperrrr.plugin",
-      "description": "Игра Камень-ножницы-бумага с приятным интерфейсом и функционалом. Канал автора: @Fantom_Plugins ",
-      "hash": "d100fd7c430fba32117d35e66bf7bcbfdd2f6b80121763e8c369fc372a981af6"
+      "description": "Play Rock-Paper-Scissors.",
+      "about": [
+        "Play Rock-Paper-Scissors.",
+        "Запускает игру: Rock-Paper-Scissors."
+      ],
+      "hash": "d100fd7c430fba32117d35e66bf7bcbfdd2f6b80121763e8c369fc372a981af6",
+      "tag": "Game"
     },
     {
       "id": "autoTranslate",
@@ -1423,8 +1963,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/autoTranslate.plugin",
-      "description": "Automatically translates outgoing messages using Google Translate. Toggle in settings.",
-      "hash": "322447a9a621e0a3442987aea27d84d8b4408417dd5e0814f22bf64d9079e494"
+      "description": "Automatically translate outgoing messages.",
+      "about": [
+        "Automatically translate outgoing messages.",
+        "Automatically translate исходящие сообщения."
+      ],
+      "hash": "322447a9a621e0a3442987aea27d84d8b4408417dd5e0814f22bf64d9079e494",
+      "tag": "Utility"
     },
     {
       "id": "better_previews",
@@ -1437,7 +1982,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/better_previews.plugin",
       "description": "Modifies specific URLs (Twitter, TikTok, Reddit, Instagram, Pixiv) for better previews.",
-      "hash": "1816fce5d5fcff368838cfdd84c0575453c6e98fb616443dbcd4ef14c8caaf9d"
+      "about": [
+        "Modifies specific URLs (Twitter, TikTok, Reddit, Instagram, Pixiv) for better previews.",
+        "Modifies specific URLs (Twitter, TikTok, Reddit, Instagram, Pixiv) for better previews."
+      ],
+      "hash": "1816fce5d5fcff368838cfdd84c0575453c6e98fb616443dbcd4ef14c8caaf9d",
+      "tag": "Utility"
     },
     {
       "id": "calculator with UI interface",
@@ -1450,7 +2000,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/calculator UI.plugin",
       "description": "calculator with UI interface",
-      "hash": "22cf327190b9b8fb448c54d6031189ea3acf48a8ca2600753de872e77ea10cbf"
+      "about": [
+        "calculator with UI interface",
+        "Калькулятор с интерфейсом."
+      ],
+      "hash": "22cf327190b9b8fb448c54d6031189ea3acf48a8ca2600753de872e77ea10cbf",
+      "tag": "Customization"
     },
     {
       "id": "cat",
@@ -1462,8 +2017,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/cat.plugin",
-      "description": "Send a random cat image with .cat",
-      "hash": "571b81fcfc04a059ce42012ce5808ae95265e8aa1ba53f318a1d029c19e15b69"
+      "description": "Send a random cat image.",
+      "about": [
+        "Send a random cat image.",
+        "Send a random cat image."
+      ],
+      "hash": "571b81fcfc04a059ce42012ce5808ae95265e8aa1ba53f318a1d029c19e15b69",
+      "tag": "Media"
     },
     {
       "id": "command_list_by_mihailkotovski",
@@ -1475,8 +2035,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/comlist.plugin",
-      "description": "Command list with search, filtering, caching, statistics and export features. Use .cmdstats to view command usage statistics.",
-      "hash": "389b208b5c43dbbf4a6f929e4f42c1ad44aafd15da207866ab55774a11e44490"
+      "description": "Browse and search available commands.",
+      "about": [
+        "Browse and search available commands.",
+        "Browse and search available commands."
+      ],
+      "hash": "389b208b5c43dbbf4a6f929e4f42c1ad44aafd15da207866ab55774a11e44490",
+      "tag": "Utility"
     },
     {
       "id": "crypto_converter",
@@ -1489,7 +2054,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/crypto_converter.plugin",
       "description": "Plugin for tracking cryptocurrency rates and conversion",
-      "hash": "2f6b006aef59299720c3c889113580b9652dafd52b0dca63087b5dc043b8b331"
+      "about": [
+        "Plugin for tracking cryptocurrency rates and conversion",
+        "Plugin for tracking cryptocurrency rates and conversion."
+      ],
+      "hash": "2f6b006aef59299720c3c889113580b9652dafd52b0dca63087b5dc043b8b331",
+      "tag": "Utility"
     },
     {
       "id": "currency",
@@ -1501,8 +2071,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/currency.plugin",
-      "description": "Converts currencies using the command .cr [amount] [currency code]",
-      "hash": "980158d0e2944cd6fd3f84885ae881c1c774abb11edb45e839bf9165f7790f13"
+      "description": "Convert currencies.",
+      "about": [
+        "Convert currencies.",
+        "Конвертирует currencies."
+      ],
+      "hash": "980158d0e2944cd6fd3f84885ae881c1c774abb11edb45e839bf9165f7790f13",
+      "tag": "Utility"
     },
     {
       "id": "custom_fab",
@@ -1515,7 +2090,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/customfab.plugin",
       "description": "Customize FAB (Floating Action Button)",
-      "hash": "37787ba8a6e2bdb6825689c6aaa15877e1cf9eec0e4cd4246607b5d81b070178"
+      "about": [
+        "Customize FAB (Floating Action Button)",
+        "Настраивает FAB (Floating Action Button)."
+      ],
+      "hash": "37787ba8a6e2bdb6825689c6aaa15877e1cf9eec0e4cd4246607b5d81b070178",
+      "tag": "Customization"
     },
     {
       "id": "birthday_time",
@@ -1527,8 +2107,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/data.plugin",
-      "description": "Показывает количество дней до твоего дня рождения.",
-      "hash": "f0b06fc36dab92e7eabd418ca187e004394f5ea81a2d98cfa40c8cdac658c5cc"
+      "description": "Show days remaining until your birthday.",
+      "about": [
+        "Show days remaining until your birthday.",
+        "Показывает days remaining until your birthday."
+      ],
+      "hash": "f0b06fc36dab92e7eabd418ca187e004394f5ea81a2d98cfa40c8cdac658c5cc",
+      "tag": "Utility"
     },
     {
       "id": "downloader",
@@ -1540,8 +2125,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/downloader.plugin",
-      "description": "Download and send a media (photo, video, audio, gif) from supported services (check in auto-download settings)",
-      "hash": "ae82002ae793bf0bc622501d1b928d8e0c1f9d5dbc34243c93f585ab0aa96340"
+      "description": "Download and send media from supported services.",
+      "about": [
+        "Download and send media from supported services.",
+        "Скачивает and send media from supported services."
+      ],
+      "hash": "ae82002ae793bf0bc622501d1b928d8e0c1f9d5dbc34243c93f585ab0aa96340",
+      "tag": "Media"
     },
     {
       "id": "endlessFoldersScroll",
@@ -1554,7 +2144,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/endlessFoldersScroll.plugin",
       "description": "Swipe the folders until your fingers rub off! (requires zwylib)",
-      "hash": "2fee8fb98e517a90fa0cd13164aab11422de0236fca9cddfb640e6624ad9205c"
+      "about": [
+        "Swipe the folders until your fingers rub off! (requires zwylib)",
+        "Добавляет управление папками свайпами."
+      ],
+      "hash": "2fee8fb98e517a90fa0cd13164aab11422de0236fca9cddfb640e6624ad9205c",
+      "tag": "Network"
     },
     {
       "id": "gemini_plugin_security",
@@ -1567,7 +2162,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Gemini.plugin",
       "description": "Checks Extera plugin code for security risks using Google Gemini API.",
-      "hash": "36e882eeab9c170df73c189f27048ac5a205f68be7046804977c6664826deaea"
+      "about": [
+        "Checks Extera plugin code for security risks using Google Gemini API.",
+        "Checks Extera plugin code for security risks using Google Gemini API."
+      ],
+      "hash": "36e882eeab9c170df73c189f27048ac5a205f68be7046804977c6664826deaea",
+      "tag": "AI"
     },
     {
       "id": "google_search",
@@ -1579,8 +2179,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/GoogleSearch.plugin",
-      "description": "Searching for information via Google [.g], searching pic",
-      "hash": "9770a505e9bdc67609b1ccbe71ba153e7de3a89de4102331a4274e8dbc66ee42"
+      "description": "Search Google.",
+      "about": [
+        "Search Google.",
+        "Ищет Google."
+      ],
+      "hash": "9770a505e9bdc67609b1ccbe71ba153e7de3a89de4102331a4274e8dbc66ee42",
+      "tag": "Utility"
     },
     {
       "id": "hashTagsFix",
@@ -1592,8 +2197,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/HashTagsFix.plugin",
-      "description": "Открытие папки \\",
-      "hash": "f6f12a24ce46021ba1d6067f9c85c8e83ab16c79ae9557753bfeae733bbf95b7"
+      "description": "Fix hashtag tap behavior in chats.",
+      "about": [
+        "Fix hashtag tap behavior in chats.",
+        "Исправляет hashtag tap behavior in chats."
+      ],
+      "hash": "f6f12a24ce46021ba1d6067f9c85c8e83ab16c79ae9557753bfeae733bbf95b7",
+      "tag": "Customization"
     },
     {
       "id": "lastfm",
@@ -1605,8 +2215,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/lastfm.plugin",
-      "description": "Shows the current song from LastFM. [.np]",
-      "hash": "e4139a75048aed8159bfa1d61128c767e865b18165a21f5a410284ec3d24e5e7"
+      "description": "Show the current Last.fm track.",
+      "about": [
+        "Show the current Last.fm track.",
+        "Показывает the current Last.fm track."
+      ],
+      "hash": "e4139a75048aed8159bfa1d61128c767e865b18165a21f5a410284ec3d24e5e7",
+      "tag": "Utility"
     },
     {
       "id": "minesweeper",
@@ -1618,8 +2233,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/minesweeper.plugin",
-      "description": "Плагин для игры в Cапёр. Использование: в чате Три Точки --> Плагины --> Minesweeper",
-      "hash": "580547076901abaef1add0d1b32d16edce65dead59af1089885a2e0069a6f079"
+      "description": "Play Minesweeper.",
+      "about": [
+        "Play Minesweeper.",
+        "Запускает игру: Minesweeper."
+      ],
+      "hash": "580547076901abaef1add0d1b32d16edce65dead59af1089885a2e0069a6f079",
+      "tag": "Game"
     },
     {
       "id": "zwyNoForwardLimit",
@@ -1632,7 +2252,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/noForwardLimit.plugin",
       "description": "Removes the limit of 100 forward messages (requires zwylib)",
-      "hash": "c9a15fccc6cd735f31cf07626f82d501e967d63f48c889b46d7430a05d01cc54"
+      "about": [
+        "Removes the limit of 100 forward messages (requires zwylib)",
+        "Removes the limit of 100 forward messages (requires zwylib)."
+      ],
+      "hash": "c9a15fccc6cd735f31cf07626f82d501e967d63f48c889b46d7430a05d01cc54",
+      "tag": "Customization"
     },
     {
       "id": "overlay_disabler",
@@ -1645,7 +2270,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/overlay_disabler.plugin",
       "description": "Disables blurry overlay for Video Messages.",
-      "hash": "bcef5231c9f56ff91c3e5ab8008ae561c76e983c65c95b204958f870b436eb0b"
+      "about": [
+        "Disables blurry overlay for Video Messages.",
+        "Отключает blurry overlay for Video Messages."
+      ],
+      "hash": "bcef5231c9f56ff91c3e5ab8008ae561c76e983c65c95b204958f870b436eb0b",
+      "tag": "Media"
     },
     {
       "id": "cutemessagesenhanced",
@@ -1658,7 +2288,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/picmefork.plugin",
       "description": "Makes your messages extra cute with many adorable styles!",
-      "hash": "dd08ad0800656b1571cb997fddeb207fe6815d2cb040e493e6430c09512e133b"
+      "about": [
+        "Makes your messages extra cute with many adorable styles!",
+        "Makes your messages extra cute with many adorable styles!"
+      ],
+      "hash": "dd08ad0800656b1571cb997fddeb207fe6815d2cb040e493e6430c09512e133b",
+      "tag": "Fun"
     },
     {
       "id": "ping",
@@ -1670,8 +2305,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/ping.plugin",
-      "description": "Показывает задержку ответа Telegram.",
-      "hash": "24ce403052ea2626f58687e2a0fdf556ea9b7997fcd77b131147a7f5c37c6d9b"
+      "description": "Show Telegram response latency.",
+      "about": [
+        "Show Telegram response latency.",
+        "Показывает Telegram response latency."
+      ],
+      "hash": "24ce403052ea2626f58687e2a0fdf556ea9b7997fcd77b131147a7f5c37c6d9b",
+      "tag": "Utility"
     },
     {
       "id": "ping_pong",
@@ -1684,7 +2324,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/pingpong.plugin",
       "description": "Ping-Pong game. Launch the game in the side menu on the left in the chat list.",
-      "hash": "9336dacf48a22d2fd8bb9353a61d990aa359737709766f6e03bf7cdfaf0897b0"
+      "about": [
+        "Ping-Pong game. Launch the game in the side menu on the left in the chat list.",
+        "Ping-Pong game. Launch the game in the side menu on the left in the списке чатов."
+      ],
+      "hash": "9336dacf48a22d2fd8bb9353a61d990aa359737709766f6e03bf7cdfaf0897b0",
+      "tag": "Network"
     },
     {
       "id": "qmrrchh_plugins_manager",
@@ -1696,8 +2341,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/plugins_manager.plugin",
-      "description": "Manager of locally installed plugins.\nYou can find out all the commands by writing .phelp in any chat.",
-      "hash": "ff32359355132ae180e68ef0e1c734599a97f18c0d4af69791cff20d5ad10aa2"
+      "description": "Manage locally installed plugins.",
+      "about": [
+        "Manage locally installed plugins.",
+        "Управляет locally installed plugins."
+      ],
+      "hash": "ff32359355132ae180e68ef0e1c734599a97f18c0d4af69791cff20d5ad10aa2",
+      "tag": "Utility"
     },
     {
       "id": "quick_settings_menu",
@@ -1710,7 +2360,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/QuickSettings.plugin",
       "description": "Adds a menu for quick access to other plugins",
-      "hash": "47c7330b77e8380f491b6a8249f38c0557661556809ce245d344d11b6d6e92dd"
+      "about": [
+        "Adds a menu for quick access to other plugins",
+        "Добавляет a menu for quick access to other plugins."
+      ],
+      "hash": "47c7330b77e8380f491b6a8249f38c0557661556809ce245d344d11b6d6e92dd",
+      "tag": "Customization"
     },
     {
       "id": "quoteReply",
@@ -1723,7 +2378,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/quoteReply.plugin",
       "description": "Send reply as a quote with the text of the message (requires zwylib)",
-      "hash": "c220de0ba576eecb165c9f4707c110e7d3ac2a442a41625a07106f3a9e84269e"
+      "about": [
+        "Send reply as a quote with the text of the message (requires zwylib)",
+        "Send reply as a quote with the text of the message (requires zwylib)."
+      ],
+      "hash": "c220de0ba576eecb165c9f4707c110e7d3ac2a442a41625a07106f3a9e84269e",
+      "tag": "Customization"
     },
     {
       "id": "tailed-quotify",
@@ -1735,8 +2395,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/quotify.plugin",
-      "description": "quote messages by replying with .q command",
-      "hash": "e11847f8c2791803cd5b78df6fe3872cb673cf4193caae24eb235b81e23c076e"
+      "description": "Quote messages.",
+      "about": [
+        "Quote messages.",
+        "Quote messages."
+      ],
+      "hash": "e11847f8c2791803cd5b78df6fe3872cb673cf4193caae24eb235b81e23c076e",
+      "tag": "Utility"
     },
     {
       "id": "respotify_renightly",
@@ -1748,8 +2413,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/reSpotify.plugin",
-      "description": "Now play plugin for Spotify.\n\nUse:\n   .now — send now play card\n   .nowt — send now play track\n\nThanks @itsv1eds, @zwylair & @exteradev for the help",
-      "hash": "2f8896d1f2e09d058b668a023863d036d1166afb62a25add8235b06a7dbf7bf4"
+      "description": "Share the currently playing Spotify track.",
+      "about": [
+        "Share the currently playing Spotify track.",
+        "Share the currently playing Spotify track."
+      ],
+      "hash": "2f8896d1f2e09d058b668a023863d036d1166afb62a25add8235b06a7dbf7bf4",
+      "tag": "Utility"
     },
     {
       "id": "smart_text_enhancer",
@@ -1761,8 +2431,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/smarttextenhancer.plugin",
-      "description": "Умное улучшение текста с помощью ИИ\n\nКоманды:\n   .emojify - добавить эмодзи\n   .rewrite - переписать текст\n   .fix - исправить ошибки\n\nАвтор: Oniel",
-      "hash": "0a5abd7783606c8b98b242b774c2b99c70923387117ecb21673ac3a33b54da7c"
+      "description": "Improve text using AI (rewrite, fix, add emojis).",
+      "about": [
+        "Improve text using AI (rewrite, fix, add emojis).",
+        "Improve text using ИИ (rewrite, fix, add emojis)."
+      ],
+      "hash": "0a5abd7783606c8b98b242b774c2b99c70923387117ecb21673ac3a33b54da7c",
+      "tag": "Media"
     },
     {
       "id": "steam",
@@ -1774,8 +2449,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/steam_plugin.plugin",
-      "description": "🎮 Shows the current game on Steam\n\n📋 Commands:\n• [.nowsteam/.snp] — current game\n• [.slibrary] — games library\n• [.sflibrary] — full library\n\n🎨 Design by @reNightly, @qmrrchh",
-      "hash": "b8c745c293bbeb54c057a187959c9807dab382aced46edc3e911278d8f50b51e"
+      "description": "Show your current Steam game and library.",
+      "about": [
+        "Show your current Steam game and library.",
+        "Показывает your current Steam game and library."
+      ],
+      "hash": "b8c745c293bbeb54c057a187959c9807dab382aced46edc3e911278d8f50b51e",
+      "tag": "Library"
     },
     {
       "id": "tailed-tts",
@@ -1787,8 +2467,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/tailed-tts.plugin",
-      "description": "uses voicerss api to voice your text with .tts [text] command",
-      "hash": "bfb82ae8c2e6ad15862b2a28deebec963739cca3a97e776667ee0f89ddf88729"
+      "description": "Convert text to speech.",
+      "about": [
+        "Convert text to speech.",
+        "Конвертирует text to speech."
+      ],
+      "hash": "bfb82ae8c2e6ad15862b2a28deebec963739cca3a97e776667ee0f89ddf88729",
+      "tag": "Utility"
     },
     {
       "id": "ai_status",
@@ -1801,7 +2486,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/ai_status.1.0.8.plugin",
       "description": "Unknown",
-      "hash": "406a2b10142997ac8dbfa8ef04c82abb2de45192a4921ab6b14355c5ca474f3e"
+      "about": [
+        "Unknown",
+        "Unknown"
+      ],
+      "hash": "406a2b10142997ac8dbfa8ef04c82abb2de45192a4921ab6b14355c5ca474f3e",
+      "tag": "Unknown"
     },
     {
       "id": "cactuslib_mini",
@@ -1814,7 +2504,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/cactusLibMini.plugin",
       "description": "Mini version of CactusLib :D",
-      "hash": "6d94c166bf3ec639f4f035de8e27c4c7025c409fb7e0f8966f218a250b24e59b"
+      "about": [
+        "Mini version of CactusLib :D",
+        "Мини-библиотека CactusLib."
+      ],
+      "hash": "6d94c166bf3ec639f4f035de8e27c4c7025c409fb7e0f8966f218a250b24e59b",
+      "tag": "Library"
     },
     {
       "id": "demotivator_ar34",
@@ -1826,8 +2521,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/demotivator.plugin",
-      "description": "Создаёт демотиватор по команде .dem <верх> | <низ> (с фото)",
-      "hash": "2b0f86e96eac2acb53cab6d333ec1179193567a96b324438a47283bf127bbca3"
+      "description": "Create demotivator posters from images.",
+      "about": [
+        "Create demotivator posters from images.",
+        "Создает demotivator posters from images."
+      ],
+      "hash": "2b0f86e96eac2acb53cab6d333ec1179193567a96b324438a47283bf127bbca3",
+      "tag": "Media"
     },
     {
       "id": "diamond_hunt",
@@ -1839,8 +2539,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Diamond Hunt.plugin",
-      "description": "Игра: найдите все спрятанные алмазы.",
-      "hash": "0df2667a5c287663559ec19abc14c39af2d76ce2baa7f514819fac0539057225"
+      "description": "Play a hidden-object game to find all gems.",
+      "about": [
+        "Play a hidden-object game to find all gems.",
+        "Запускает игру: a hidden-object game to find all gems."
+      ],
+      "hash": "0df2667a5c287663559ec19abc14c39af2d76ce2baa7f514819fac0539057225",
+      "tag": "Game"
     },
     {
       "id": "githubinfo",
@@ -1852,8 +2557,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/githubinfo.plugin",
-      "description": "GitHub user info, activity and stats [.gh; .gha]",
-      "hash": "090f7d7e7fbbb66677263b1503fefa3dc4f2fb4926bfd9a1c899b44fe7f8ea39"
+      "description": "Show GitHub user info and activity.",
+      "about": [
+        "Show GitHub user info and activity.",
+        "Показывает GitHub user info and activity."
+      ],
+      "hash": "090f7d7e7fbbb66677263b1503fefa3dc4f2fb4926bfd9a1c899b44fe7f8ea39",
+      "tag": "Utility"
     },
     {
       "id": "memorymatch",
@@ -1866,7 +2576,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/memorymatch.plugin",
       "description": "Unknown",
-      "hash": "72da04e3580decdc1da633bfa4d854122e02183d041fa0ed4e4bfc43b0a6e0dc"
+      "about": [
+        "Unknown",
+        "Unknown"
+      ],
+      "hash": "72da04e3580decdc1da633bfa4d854122e02183d041fa0ed4e4bfc43b0a6e0dc",
+      "tag": "Unknown"
     },
     {
       "id": "quote_message_converter",
@@ -1878,8 +2593,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/quote.plugin",
-      "description": "Заменяет сообщения с префиксом .qe на случайную цитату",
-      "hash": "c696514faf2a8a1a3ae65c30a5f89d3ae55c8e2bae035437e58fced0c71db27f"
+      "description": "Replace messages with a random quote.",
+      "about": [
+        "Replace messages with a random quote.",
+        "Заменяет messages with a random quote."
+      ],
+      "hash": "c696514faf2a8a1a3ae65c30a5f89d3ae55c8e2bae035437e58fced0c71db27f",
+      "tag": "Utility"
     },
     {
       "id": "Round_Videos_Configurator",
@@ -1892,11 +2612,16 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/round_config.plugin",
       "description": "Allows to set custom resolution and bitrate for round videos.",
-      "hash": "fca14b0307ee0bb29f15464fd74f7dbb52714d8ebd5123559d2d1658e750cc43"
+      "about": [
+        "Allows to set custom resolution and bitrate for round videos.",
+        "Allows to set custom resolution and bitrate for round videos."
+      ],
+      "hash": "fca14b0307ee0bb29f15464fd74f7dbb52714d8ebd5123559d2d1658e750cc43",
+      "tag": "Media"
     },
     {
       "id": "snake_game",
-      "name": "Snake Game apple 🌟",
+      "name": "Snake Game apple",
       "author": "@SaturnFake @JasonVurhyz",
       "version": "1.5.2",
       "state": "release",
@@ -1905,7 +2630,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/snake_game.plugin",
       "description": "a snake running after an apple",
-      "hash": "ee0248987401a480e131705dd58a2d0c68e0d6009fe4b3b391926be6dcc9e857"
+      "about": [
+        "a snake running after an apple",
+        "Игра «Змейка»."
+      ],
+      "hash": "ee0248987401a480e131705dd58a2d0c68e0d6009fe4b3b391926be6dcc9e857",
+      "tag": "Game"
     },
     {
       "id": "tictactoe",
@@ -1918,7 +2648,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/tictactoe.plugin",
       "description": "Play Tic-Tac-Toe against the AI. Access via 3dot chat menu.",
-      "hash": "aca94378b110e72a149912f3b37b749f4e59ccd80ddb0a149a905d3d63f298ae"
+      "about": [
+        "Play Tic-Tac-Toe against the AI. Access via 3dot chat menu.",
+        "Запускает игру: Tic-Tac-Toe against the ИИ. Access via 3dot chat menu."
+      ],
+      "hash": "aca94378b110e72a149912f3b37b749f4e59ccd80ddb0a149a905d3d63f298ae",
+      "tag": "Game"
     },
     {
       "id": "xiaomiotaprober",
@@ -1931,11 +2666,16 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/xiaomimiromfetcher.plugin",
       "description": "Fastboot ROM fetcher",
-      "hash": "87dcc4f576bacd426c52777d6e97bf503b47a6baee5a19ea0a3fd57005cfd92c"
+      "about": [
+        "Fastboot ROM fetcher",
+        "Ищет и скачивает Fastboot ROM."
+      ],
+      "hash": "87dcc4f576bacd426c52777d6e97bf503b47a6baee5a19ea0a3fd57005cfd92c",
+      "tag": "Utility"
     },
     {
       "id": "blackjack_REAL",
-      "name": "♠️ Blackjack ♥️",
+      "name": "Blackjack",
       "author": "@SaturnFake",
       "version": "1.0.0",
       "state": "release",
@@ -1944,7 +2684,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/BlackJack.plugin",
       "description": "Unknown",
-      "hash": "eb5f7e7052e14c19562fe04c0ab445d19ba4a10cf63743f89b1826a18f09bfed"
+      "about": [
+        "Unknown",
+        "Unknown"
+      ],
+      "hash": "eb5f7e7052e14c19562fe04c0ab445d19ba4a10cf63743f89b1826a18f09bfed",
+      "tag": "Unknown"
     },
     {
       "id": "checkhost_network_by_mihailkotovski",
@@ -1956,8 +2701,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/checkhost.plugin",
-      "description": "Проверка IP, сайтов, DNS, TCP, UDP, HTTP соединений через check-host.net API",
-      "hash": "d241af8088fba6ac96189628af11ddef6262952d44abd678c7eafcc8f1b03d50"
+      "description": "Check IP, DNS, and network connectivity via check-host.net.",
+      "about": [
+        "Check IP, DNS, and network connectivity via check-host.net.",
+        "Check IP, DNS, and network connectivity via check-host.net."
+      ],
+      "hash": "d241af8088fba6ac96189628af11ddef6262952d44abd678c7eafcc8f1b03d50",
+      "tag": "Network"
     },
     {
       "id": "genius_lyrics",
@@ -1969,8 +2719,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/genius_lyrics.plugin",
-      "description": "Получить текст песни из Genius , юзай .lyrics [имя песни].",
-      "hash": "7a930d7882ff4f93dcecaa8542a5efc645321fe724732c1040e293bc321f7d70"
+      "description": "Fetch song lyrics from Genius.",
+      "about": [
+        "Fetch song lyrics from Genius.",
+        "Fetch song lyrics from Genius."
+      ],
+      "hash": "7a930d7882ff4f93dcecaa8542a5efc645321fe724732c1040e293bc321f7d70",
+      "tag": "Media"
     },
     {
       "id": "command_suggestions",
@@ -1983,7 +2738,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/list of commands.plugin",
       "description": "Unknown",
-      "hash": "371b9968c9562416e4b250ede8e1457fe2bd21c389ffac6ac3dff4a84ce61935"
+      "about": [
+        "Unknown",
+        "Unknown"
+      ],
+      "hash": "371b9968c9562416e4b250ede8e1457fe2bd21c389ffac6ac3dff4a84ce61935",
+      "tag": "Unknown"
     },
     {
       "id": "lrcfy",
@@ -1995,12 +2755,17 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/lrcfy.plugin",
-      "description": "Your music, your lyrics. Fetch any song\\",
-      "hash": "97a1982455f166f9bc5dab50053dc077280b933a00ac4cabaa30e83120be0186"
+      "description": "Fetch song lyrics.",
+      "about": [
+        "Fetch song lyrics.",
+        "Fetch song lyrics."
+      ],
+      "hash": "97a1982455f166f9bc5dab50053dc077280b933a00ac4cabaa30e83120be0186",
+      "tag": "Media"
     },
     {
       "id": "Message_Tracker",
-      "name": "🚀Message Tracker🚀",
+      "name": "Message Tracker",
       "author": "@SaturnFake",
       "version": "1.15.0",
       "state": "release",
@@ -2008,8 +2773,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Message_Trackers.plugin",
-      "description": "Отслеживает количество сообщений, отправленных вами за выбранный период и показывает статистику. Доступно 2 вида: Статистика-сообщение and статистика-диаграмма",
-      "hash": "c3c2b53efa88e4feeaa488ff9472a3199ced08774ca49b9fceae22868dfd4839"
+      "description": "Track how many messages you send and show statistics.",
+      "about": [
+        "Track how many messages you send and show statistics.",
+        "Отслеживает how many messages you send and show statistics."
+      ],
+      "hash": "c3c2b53efa88e4feeaa488ff9472a3199ced08774ca49b9fceae22868dfd4839",
+      "tag": "Utility"
     },
     {
       "id": "info_block",
@@ -2022,7 +2792,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/MyInfo_1.0.0.plugin",
       "description": "Unknown",
-      "hash": "700ea8a61f1befbf0540d64f65bba99ae260abc09a3c0fa925c10162b9d7e72b"
+      "about": [
+        "Unknown",
+        "Unknown"
+      ],
+      "hash": "700ea8a61f1befbf0540d64f65bba99ae260abc09a3c0fa925c10162b9d7e72b",
+      "tag": "Unknown"
     },
     {
       "id": "NoCallConfirmation",
@@ -2034,8 +2809,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/NoCallConfimation.plugin",
-      "description": "Убирает надоедливое окно подтверждение звонка \n\nRemoves annoying call confirmation popup.",
-      "hash": "d8ad54a8dc2a61af04ec67a6bb3dee3d0a0b26bbd1f0087f68f78ee280db0ba4"
+      "description": "Remove the call confirmation popup.",
+      "about": [
+        "Remove the call confirmation popup.",
+        "Убирает the call confirmation popup."
+      ],
+      "hash": "d8ad54a8dc2a61af04ec67a6bb3dee3d0a0b26bbd1f0087f68f78ee280db0ba4",
+      "tag": "Utility"
     },
     {
       "id": "msgsDeleter",
@@ -2047,8 +2827,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/OwnMsgsDeleter.plugin",
-      "description": "Удаляет все собственные сообщения в чате/группе.\n\nDeletes all your own message in chat/group.",
-      "hash": "036e62e74e4afa08ec57d10b70e01008601c20e1b268c38c860dbf64666a2a14"
+      "description": "Delete all your own messages in a chat or group.",
+      "about": [
+        "Delete all your own messages in a chat or group.",
+        "Delete all your own messages in a chat or group."
+      ],
+      "hash": "036e62e74e4afa08ec57d10b70e01008601c20e1b268c38c860dbf64666a2a14",
+      "tag": "Utility"
     },
     {
       "id": "ppg",
@@ -2060,21 +2845,31 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/ppg.plugin",
-      "description": "Генерирует цветовые палитры по текстовому запросу с помощью AI, извлекает из изображения или создаёт случайный градиент.",
-      "hash": "7cbb14e40b7ca0eb4bb2b2120698882856cb31cd0e1a4fc02bf290617e2e63d7"
+      "description": "Generate color palettes from text or images.",
+      "about": [
+        "Generate color palettes from text or images.",
+        "Генерирует color palettes from text or images."
+      ],
+      "hash": "7cbb14e40b7ca0eb4bb2b2120698882856cb31cd0e1a4fc02bf290617e2e63d7",
+      "tag": "Media"
     },
     {
-      "id": "Sea Battle 🚢",
+      "id": "Sea Battle",
       "name": "Морской Бой",
       "author": "Creator @IRimuru_TempestI",
       "version": "2.4",
       "state": "release",
-      "icon": "нету",
+      "icon": "Unknown",
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Sea battle.plugin",
-      "description": "Классическая игра Морской Бой",
-      "hash": "696973e70d360bdb2b4aec6e6a9a449da8c7351a5e21688674e89fc3797429d7"
+      "description": "Play Battleship.",
+      "about": [
+        "Play Battleship.",
+        "Запускает игру: Battleship."
+      ],
+      "hash": "696973e70d360bdb2b4aec6e6a9a449da8c7351a5e21688674e89fc3797429d7",
+      "tag": "Game"
     },
     {
       "id": "calendarplugin",
@@ -2086,8 +2881,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/calendar-plugin.plugin",
-      "description": "Пиши .day чтобы узнать праздник. Можно добавить свой: .addday 01.09 День Знаний. Удалить: .removeday 01.09",
-      "hash": "b292813f2e9d2762b6d2e2a69cfdcfc959b7c7608ea48c61defff9f4c4a81b6f"
+      "description": "Show holidays for a given date.",
+      "about": [
+        "Show holidays for a given date.",
+        "Показывает holidays for a given date."
+      ],
+      "hash": "b292813f2e9d2762b6d2e2a69cfdcfc959b7c7608ea48c61defff9f4c4a81b6f",
+      "tag": "Utility"
     },
     {
       "id": "copyprofile",
@@ -2099,8 +2899,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/copyprofile.plugin",
-      "description": "Копирует профиль пользователя по команде .copy реплаем или через кнопку в меню профиля.\n\nКоманды: .backup - сохранить свой профиль, .restore - восстановить профиль\n\nКнопка ",
-      "hash": "f23ac187f964bcf35e91779158114118111756b30b4d98483958bd679548a093"
+      "description": "Copy and restore user profile information.",
+      "about": [
+        "Copy and restore user profile information.",
+        "Копирует and restore user profile information."
+      ],
+      "hash": "f23ac187f964bcf35e91779158114118111756b30b4d98483958bd679548a093",
+      "tag": "Utility"
     },
     {
       "id": "debug",
@@ -2112,8 +2917,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/debug.plugin",
-      "description": "Device & Plugin info [.dg]",
-      "hash": "9a5a8f1123c070a58162deda7641b9e0ee4e9edf19733e43ecd868a296b728ca"
+      "description": "Show device and plugin info.",
+      "about": [
+        "Show device and plugin info.",
+        "Показывает информацию об устройстве и плагинах."
+      ],
+      "hash": "9a5a8f1123c070a58162deda7641b9e0ee4e9edf19733e43ecd868a296b728ca",
+      "tag": "Utility"
     },
     {
       "id": "emoji_parser",
@@ -2125,8 +2935,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/emoji_parser.plugin",
-      "description": "Парсит document ID премиум эмодзи и отправляет в чат.\n\nКоманды: .emoji, .eid, .estatus, .emd, .esend [markdown]",
-      "hash": "d823098e07099f537165e967096cf86dbabb6d5b26845bec2890ffb0ffab2c59"
+      "description": "Extract premium emoji document IDs and send them in chat.",
+      "about": [
+        "Extract premium emoji document IDs and send them in chat.",
+        "Extract премиум-эмодзи document IDs and send them in chat."
+      ],
+      "hash": "d823098e07099f537165e967096cf86dbabb6d5b26845bec2890ffb0ffab2c59",
+      "tag": "Media"
     },
     {
       "id": "gift_parser",
@@ -2138,8 +2953,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/GiftParser.plugin",
-      "description": "Пропиши команду .gift и получи актуальную информацию о телеграм подарках.",
-      "hash": "852eb1ae85b3824ec07e81baf131c70b7498acb33c3f2339f4ade2cc36437c57"
+      "description": "Show information about Telegram gifts.",
+      "about": [
+        "Show information about Telegram gifts.",
+        "Показывает information about Telegram gifts."
+      ],
+      "hash": "852eb1ae85b3824ec07e81baf131c70b7498acb33c3f2339f4ade2cc36437c57",
+      "tag": "Media"
     },
     {
       "id": "localPremium",
@@ -2152,7 +2972,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/LocalPremium.plugin",
       "description": "Unlock Local Premium",
-      "hash": "3129289bf102aeb1b9dd74d88342a96f159f2cc2c1a31e161d3be41095e2d27a"
+      "about": [
+        "Unlock Local Premium",
+        "Unlock Local Premium."
+      ],
+      "hash": "3129289bf102aeb1b9dd74d88342a96f159f2cc2c1a31e161d3be41095e2d27a",
+      "tag": "Utility"
     },
     {
       "id": "no_quote_forward",
@@ -2165,7 +2990,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/No Quote.plugin",
       "description": "Stops goofy-ahh Telegram from adding quotes when you forward messages",
-      "hash": "cc98d5f6d8b662f3b2455433303ab5b0c4647e4b6dd7dc71bab4aad3002b09e9"
+      "about": [
+        "Stops goofy-ahh Telegram from adding quotes when you forward messages",
+        "Отключает добавление кавычек при пересылке сообщений."
+      ],
+      "hash": "cc98d5f6d8b662f3b2455433303ab5b0c4647e4b6dd7dc71bab4aad3002b09e9",
+      "tag": "Utility"
     },
     {
       "id": "nowMediaRn",
@@ -2178,7 +3008,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/nowMediaRn_1.0.3.plugin",
       "description": "Unknown",
-      "hash": "6f7c970f99fa33e7742dcda0bcfe3a736528ce369d112bcddd76c48cf0e3881d"
+      "about": [
+        "Unknown",
+        "Unknown"
+      ],
+      "hash": "6f7c970f99fa33e7742dcda0bcfe3a736528ce369d112bcddd76c48cf0e3881d",
+      "tag": "Unknown"
     },
     {
       "id": "ar34quotify",
@@ -2190,8 +3025,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/quotify (1).plugin",
-      "description": "Quote messages by replying with .q command and fake quotes with reply .fq <text> \nRequired: exteraGram/Ayugram 12.0.1 or higher",
-      "hash": "cda37e83e8b5d60c5f144a9d3ed09840fa8cf695132301906751184e89bf6f27"
+      "description": "Create real and fake message quotes.",
+      "about": [
+        "Create real and fake message quotes.",
+        "Создает real and fake цитаты сообщений."
+      ],
+      "hash": "cda37e83e8b5d60c5f144a9d3ed09840fa8cf695132301906751184e89bf6f27",
+      "tag": "Utility"
     },
     {
       "id": "tgfy",
@@ -2204,7 +3044,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/TGfy.plugin",
       "description": "Unknown",
-      "hash": "f96dc76bc1c13293c2c4534f4e2d293ea88098dd23aac96a13d2e3e678045618"
+      "about": [
+        "Unknown",
+        "Unknown"
+      ],
+      "hash": "f96dc76bc1c13293c2c4534f4e2d293ea88098dd23aac96a13d2e3e678045618",
+      "tag": "Unknown"
     },
     {
       "id": "zwyAdminTools",
@@ -2216,8 +3061,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/adminTools.plugin",
-      "description": "Lots of useful commands for the administrator (more details in the settings) (requires zwylib)",
-      "hash": "b4f2bce88070172f95be90d7064a8778deba83f3785e5e05a778f1a439395eb4"
+      "description": "Admin utilities.",
+      "about": [
+        "Admin utilities.",
+        "Admin utilities."
+      ],
+      "hash": "b4f2bce88070172f95be90d7064a8778deba83f3785e5e05a778f1a439395eb4",
+      "tag": "Admin"
     },
     {
       "id": "clearURLs",
@@ -2230,7 +3080,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/clearURLs.plugin",
       "description": "Clear the sent URLs from tracking shit (requires zwylib)",
-      "hash": "7163c0d321b084231519a9fa2706987cd91c1862f6728369b28bc7a2ca536a68"
+      "about": [
+        "Clear the sent URLs from tracking shit (requires zwylib)",
+        "Удаляет трекеры из отправляемых ссылок."
+      ],
+      "hash": "7163c0d321b084231519a9fa2706987cd91c1862f6728369b28bc7a2ca536a68",
+      "tag": "Customization"
     },
     {
       "id": "googlethat",
@@ -2242,8 +3097,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/googleThat.plugin",
-      "description": "Creates search link [.gt]",
-      "hash": "be08e58086d97bc6360e8cca9a480ab72b041176ad3a8447b07319e488ebb7f2"
+      "description": "Create a search link.",
+      "about": [
+        "Create a search link.",
+        "Создает a search link."
+      ],
+      "hash": "be08e58086d97bc6360e8cca9a480ab72b041176ad3a8447b07319e488ebb7f2",
+      "tag": "Utility"
     },
     {
       "id": "qrcode",
@@ -2255,8 +3115,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/qrcode.plugin",
-      "description": "Generate QR codes with .qr command",
-      "hash": "d0a83a0d6f09c7eb6c11e99ab892d738199d9adb9ca1ba437cacf5da426e2fe6"
+      "description": "Generate QR codes.",
+      "about": [
+        "Generate QR codes.",
+        "Генерирует QR codes."
+      ],
+      "hash": "d0a83a0d6f09c7eb6c11e99ab892d738199d9adb9ca1ba437cacf5da426e2fe6",
+      "tag": "Utility"
     },
     {
       "id": "reExtera",
@@ -2269,7 +3134,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/re_extera.plugin",
       "description": "Just a plugin with ToS breaking features.",
-      "hash": "1726a76c8e3b0a50619f3e841d5a4983cb9d0a73dd230a7dcbffa596f42a7823"
+      "about": [
+        "Just a plugin with ToS breaking features.",
+        "Добавляет расширенные функции (может нарушать правила)."
+      ],
+      "hash": "1726a76c8e3b0a50619f3e841d5a4983cb9d0a73dd230a7dcbffa596f42a7823",
+      "tag": "Utility"
     },
     {
       "id": "roleplay_plugin",
@@ -2281,8 +3151,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/rpcmd.plugin",
-      "description": "Плагин для ролевых команд. Больше информации в настройках",
-      "hash": "e3010c8a5ec907006eb19073c461c2ed6fe3b0aa20414e1ff5bc53cded0b522f"
+      "description": "Roleplay command shortcuts.",
+      "about": [
+        "Roleplay command shortcuts.",
+        "Roleplay command shortcuts."
+      ],
+      "hash": "e3010c8a5ec907006eb19073c461c2ed6fe3b0aa20414e1ff5bc53cded0b522f",
+      "tag": "Utility"
     },
     {
       "id": "wiki_search",
@@ -2294,12 +3169,17 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/wiki_search.plugin",
-      "description": "Search Wikipedia with .wiki [term]",
-      "hash": "fb310109eb8312e48edd3f9e181eddb5efd08cc57c3ea23c1bc99acb75cb5e5d"
+      "description": "Search Wikipedia.",
+      "about": [
+        "Search Wikipedia.",
+        "Ищет Wikipedia."
+      ],
+      "hash": "fb310109eb8312e48edd3f9e181eddb5efd08cc57c3ea23c1bc99acb75cb5e5d",
+      "tag": "Network"
     },
     {
       "id": "pokedex",
-      "name": "Pokédex",
+      "name": "Pokedex",
       "author": "@itsv1eds",
       "version": "1.0.2",
       "state": "release",
@@ -2307,8 +3187,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/pokedex.plugin",
-      "description": "Gets Pokémon information",
-      "hash": "ab695075c94cb34f6cce8854a8d926a28eb5b727115e7ec848ae37cfdf5c9745"
+      "description": "Gets Pokemon information",
+      "about": [
+        "Gets Pokemon information",
+        "Gets Pokemon information."
+      ],
+      "hash": "ab695075c94cb34f6cce8854a8d926a28eb5b727115e7ec848ae37cfdf5c9745",
+      "tag": "Utility"
     },
     {
       "id": "point",
@@ -2320,8 +3205,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/point.plugin",
-      "description": "Ставит точку в конце сообщенияи делает заглавной первую букву каждого предложения",
-      "hash": "3d8e3a01c73106bacb94e95825f7891e4fc60f9726aec6586b3c7d3a857fdeca"
+      "description": "Auto-fix sentence capitalization and ending punctuation.",
+      "about": [
+        "Auto-fix sentence capitalization and ending punctuation.",
+        "Auto-fix sentence capitalization and ending punctuation."
+      ],
+      "hash": "3d8e3a01c73106bacb94e95825f7891e4fc60f9726aec6586b3c7d3a857fdeca",
+      "tag": "Utility"
     },
     {
       "id": "remusic",
@@ -2333,8 +3223,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/reMusic.plugin",
-      "description": "Now play plugin for Yandex Music.\n\nUse:\n   .now — send now play card\n   .nowt — send now play track\n\nThanks @mipohbopohih & @exteradev for the help",
-      "hash": "3ce58baee63544adb8f1b06877d9644afc7040a4021b85bfc7c5c4db9cdc8b40"
+      "description": "Share the currently playing Yandex Music track.",
+      "about": [
+        "Share the currently playing Yandex Music track.",
+        "Share the currently playing Yandex Music track."
+      ],
+      "hash": "3ce58baee63544adb8f1b06877d9644afc7040a4021b85bfc7c5c4db9cdc8b40",
+      "tag": "Media"
     },
     {
       "id": "text_transformer",
@@ -2346,8 +3241,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/text_transformer.plugin",
-      "description": "Transform your message to various formats using the .rp command",
-      "hash": "62ce3966d59a6a85f3c6289d13eb67c492b8cc030eec069c5df66cfae486dbba"
+      "description": "Transform message text into different formats.",
+      "about": [
+        "Transform message text into different formats.",
+        "Transform message text into different formats."
+      ],
+      "hash": "62ce3966d59a6a85f3c6289d13eb67c492b8cc030eec069c5df66cfae486dbba",
+      "tag": "Utility"
     },
     {
       "id": "zwylib",
@@ -2360,7 +3260,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/zwyLib.plugin",
       "description": "Zwylair",
-      "hash": "2fae10d51a650045d2b5a1f0d56e47029844ac43b6dc0f01d7dc8a507c91d495"
+      "about": [
+        "Zwylair",
+        "Библиотека/зависимость плагинов Zwylair."
+      ],
+      "hash": "2fae10d51a650045d2b5a1f0d56e47029844ac43b6dc0f01d7dc8a507c91d495",
+      "tag": "Library"
     },
     {
       "id": "game_2048_new",
@@ -2373,7 +3278,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/2048.plugin",
       "description": "Unknown",
-      "hash": "158e18b3bc2144986054c9c0a3987e8b1476b6175b17a10ab5a2bb0360fc7b8b"
+      "about": [
+        "Unknown",
+        "Unknown"
+      ],
+      "hash": "158e18b3bc2144986054c9c0a3987e8b1476b6175b17a10ab5a2bb0360fc7b8b",
+      "tag": "Unknown"
     },
     {
       "id": "botsautofarm",
@@ -2385,8 +3295,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/BotsAutoFаrm.plugin",
-      "description": "Автофарминг с гибкими настройками для различных фарм-ботов.",
-      "hash": "0c306f5517dc566d185ac7baf4535dce9256e432d7028886aed41a9da862acd7"
+      "description": "Automate farming for supported bot games.",
+      "about": [
+        "Automate farming for supported bot games.",
+        "Automate farming for supported bot games."
+      ],
+      "hash": "0c306f5517dc566d185ac7baf4535dce9256e432d7028886aed41a9da862acd7",
+      "tag": "Utility"
     },
     {
       "id": "demotiv",
@@ -2398,8 +3313,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/demotiv.plugin",
-      "description": "Create demotivators from replied photos [.demotiv/.dm]",
-      "hash": "24a13ba25289f07261b67fbd59b214278bfe31f45bada2f1e21820eb04d0a3eb"
+      "description": "Create demotivators from replied photos.",
+      "about": [
+        "Create demotivators from replied photos.",
+        "Создает demotivators from replied photos."
+      ],
+      "hash": "24a13ba25289f07261b67fbd59b214278bfe31f45bada2f1e21820eb04d0a3eb",
+      "tag": "Fun"
     },
     {
       "id": "log_overlay",
@@ -2411,8 +3331,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Log Overlay.plugin",
-      "description": "Modern log overlay: draggable card with header actions (pause/copy/clear/close), severity colors, theming, and plugin filtering",
-      "hash": "07d52b4df30bb70b42e2ce5f8bcdce4b6080c61a7f6373e8b869cdc241465ff6"
+      "description": "Show an in-app log overlay.",
+      "about": [
+        "Show an in-app log overlay.",
+        "Показывает an in-app log overlay."
+      ],
+      "hash": "07d52b4df30bb70b42e2ce5f8bcdce4b6080c61a7f6373e8b869cdc241465ff6",
+      "tag": "Utility"
     },
     {
       "id": "more_features",
@@ -2424,8 +3349,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/morefeatures.plugin",
-      "description": "A collection of useful features, including call confirmation, hiding the video chat banner, and a device music controller.",
-      "hash": "aac7bee07a6b00474f0e0fa87c33b221d66798ae759fe9160c8ddfb4a41a990c"
+      "description": "Add extra Telegram features and toggles.",
+      "about": [
+        "Add extra Telegram features and toggles.",
+        "Добавляет extra Telegram features and toggles."
+      ],
+      "hash": "aac7bee07a6b00474f0e0fa87c33b221d66798ae759fe9160c8ddfb4a41a990c",
+      "tag": "Utility"
     },
     {
       "id": "AntiRepeatLocal",
@@ -2437,8 +3367,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/AntiRepeatLocal.plugin",
-      "description": "Удаляет повторяющиеся сообщения и ЛОКАЛЬНО редактирует исходное, добавляя счетчик.",
-      "hash": "60ef076435084a33d3935d35d43d9b9b8196861ab73d20f1ab677adfd887ebab"
+      "description": "Remove repeated messages and locally add a repeat counter.",
+      "about": [
+        "Remove repeated messages and locally add a repeat counter.",
+        "Убирает repeated messages and locally add a repeat counter."
+      ],
+      "hash": "60ef076435084a33d3935d35d43d9b9b8196861ab73d20f1ab677adfd887ebab",
+      "tag": "Utility"
     },
     {
       "id": "auto_advanced",
@@ -2450,8 +3385,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/autoadvanced.plugin",
-      "description": "Добавляет настраиваемую подпись к каждому отправляемому сообщению с возможностью форматирования.",
-      "hash": "1f5766cecc2fc79e771d67d86f3434cc617c7abcc2b10f320f5780ecb6b321fa"
+      "description": "Add a customizable signature to outgoing messages.",
+      "about": [
+        "Add a customizable signature to outgoing messages.",
+        "Добавляет a customizable signature to исходящие сообщения."
+      ],
+      "hash": "1f5766cecc2fc79e771d67d86f3434cc617c7abcc2b10f320f5780ecb6b321fa",
+      "tag": "Utility"
     },
     {
       "id": "chess_game",
@@ -2463,8 +3403,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Chess_Game.plugin",
-      "description": "Игра в шахматы в оверлее с возможностью перетаскивания свернутого окна.",
-      "hash": "3194e2eb7f1248a7a6de1178b84b0ed539da55460cb0757122d57cae2d3371d4"
+      "description": "Play chess in a draggable overlay window.",
+      "about": [
+        "Play chess in a draggable overlay window.",
+        "Запускает игру: chess in a draggable overlay window."
+      ],
+      "hash": "3194e2eb7f1248a7a6de1178b84b0ed539da55460cb0757122d57cae2d3371d4",
+      "tag": "Game"
     },
     {
       "id": "cuturl",
@@ -2476,8 +3421,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/cuturl.plugin",
-      "description": "Shorten URLs using Cutt.ly, TinyURL, is.gd, Cleanuri, Bitly or Clck.ru. Use .cut <link>",
-      "hash": "162a5ad7ddd0e98143af2651169035a8c72eb0b49ad9ea31fadafe12c2ed5438"
+      "description": "Shorten URLs.",
+      "about": [
+        "Shorten URLs.",
+        "Shorten URLs."
+      ],
+      "hash": "162a5ad7ddd0e98143af2651169035a8c72eb0b49ad9ea31fadafe12c2ed5438",
+      "tag": "Utility"
     },
     {
       "id": "account_age_checker",
@@ -2489,8 +3439,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/dateaccount.plugin",
-      "description": "Check the age of a Telegram account. Features free mode (local data only) and API mode with cache, loading indicator, and more. Includes profile button for quick account info access.",
-      "hash": "d356ae61065f82dd016a04bf8ecd099eb7bdba55de6a8735005d547317ceea50"
+      "description": "Check the age of a Telegram account.",
+      "about": [
+        "Check the age of a Telegram account.",
+        "Check the age of a Telegram account."
+      ],
+      "hash": "d356ae61065f82dd016a04bf8ecd099eb7bdba55de6a8735005d547317ceea50",
+      "tag": "Utility"
     },
     {
       "id": "image_fx",
@@ -2502,8 +3457,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/ImageFX.plugin",
-      "description": "Применяйте множество эффектов к изображениям. Используйте команды в ответе на фото. Список команд и префикс можно настроить в боковом меню -> Настройки ImageFX.",
-      "hash": "5f38e2258dee57510b36af80cbeb97d451b1c3bd0afcb43eadeb4c3c2f32e9c9"
+      "description": "Apply effects to images.",
+      "about": [
+        "Apply effects to images.",
+        "Применяет effects to images."
+      ],
+      "hash": "5f38e2258dee57510b36af80cbeb97d451b1c3bd0afcb43eadeb4c3c2f32e9c9",
+      "tag": "Media"
     },
     {
       "id": "lightshot_random",
@@ -2515,8 +3475,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/lightshot.plugin",
-      "description": "ищет рандомную фотку с Lightshot [.lsr]",
-      "hash": "b550eff6908d0f23fd830a27dbd1916fdefb51444df731198a19e11e58927112"
+      "description": "Fetch a random Lightshot image.",
+      "about": [
+        "Fetch a random Lightshot image.",
+        "Fetch a random Lightshot image."
+      ],
+      "hash": "b550eff6908d0f23fd830a27dbd1916fdefb51444df731198a19e11e58927112",
+      "tag": "Media"
     },
     {
       "id": "LocalEdictor",
@@ -2529,7 +3494,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/LocalEdictor_V1.3.0.plugin",
       "description": "Unknown",
-      "hash": "1239a1351867954cce6614a59d696cd48497b4bf8a147d7bb3e63561df2aaa7c"
+      "about": [
+        "Unknown",
+        "Unknown"
+      ],
+      "hash": "1239a1351867954cce6614a59d696cd48497b4bf8a147d7bb3e63561df2aaa7c",
+      "tag": "Unknown"
     },
     {
       "id": "premiumfeatures",
@@ -2542,7 +3512,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/premium.plugin",
       "description": "Unknown",
-      "hash": "3036f2606027e560dd978931bd8d62d19e9e33b0ed5986f7cf4c607113876fdc"
+      "about": [
+        "Unknown",
+        "Unknown"
+      ],
+      "hash": "3036f2606027e560dd978931bd8d62d19e9e33b0ed5986f7cf4c607113876fdc",
+      "tag": "Unknown"
     },
     {
       "id": "rule34_search",
@@ -2555,7 +3530,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/rule34.plugin",
       "description": "Unknown",
-      "hash": "dc3d73fa818d1c60b251eafdf65f7c16fe554b468ffa1a51df1e5bdb6b224dc4"
+      "about": [
+        "Unknown",
+        "Unknown"
+      ],
+      "hash": "dc3d73fa818d1c60b251eafdf65f7c16fe554b468ffa1a51df1e5bdb6b224dc4",
+      "tag": "Unknown"
     },
     {
       "id": "shareui_github",
@@ -2568,7 +3548,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_github.plugin",
       "description": "Unknown",
-      "hash": "430ad0c3a84def6d53af89c144a050b04bb3ce5cac00b29246f9b438f703cf4f"
+      "about": [
+        "Unknown",
+        "Unknown"
+      ],
+      "hash": "430ad0c3a84def6d53af89c144a050b04bb3ce5cac00b29246f9b438f703cf4f",
+      "tag": "Unknown"
     },
     {
       "id": "voice_changer",
@@ -2581,7 +3566,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/voice_changer.plugin",
       "description": "Change your voice",
-      "hash": "922621e74f816a5cb03dcbd5650d967452404c065084711c87e88abdad0f15c0"
+      "about": [
+        "Change your voice",
+        "Изменяет голос."
+      ],
+      "hash": "922621e74f816a5cb03dcbd5650d967452404c065084711c87e88abdad0f15c0",
+      "tag": "Utility"
     },
     {
       "id": "all_mention",
@@ -2594,7 +3584,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/all_mention.plugin",
       "description": "Unknown",
-      "hash": "276da633d8fd0cd0c03651428f9b81d56b15ce4cdc904cfc8e94fc3ea48a446c"
+      "about": [
+        "Unknown",
+        "Unknown"
+      ],
+      "hash": "276da633d8fd0cd0c03651428f9b81d56b15ce4cdc904cfc8e94fc3ea48a446c",
+      "tag": "Unknown"
     },
     {
       "id": "alwaysShowDownloadManager",
@@ -2607,7 +3602,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/alwaysShowDownloadManager.plugin",
       "description": "Always Show Download Manager",
-      "hash": "5f14fdb47546bc6b926031343b64d34a4823d58404569668652b76b1280a7868"
+      "about": [
+        "Always Show Download Manager",
+        "Всегда показывает менеджер загрузок."
+      ],
+      "hash": "5f14fdb47546bc6b926031343b64d34a4823d58404569668652b76b1280a7868",
+      "tag": "Utility"
     },
     {
       "id": "Translator",
@@ -2620,7 +3620,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/autoTranslate - Entire chat.plugin",
       "description": "Because you deserve premium-grade mistranslations, not the factory default!",
-      "hash": "e152587b2abd648543aa3d9eaa5ad0f102fd8fc2e4670e31ad5ee6b5c53cdd96"
+      "about": [
+        "Because you deserve premium-grade mistranslations, not the factory default!",
+        "Автоперевод сообщений в чате."
+      ],
+      "hash": "e152587b2abd648543aa3d9eaa5ad0f102fd8fc2e4670e31ad5ee6b5c53cdd96",
+      "tag": "Utility"
     },
     {
       "id": "disable_link_preview",
@@ -2633,7 +3638,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/disable link preview.plugin",
       "description": "Disables link previews for all outgoing messages.",
-      "hash": "01f973c6cca2b6eeb4b388a97fd99256c823018c7891fa4b7d7123561d09d521"
+      "about": [
+        "Disables link previews for all outgoing messages.",
+        "Отключает превью ссылок for all исходящие сообщения."
+      ],
+      "hash": "01f973c6cca2b6eeb4b388a97fd99256c823018c7891fa4b7d7123561d09d521",
+      "tag": "Utility"
     },
     {
       "id": "jumpto",
@@ -2645,8 +3655,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/jumpto.plugin",
-      "description": "JumpTo creates custom commands (.apple, .team, etc.) to quickly open public Telegram links and internal screens. Type .jump to see how it works.",
-      "hash": "03d7dcd84114c4359e34c28498e4ab70dcc4078711329d0cfbcb983f172f2f38"
+      "description": "Create shortcuts to open Telegram links and internal screens.",
+      "about": [
+        "Create shortcuts to open Telegram links and internal screens.",
+        "Создает shortcuts to open Telegram links and internal screens."
+      ],
+      "hash": "03d7dcd84114c4359e34c28498e4ab70dcc4078711329d0cfbcb983f172f2f38",
+      "tag": "Utility"
     },
     {
       "id": "8473728",
@@ -2658,8 +3673,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/NoMоreHttps.plugin",
-      "description": "Удаляет http:// и https:// из отправляемых ссылок.",
-      "hash": "1a12a9f278f432810badabba9b72c0c961b2922ecebf89bcd12cf058afe39140"
+      "description": "Remove http:// and https:// from outgoing links.",
+      "about": [
+        "Remove http:// and https:// from outgoing links.",
+        "Убирает http:// and https:// from outgoing links."
+      ],
+      "hash": "1a12a9f278f432810badabba9b72c0c961b2922ecebf89bcd12cf058afe39140",
+      "tag": "Network"
     },
     {
       "id": "premium_emojib",
@@ -2672,7 +3692,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/prej.plugin",
       "description": "Sync premium emoji, even if you dont have premium!",
-      "hash": "6fb666a9bff39487ee262acfaa3268caa4425484cbcb5a391c0cad32a2d5e047"
+      "about": [
+        "Sync premium emoji, even if you dont have premium!",
+        "Sync премиум-эмодзи, even if you dont have premium!"
+      ],
+      "hash": "6fb666a9bff39487ee262acfaa3268caa4425484cbcb5a391c0cad32a2d5e047",
+      "tag": "Media"
     },
     {
       "id": "quick_reply",
@@ -2684,8 +3709,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Quik Reply.plugin",
-      "description": "Send predefined messages by typing a command (e.g., /address) in chat. Configure multiple quick replies in settings.",
-      "hash": "b81d66ca57bbcfecdf14e31842b6a7cc044246aac9b90a5387da3e757e06b884"
+      "description": "Send predefined quick replies.",
+      "about": [
+        "Send predefined quick replies.",
+        "Send predefined quick replies."
+      ],
+      "hash": "b81d66ca57bbcfecdf14e31842b6a7cc044246aac9b90a5387da3e757e06b884",
+      "tag": "Customization"
     },
     {
       "id": "tetris_game",
@@ -2698,7 +3728,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Tetris_game(NEW).plugin",
       "description": "Unknown",
-      "hash": "7fd24814e1b51b115e467c2c38e168b46f4237a8d4733db95a06a747a6398bfa"
+      "about": [
+        "Unknown",
+        "Unknown"
+      ],
+      "hash": "7fd24814e1b51b115e467c2c38e168b46f4237a8d4733db95a06a747a6398bfa",
+      "tag": "Unknown"
     },
     {
       "id": "weather",
@@ -2710,8 +3745,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/weather.plugin",
-      "description": "Get current weather using OpenWeatherMap [.wt]",
-      "hash": "2f2619aca7dba8fb0e0a2ddca6a15c4836d3e80d4f80aa1f0a0550ef08ab9738"
+      "description": "Show current weather.",
+      "about": [
+        "Show current weather.",
+        "Показывает current weather."
+      ],
+      "hash": "2f2619aca7dba8fb0e0a2ddca6a15c4836d3e80d4f80aa1f0a0550ef08ab9738",
+      "tag": "Utility"
     },
     {
       "id": "adaptive_audio",
@@ -2724,7 +3764,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Adaptive Audio.plugin",
       "description": "Expand audio message bubbles for longer recordings",
-      "hash": "affe08ca9be949db09ebed1bed35b6aa0044377983c08fb81f9512cce24c8e07"
+      "about": [
+        "Expand audio message bubbles for longer recordings",
+        "Expand audio message bubbles for longer recordings."
+      ],
+      "hash": "affe08ca9be949db09ebed1bed35b6aa0044377983c08fb81f9512cce24c8e07",
+      "tag": "Media"
     },
     {
       "id": "add_to_folder_all_tabs",
@@ -2737,7 +3782,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Add To Folder in All Tabs.plugin",
       "description": "Always show ",
-      "hash": "3b7ccb4734e42aa42469b60840b9d99c78f53d9db60f841cf0db338aa2c74e2c"
+      "about": [
+        "Always show ",
+        "Always show."
+      ],
+      "hash": "3b7ccb4734e42aa42469b60840b9d99c78f53d9db60f841cf0db338aa2c74e2c",
+      "tag": "Utility"
     },
     {
       "id": "ai_role_limit",
@@ -2750,7 +3800,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Ai Role Limit.plugin",
       "description": "Increase the character limit for AI assistant role from 1024 to 9999",
-      "hash": "3b96e2464b63315e9dd64a462188cb090dcac17c4c751f486e63334e3f3e078c"
+      "about": [
+        "Increase the character limit for AI assistant role from 1024 to 9999",
+        "Increase the character limit for ИИ assistant role from 1024 to 9999."
+      ],
+      "hash": "3b96e2464b63315e9dd64a462188cb090dcac17c4c751f486e63334e3f3e078c",
+      "tag": "AI"
     },
     {
       "id": "always_show_proxy_button",
@@ -2763,7 +3818,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Always Show Proxy Button.plugin",
       "description": "Always show the proxy button in the action bar",
-      "hash": "c9fe55037ec66c405da0ac08225bc9480b86af22535da6943bc18ebeaae9b6b0"
+      "about": [
+        "Always show the proxy button in the action bar",
+        "Always show the proxy button in the action bar."
+      ],
+      "hash": "c9fe55037ec66c405da0ac08225bc9480b86af22535da6943bc18ebeaae9b6b0",
+      "tag": "Network"
     },
     {
       "id": "bookmark_chat",
@@ -2776,7 +3836,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Bookmark Chat.plugin",
       "description": "Bookmark messages in chats to easily find them later",
-      "hash": "0183b28d5d30ab366a838db1e958b8dfb5bdde221f8557bff73b4d9190c7dfee"
+      "about": [
+        "Bookmark messages in chats to easily find them later",
+        "Добавляет закладки на messages in chats to easily find them later."
+      ],
+      "hash": "0183b28d5d30ab366a838db1e958b8dfb5bdde221f8557bff73b4d9190c7dfee",
+      "tag": "Utility"
     },
     {
       "id": "code_formatting",
@@ -2789,7 +3854,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Code Formatting.plugin",
       "description": "Add Code and Mention formatting options to text selection menu",
-      "hash": "601c25059db5ab6c4b83f4a5b24f4e08823a175b3a6fff3a2459a01341f8261a"
+      "about": [
+        "Add Code and Mention formatting options to text selection menu",
+        "Добавляет Code and Mention formatting options to text selection menu."
+      ],
+      "hash": "601c25059db5ab6c4b83f4a5b24f4e08823a175b3a6fff3a2459a01341f8261a",
+      "tag": "Utility"
     },
     {
       "id": "confirmation_settings",
@@ -2802,7 +3872,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Confirmation Before Sending.plugin",
       "description": "Show confirmation dialogs for various actions like stickers, voice, commands, etc..",
-      "hash": "84855c1f41ad944b4fbd2cf52d01f7c2e68ae8f51b1730f5ed205672d4825a92"
+      "about": [
+        "Show confirmation dialogs for various actions like stickers, voice, commands, etc..",
+        "Показывает confirmation dialogs for various actions like stickers, voice, commands, etc."
+      ],
+      "hash": "84855c1f41ad944b4fbd2cf52d01f7c2e68ae8f51b1730f5ed205672d4825a92",
+      "tag": "Media"
     },
     {
       "id": "disable_auto_web_login",
@@ -2815,7 +3890,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Disable Auto Web Login.plugin",
       "description": "Prevent Telegram from automatically adding your token into web links",
-      "hash": "c82d7def16ecad8cbb4d9f19a717395aeeb1a5ed46b66e55b23d6f1ed02eccc8"
+      "about": [
+        "Prevent Telegram from automatically adding your token into web links",
+        "Предотвращает Telegram from automatically adding your token into web links."
+      ],
+      "hash": "c82d7def16ecad8cbb4d9f19a717395aeeb1a5ed46b66e55b23d6f1ed02eccc8",
+      "tag": "Utility"
     },
     {
       "id": "disable_emoji_suggestions",
@@ -2828,7 +3908,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Disable Emoji Suggestions.plugin",
       "description": "Disable emoji suggestions while typing",
-      "hash": "661b852c4a6467e5378a64c1fa3ba22661c0aafdd91bed7379e916aa63667e83"
+      "about": [
+        "Disable emoji suggestions while typing",
+        "Отключает emoji suggestions while typing."
+      ],
+      "hash": "661b852c4a6467e5378a64c1fa3ba22661c0aafdd91bed7379e916aa63667e83",
+      "tag": "Media"
     },
     {
       "id": "share_folders",
@@ -2841,7 +3926,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Folders in Forward Sheet.plugin",
       "description": "Add folder tabs to the share sheet dialog for quick filtering",
-      "hash": "416b0f9ca36229f954232474696baf662c72238976bad4a20bcf2688aaa2bf00"
+      "about": [
+        "Add folder tabs to the share sheet dialog for quick filtering",
+        "Добавляет folder tabs to the меню «Поделиться» dialog for quick filtering."
+      ],
+      "hash": "416b0f9ca36229f954232474696baf662c72238976bad4a20bcf2688aaa2bf00",
+      "tag": "Customization"
     },
     {
       "id": "gif_spoiler",
@@ -2854,7 +3944,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Gif Spoiler.plugin",
       "description": "Add ",
-      "hash": "14afd482e2a5332eb0ea620f895299155565621ed36606d61713747a0bfa86a5"
+      "about": [
+        "Add ",
+        "Add."
+      ],
+      "hash": "14afd482e2a5332eb0ea620f895299155565621ed36606d61713747a0bfa86a5",
+      "tag": "Utility"
     },
     {
       "id": "hide_accounts_in_drawer",
@@ -2867,7 +3962,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Hide Account from Drawer.plugin",
       "description": "Long-press theme button to toggle visibility of other accounts in drawer",
-      "hash": "57f1824b4105efa844a25245ea075636783abbc8997f2d0221a41b4bf2de7643"
+      "about": [
+        "Long-press theme button to toggle visibility of other accounts in drawer",
+        "Long-press theme button to toggle visibility of other accounts in drawer."
+      ],
+      "hash": "57f1824b4105efa844a25245ea075636783abbc8997f2d0221a41b4bf2de7643",
+      "tag": "Customization"
     },
     {
       "id": "hide_bot_button",
@@ -2880,7 +3980,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Hide Bot Button.plugin",
       "description": "Hide the bot button in the chat input field",
-      "hash": "f5eeb6c4e03b1c2dce3d94edfef6de0a0e6c7a44057b029c2c6fece6443780d6"
+      "about": [
+        "Hide the bot button in the chat input field",
+        "Скрывает the bot button in the поле ввода чата."
+      ],
+      "hash": "f5eeb6c4e03b1c2dce3d94edfef6de0a0e6c7a44057b029c2c6fece6443780d6",
+      "tag": "Customization"
     },
     {
       "id": "hide_phone_number",
@@ -2893,7 +3998,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Hide Phone Number.plugin",
       "description": "Hide other users",
-      "hash": "23e22a2f0ef5a45558aa02ebbd4be3e0989263bf0d3d46d67c4976bb9bc35ac0"
+      "about": [
+        "Hide other users",
+        "Скрывает other users."
+      ],
+      "hash": "23e22a2f0ef5a45558aa02ebbd4be3e0989263bf0d3d46d67c4976bb9bc35ac0",
+      "tag": "Utility"
     },
     {
       "id": "hide_star_reaction",
@@ -2906,7 +4016,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Hide Star Reaction.plugin",
       "description": "Hide star reactions from reaction menu and message cells",
-      "hash": "3840c8d38c3193487b7e52c3ca78b94d8bf2d6c93e7a125cc5e48556dde8b352"
+      "about": [
+        "Hide star reactions from reaction menu and message cells",
+        "Скрывает star reactions from reaction menu and message cells."
+      ],
+      "hash": "3840c8d38c3193487b7e52c3ca78b94d8bf2d6c93e7a125cc5e48556dde8b352",
+      "tag": "Utility"
     },
     {
       "id": "in_message_translation",
@@ -2919,7 +4034,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/In Message Translation.plugin",
       "description": "Translate messages inline",
-      "hash": "eebe8a8060b2365a8fbd29588cde2709a6104d0c31376a392dc3653a4a5d6c42"
+      "about": [
+        "Translate messages inline",
+        "Переводит messages inline."
+      ],
+      "hash": "eebe8a8060b2365a8fbd29588cde2709a6104d0c31376a392dc3653a4a5d6c42",
+      "tag": "Utility"
     },
     {
       "id": "media_message_control",
@@ -2932,7 +4052,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Media Message Control.plugin",
       "description": "Stop auto-playing next voice/video message after current one ends",
-      "hash": "272c1645a157c6da699203a3312b1dcfcda6ad6be96c4eafc31a3bf8b2f3242d"
+      "about": [
+        "Stop auto-playing next voice/video message after current one ends",
+        "Останавливает auto-playing next voice/video message after current one ends."
+      ],
+      "hash": "272c1645a157c6da699203a3312b1dcfcda6ad6be96c4eafc31a3bf8b2f3242d",
+      "tag": "Media"
     },
     {
       "id": "message_repeat",
@@ -2945,7 +4070,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Message Repeat.plugin",
       "description": "Add a ",
-      "hash": "a9050833c8a8ef627095465dded06e9ce4059d72a9ee9111e3332244a8268e39"
+      "about": [
+        "Add a ",
+        "Добавляет a."
+      ],
+      "hash": "a9050833c8a8ef627095465dded06e9ce4059d72a9ee9111e3332244a8268e39",
+      "tag": "Utility"
     },
     {
       "id": "music_speed_control",
@@ -2958,7 +4088,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Music Speed Control.plugin",
       "description": "Enable playback speed control for all music files regardless of duration",
-      "hash": "7c5a0e808cf99f82ee149c6ded705fcef3514e62a54a72ab13fd56435b7e6360"
+      "about": [
+        "Enable playback speed control for all music files regardless of duration",
+        "Включает playback speed control for all music files regardless of duration."
+      ],
+      "hash": "7c5a0e808cf99f82ee149c6ded705fcef3514e62a54a72ab13fd56435b7e6360",
+      "tag": "Media"
     },
     {
       "id": "non_clickable_preview",
@@ -2971,7 +4106,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Non Clickable Preview.plugin",
       "description": "Makes chat previews non-clickable and adds Open Profile/Open Chat buttons",
-      "hash": "c8e7c69900389098f4c33989e59612ff0e05a0f12fcea39e90d2a68c3320da4b"
+      "about": [
+        "Makes chat previews non-clickable and adds Open Profile/Open Chat buttons",
+        "Makes превью чатов non-clickable and adds Open Profile/Open Chat buttons."
+      ],
+      "hash": "c8e7c69900389098f4c33989e59612ff0e05a0f12fcea39e90d2a68c3320da4b",
+      "tag": "Customization"
     },
     {
       "id": "pinned_reactions",
@@ -2984,7 +4124,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Pinned Reaction.plugin",
       "description": "Pin your favorite reactions to appear first in the reaction picker",
-      "hash": "5b9a53aecd039f9c57bc78d1d74d9a06806e2906799ec82173d0b48a362cf571"
+      "about": [
+        "Pin your favorite reactions to appear first in the reaction picker",
+        "Закрепляет your favorite reactions to appear first in the выбор реакций."
+      ],
+      "hash": "5b9a53aecd039f9c57bc78d1d74d9a06806e2906799ec82173d0b48a362cf571",
+      "tag": "Utility"
     },
     {
       "id": "common_groups_tab",
@@ -2997,7 +4142,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Prefer Common Groups Tab.plugin",
       "description": "Automatically select Common Groups tab instead of Gifts in user profiles",
-      "hash": "46f3c22cafdc96c3246f34b710c67c6bf857b618a127a1c36c0d94eaa2b1122e"
+      "about": [
+        "Automatically select Common Groups tab instead of Gifts in user profiles",
+        "Automatically select Common Groups tab instead of Gifts в профилях пользователей."
+      ],
+      "hash": "46f3c22cafdc96c3246f34b710c67c6bf857b618a127a1c36c0d94eaa2b1122e",
+      "tag": "Media"
     },
     {
       "id": "remove_https_from_links",
@@ -3010,7 +4160,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Remove Https From Links.plugin",
       "description": "Remove ",
-      "hash": "8459380b090b43c167821b607036b2acc6c35297e2590e115fe12650cd096ec3"
+      "about": [
+        "Remove ",
+        "Remove."
+      ],
+      "hash": "8459380b090b43c167821b607036b2acc6c35297e2590e115fe12650cd096ec3",
+      "tag": "Utility"
     },
     {
       "id": "reply_in_another_chat_shortcut",
@@ -3023,7 +4178,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Reply In Another Chat Shortcut.plugin",
       "description": "Long press reply button to reply to selected message in another chat",
-      "hash": "c79c6a53eb175299f2185211525d2c20e54310be331fc3551e002bae7aeff235"
+      "about": [
+        "Long press reply button to reply to selected message in another chat",
+        "Long press reply button to reply to selected message in another chat."
+      ],
+      "hash": "c79c6a53eb175299f2185211525d2c20e54310be331fc3551e002bae7aeff235",
+      "tag": "Customization"
     },
     {
       "id": "reply_private_chat",
@@ -3038,7 +4198,12 @@
       ],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Reply Private Chat.plugin",
       "description": "Add ",
-      "hash": "682b60758e17bafaff4e5a94d6f6ce24eb925eed0ee2fb1297b0753ff14ae406"
+      "about": [
+        "Add ",
+        "Add."
+      ],
+      "hash": "682b60758e17bafaff4e5a94d6f6ce24eb925eed0ee2fb1297b0753ff14ae406",
+      "tag": "Utility"
     },
     {
       "id": "search_by_user_id",
@@ -3051,7 +4216,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Search By User Id.plugin",
       "description": "Search for users or chats by their ID in the search field",
-      "hash": "6ee5d2faecc85164292d7eb4e3fb33309cf8895c5de23e0d8ff12f8723e3bf51"
+      "about": [
+        "Search for users or chats by their ID in the search field",
+        "Ищет for users or chats by their ID in the search field."
+      ],
+      "hash": "6ee5d2faecc85164292d7eb4e3fb33309cf8895c5de23e0d8ff12f8723e3bf51",
+      "tag": "Utility"
     },
     {
       "id": "select_all_media",
@@ -3064,7 +4234,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Select All Media.plugin",
       "description": "Select all shared media with one click",
-      "hash": "0bc437d2728f056257853a33dad20fabce6857330242c5c664a12b93a16ff29a"
+      "about": [
+        "Select all shared media with one click",
+        "Выбирает all shared media with one click."
+      ],
+      "hash": "0bc437d2728f056257853a33dad20fabce6857330242c5c664a12b93a16ff29a",
+      "tag": "Media"
     },
     {
       "id": "message_preview_enhancement",
@@ -3077,7 +4252,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Send Media from Link Previews.plugin",
       "description": "Send media from link previews",
-      "hash": "174cfe41f70603c2ee96b37f1a063281b9dc60539adf9cfe41c6c476c985f114"
+      "about": [
+        "Send media from link previews",
+        "Send media from превью ссылок."
+      ],
+      "hash": "174cfe41f70603c2ee96b37f1a063281b9dc60539adf9cfe41c6c476c985f114",
+      "tag": "Media"
     },
     {
       "id": "send_message",
@@ -3090,7 +4270,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Send Message as Enhancement.plugin",
       "description": "Add personal account option when selecting ",
-      "hash": "c8d809d8e60c122331402349572525efb5fdcb33f6eecfadc1e62edfe9562f72"
+      "about": [
+        "Add personal account option when selecting ",
+        "Добавляет personal account option when selecting."
+      ],
+      "hash": "c8d809d8e60c122331402349572525efb5fdcb33f6eecfadc1e62edfe9562f72",
+      "tag": "Utility"
     },
     {
       "id": "summarize_chat",
@@ -3103,7 +4288,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Summarize Chat.plugin",
       "description": "Summarize recent chat messages using AI",
-      "hash": "5cb953ce3e4e94a20bf4e53a1ce2016ce6a52f6a83e4e0b9ed1c072a80ac2215"
+      "about": [
+        "Summarize recent chat messages using AI",
+        "Суммирует recent chat messages using ИИ."
+      ],
+      "hash": "5cb953ce3e4e94a20bf4e53a1ce2016ce6a52f6a83e4e0b9ed1c072a80ac2215",
+      "tag": "AI"
     },
     {
       "id": "swipe_control",
@@ -3116,7 +4306,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Swipe Control.plugin",
       "description": "Control swipe gestures in various contexts",
-      "hash": "1308fe911aa2e4bad309d1373af32ce8cc5fe099046e41fd0c6ef96fcb33ea23"
+      "about": [
+        "Control swipe gestures in various contexts",
+        "Control swipe gestures in various contexts."
+      ],
+      "hash": "1308fe911aa2e4bad309d1373af32ce8cc5fe099046e41fd0c6ef96fcb33ea23",
+      "tag": "Network"
     },
     {
       "id": "typing_instead_sticker",
@@ -3129,7 +4324,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Typing Instead Sticker.plugin",
       "description": "Show ",
-      "hash": "76cd57a193c519dffa0d2fcb4ec17815478bdb0140a5d50924692c41d07efba3"
+      "about": [
+        "Show ",
+        "Show."
+      ],
+      "hash": "76cd57a193c519dffa0d2fcb4ec17815478bdb0140a5d50924692c41d07efba3",
+      "tag": "Utility"
     },
     {
       "id": "unread_badge_back_button",
@@ -3142,7 +4342,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Unread Badge on Back Button.plugin",
       "description": "Show unread badge on back button",
-      "hash": "4fb3d6f44316867b126422b73b7aadf891aa790dc5804124dbf2bf70629dea36"
+      "about": [
+        "Show unread badge on back button",
+        "Показывает бейдж непрочитанного on back button."
+      ],
+      "hash": "4fb3d6f44316867b126422b73b7aadf891aa790dc5804124dbf2bf70629dea36",
+      "tag": "Customization"
     },
     {
       "id": "account_switcher",
@@ -3155,7 +4360,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/AccountSwitcher.plugin",
       "description": "Switch between accounts in chat",
-      "hash": "a7a794da0db315a8958aca6086cc1306a8004de59a1cc2a8b9b23b57e91c8c2d"
+      "about": [
+        "Switch between accounts in chat",
+        "Переключает between accounts in chat."
+      ],
+      "hash": "a7a794da0db315a8958aca6086cc1306a8004de59a1cc2a8b9b23b57e91c8c2d",
+      "tag": "Utility"
     },
     {
       "id": "always_show_download_manager",
@@ -3168,7 +4378,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Always Show Download Manager.plugin",
       "description": "Always show the download manager button in the action bar",
-      "hash": "109c3f42c57b884064ab93105e12b11d5b579ef544283f8658685436bb3abef4"
+      "about": [
+        "Always show the download manager button in the action bar",
+        "Always show the менеджер загрузок button in the action bar."
+      ],
+      "hash": "109c3f42c57b884064ab93105e12b11d5b579ef544283f8658685436bb3abef4",
+      "tag": "Customization"
     },
     {
       "id": "schedule_button",
@@ -3181,7 +4396,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Always Visible Schedule Button.plugin",
       "description": "Always show the schedule button in the chat input field",
-      "hash": "2d8bf1dcbc74dfe4d773e7413a70c72725763c0e3dab28ff405093de5963ad77"
+      "about": [
+        "Always show the schedule button in the chat input field",
+        "Always show the schedule button in the поле ввода чата."
+      ],
+      "hash": "2d8bf1dcbc74dfe4d773e7413a70c72725763c0e3dab28ff405093de5963ad77",
+      "tag": "Customization"
     },
     {
       "id": "confirm_deeplinks",
@@ -3194,7 +4414,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Confirm DeepLinks.plugin",
       "description": "Show confirmation dialog before opening Telegram and AyuGram deep links",
-      "hash": "2fe26b5b5b2e0883e7d47edfed302846010862eda3ffb7eccfb79b2769ca68a8"
+      "about": [
+        "Show confirmation dialog before opening Telegram and AyuGram deep links",
+        "Показывает confirmation dialog before opening Telegram and AyuGram deep links."
+      ],
+      "hash": "2fe26b5b5b2e0883e7d47edfed302846010862eda3ffb7eccfb79b2769ca68a8",
+      "tag": "Utility"
     },
     {
       "id": "contact_status",
@@ -3207,7 +4432,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Contact Status In Profile.plugin",
       "description": "Show mutual contact status in user profiles",
-      "hash": "eda97fc28cbdf4e99c97f842662cee550cd5519d54b853764f155a6978fbf1ea"
+      "about": [
+        "Show mutual contact status in user profiles",
+        "Показывает mutual contact status в профилях пользователей."
+      ],
+      "hash": "eda97fc28cbdf4e99c97f842662cee550cd5519d54b853764f155a6978fbf1ea",
+      "tag": "Utility"
     },
     {
       "id": "message_receive_sound",
@@ -3220,7 +4450,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Custom Message Receive Sound.plugin",
       "description": "Customize message receive sound and vibration",
-      "hash": "c1711e191b76a90f83ee1e541c57944bf2124188ad7b4532bcc62c1bb4fa1d34"
+      "about": [
+        "Customize message receive sound and vibration",
+        "Настраивает message receive sound and vibration."
+      ],
+      "hash": "c1711e191b76a90f83ee1e541c57944bf2124188ad7b4532bcc62c1bb4fa1d34",
+      "tag": "Customization"
     },
     {
       "id": "custom_privacy",
@@ -3233,7 +4468,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/CustomPrivacy.plugin",
       "description": "Manage individual user privacy settings from their profile.",
-      "hash": "2f9653a86345d6463e931de96529c06c4bab4fcbac4683b6239775190bed29d6"
+      "about": [
+        "Manage individual user privacy settings from their profile.",
+        "Управляет individual user privacy settings from their profile."
+      ],
+      "hash": "2f9653a86345d6463e931de96529c06c4bab4fcbac4683b6239775190bed29d6",
+      "tag": "Utility"
     },
     {
       "id": "custom_saved_messages",
@@ -3246,7 +4486,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/CustomSavedMessages.plugin",
       "description": "Unknown",
-      "hash": "a09f0c6113ffaab40a5e3d3acb06b3abd62853f169997f642bcd34febf5034e8"
+      "about": [
+        "Unknown",
+        "Unknown"
+      ],
+      "hash": "a09f0c6113ffaab40a5e3d3acb06b3abd62853f169997f642bcd34febf5034e8",
+      "tag": "Unknown"
     },
     {
       "id": "delete_with_duration",
@@ -3259,7 +4504,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Delete With Duration.plugin",
       "description": "Add duration selection to delete messages bottom sheet (OctoGram style)",
-      "hash": "dfd2483213c97773fcecb274ae1b9c764ab125d251bfe9a64c45a1077f9d1a26"
+      "about": [
+        "Add duration selection to delete messages bottom sheet (OctoGram style)",
+        "Добавляет duration selection to delete messages bottom sheet (OctoGram style)."
+      ],
+      "hash": "dfd2483213c97773fcecb274ae1b9c764ab125d251bfe9a64c45a1077f9d1a26",
+      "tag": "Utility"
     },
     {
       "id": "edit_file_name",
@@ -3272,7 +4522,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Edit File Name.plugin",
       "description": "Add ",
-      "hash": "91536da310036ded7b2c269ca022dba2abe56b72c3eaa05330fbfd9216783f70"
+      "about": [
+        "Add ",
+        "Add."
+      ],
+      "hash": "91536da310036ded7b2c269ca022dba2abe56b72c3eaa05330fbfd9216783f70",
+      "tag": "Utility"
     },
     {
       "id": "forward_sheet_behaviour",
@@ -3284,8 +4539,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Forward Sheet Behaviour.plugin",
-      "description": "Configure forward sheet behavior - use classic forward sheet or ShareAlert for all forwards",
-      "hash": "0c8cf865d9538b2dd42f4c45a657ecb0755fed0b0c7f0239ca9f9b549dc1d4bf"
+      "description": "Customize the forward sheet.",
+      "about": [
+        "Customize the forward sheet.",
+        "Настраивает the меню пересылки."
+      ],
+      "hash": "0c8cf865d9538b2dd42f4c45a657ecb0755fed0b0c7f0239ca9f9b549dc1d4bf",
+      "tag": "Utility"
     },
     {
       "id": "gift_drawer",
@@ -3298,7 +4558,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Gift Drawer.plugin",
       "description": "Add gift to drawer for quick access",
-      "hash": "16a0f192f5bf7967ff54a6a86e1989778850ab11299a279ca23c90ef035bc336"
+      "about": [
+        "Add gift to drawer for quick access",
+        "Добавляет gift to drawer for quick access."
+      ],
+      "hash": "16a0f192f5bf7967ff54a6a86e1989778850ab11299a279ca23c90ef035bc336",
+      "tag": "Media"
     },
     {
       "id": "hide_archived_chats",
@@ -3311,7 +4576,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Hide Archived Chats.plugin",
       "description": "Hide the archived chats folder from the chat list and/or drawer",
-      "hash": "8684ecc916acbe672586ac8e5071c99dfb59c2f345d804199d30b1bd97a634de"
+      "about": [
+        "Hide the archived chats folder from the chat list and/or drawer",
+        "Скрывает the archived chats folder from the списке чатов and/or drawer."
+      ],
+      "hash": "8684ecc916acbe672586ac8e5071c99dfb59c2f345d804199d30b1bd97a634de",
+      "tag": "Customization"
     },
     {
       "id": "hide_birthday_alert",
@@ -3324,7 +4594,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Hide Birthday Alert.plugin",
       "description": "Hide the birthday setup alert in the dialogs list",
-      "hash": "9873186fa7d464870dbcee900d722c8453d6e2bded797c3e08a175a2d115ba5f"
+      "about": [
+        "Hide the birthday setup alert in the dialogs list",
+        "Скрывает the birthday setup alert in the dialogs list."
+      ],
+      "hash": "9873186fa7d464870dbcee900d722c8453d6e2bded797c3e08a175a2d115ba5f",
+      "tag": "Utility"
     },
     {
       "id": "hide_bot_open",
@@ -3337,7 +4612,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Hide Bot Open.plugin",
       "description": "Hide the ",
-      "hash": "7b8122b03ed6cba41349ea3fcfdde8d5edb8694e37de6020c15dbaa0aefa1540"
+      "about": [
+        "Hide the ",
+        "Скрывает the."
+      ],
+      "hash": "7b8122b03ed6cba41349ea3fcfdde8d5edb8694e37de6020c15dbaa0aefa1540",
+      "tag": "Utility"
     },
     {
       "id": "hidefolders_enabled",
@@ -3350,7 +4630,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Hide Folders.plugin",
       "description": "Hide specific folders from the tab bar",
-      "hash": "4b4a8042011a6092971f2cadc31d5984e0b064cba7a7b6e5f816b176aaaabe59"
+      "about": [
+        "Hide specific folders from the tab bar",
+        "Скрывает specific folders from the tab bar."
+      ],
+      "hash": "4b4a8042011a6092971f2cadc31d5984e0b064cba7a7b6e5f816b176aaaabe59",
+      "tag": "Customization"
     },
     {
       "id": "hide_hd_icon",
@@ -3363,7 +4648,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Hide Hd Icon.plugin",
       "description": "Hide the annoying ahh-HD icon from the media picker",
-      "hash": "9ef8eb27abd01e46e43b5680c728448a3068c04561a9b8e820a05aa338db5a32"
+      "about": [
+        "Hide the annoying ahh-HD icon from the media picker",
+        "Скрывает the annoying ahh-HD icon from the media picker."
+      ],
+      "hash": "9ef8eb27abd01e46e43b5680c728448a3068c04561a9b8e820a05aa338db5a32",
+      "tag": "Media"
     },
     {
       "id": "hide_via_bot",
@@ -3376,7 +4666,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Hide Via Bot.plugin",
       "description": "Hide ",
-      "hash": "f7d4b281d0416fe1ffc2b1f8629a3ebc71e2de7ebc470e751aed2032d493e192"
+      "about": [
+        "Hide ",
+        "Hide."
+      ],
+      "hash": "f7d4b281d0416fe1ffc2b1f8629a3ebc71e2de7ebc470e751aed2032d493e192",
+      "tag": "Utility"
     },
     {
       "id": "join_request_direct_profile",
@@ -3389,7 +4684,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Join Request Direct Profile.plugin",
       "description": "Open user profile directly when clicking on join request in group",
-      "hash": "c62060ef7e183055f021a86f854c7cf28e2a135a85420320fe688187ae15d86d"
+      "about": [
+        "Open user profile directly when clicking on join request in group",
+        "Open user profile directly when clicking on join request in group."
+      ],
+      "hash": "c62060ef7e183055f021a86f854c7cf28e2a135a85420320fe688187ae15d86d",
+      "tag": "Utility"
     },
     {
       "id": "message_swipe_action",
@@ -3401,8 +4701,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Message Swipe Action.plugin",
-      "description": "Customize message swipe action: Reply, Save, Translate, or Direct Share",
-      "hash": "981a82affd4c472ff4d5950e6eb2f7b9b6f436cd30bdc0f84b9e5f7b044fdc32"
+      "description": "Customize message swipe actions.",
+      "about": [
+        "Customize message swipe actions.",
+        "Настраивает message swipe actions."
+      ],
+      "hash": "981a82affd4c472ff4d5950e6eb2f7b9b6f436cd30bdc0f84b9e5f7b044fdc32",
+      "tag": "Network"
     },
     {
       "id": "owner_channels",
@@ -3415,7 +4720,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Owner Channels.plugin",
       "description": "Shows owned/admin channels and groups on drawer long-click",
-      "hash": "169cb84e6708ec27ab712a872e612c72155e254972cf9ae894eba79ab2e54a7d"
+      "about": [
+        "Shows owned/admin channels and groups on drawer long-click",
+        "Показывает owned/admin channels and groups on drawer long-click."
+      ],
+      "hash": "169cb84e6708ec27ab712a872e612c72155e254972cf9ae894eba79ab2e54a7d",
+      "tag": "Admin"
     },
     {
       "id": "recent_chats_manager",
@@ -3428,7 +4738,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/RecentChatsManager.plugin",
       "description": "View recently opened chats from drawer",
-      "hash": "fa4b25dc7c601a1a1435e6b9e19e489f0b3b801c0517ea19a81e5d721c4d99e3"
+      "about": [
+        "View recently opened chats from drawer",
+        "View recently opened chats from drawer."
+      ],
+      "hash": "fa4b25dc7c601a1a1435e6b9e19e489f0b3b801c0517ea19a81e5d721c4d99e3",
+      "tag": "Customization"
     },
     {
       "id": "remove_from_folders",
@@ -3441,7 +4756,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Remove From Folders.plugin",
       "description": "Remove chat from all folders before leaving",
-      "hash": "4ebad113ac50f9239f589339d5e1411faede3e924a12903d1555766b67fc403c"
+      "about": [
+        "Remove chat from all folders before leaving",
+        "Убирает chat from all folders before leaving."
+      ],
+      "hash": "4ebad113ac50f9239f589339d5e1411faede3e924a12903d1555766b67fc403c",
+      "tag": "Customization"
     },
     {
       "id": "remove_greeting_sticker",
@@ -3454,7 +4774,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Remove Greeting Sticker.plugin",
       "description": "Remove the greeting sticker shown when starting a new chat",
-      "hash": "0463779c44428067933851504abaa60aba30f8cecf3b0adedd091508e427f8aa"
+      "about": [
+        "Remove the greeting sticker shown when starting a new chat",
+        "Убирает the greeting sticker shown when starting a new chat."
+      ],
+      "hash": "0463779c44428067933851504abaa60aba30f8cecf3b0adedd091508e427f8aa",
+      "tag": "Media"
     },
     {
       "id": "search_message_id",
@@ -3467,7 +4792,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Search by Message ID.plugin",
       "description": "Search messages by its ID",
-      "hash": "00b6fa3215508e2e1c49a296c1cbc689ec963cdb756bf464ca140091847d061b"
+      "about": [
+        "Search messages by its ID",
+        "Ищет messages by its ID."
+      ],
+      "hash": "00b6fa3215508e2e1c49a296c1cbc689ec963cdb756bf464ca140091847d061b",
+      "tag": "Utility"
     },
     {
       "id": "search_filter",
@@ -3480,7 +4810,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Search Filter.plugin",
       "description": "Filter messages by type in chat search",
-      "hash": "0f36f337d150f84dfcca13ae68a7d4aedc3dd7d656d3bd3d20484f6fd0fd0433"
+      "about": [
+        "Filter messages by type in chat search",
+        "Фильтрует messages by type in chat search."
+      ],
+      "hash": "0f36f337d150f84dfcca13ae68a7d4aedc3dd7d656d3bd3d20484f6fd0fd0433",
+      "tag": "Utility"
     },
     {
       "id": "select_all_chats",
@@ -3493,7 +4828,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Select All Chats.plugin",
       "description": "Add ",
-      "hash": "c358cc094303a0fb6f3b9df2258c2186c57d0b8de0833da6f7de68dd5386843f"
+      "about": [
+        "Add ",
+        "Add."
+      ],
+      "hash": "c358cc094303a0fb6f3b9df2258c2186c57d0b8de0833da6f7de68dd5386843f",
+      "tag": "Utility"
     },
     {
       "id": "send_comment_after_forward",
@@ -3506,7 +4846,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Send comment after forward.plugin",
       "description": "Send comment after forward",
-      "hash": "10044f539636dc6ce754029b2f0cc771835dbf6549592849582cbc281af46a1f"
+      "about": [
+        "Send comment after forward",
+        "Send comment after forward."
+      ],
+      "hash": "10044f539636dc6ce754029b2f0cc771835dbf6549592849582cbc281af46a1f",
+      "tag": "Utility"
     },
     {
       "id": "sleep_timer",
@@ -3519,7 +4864,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Sleep Timer.plugin",
       "description": "Add sleep timer option to music player - automatically pause after set duration",
-      "hash": "e88ac43eab0c31f595cbf64c65a3f59d7ceb36b83a2414ce769cafd1da234224"
+      "about": [
+        "Add sleep timer option to music player - automatically pause after set duration",
+        "Добавляет sleep timer option to music player - automatically pause after set duration."
+      ],
+      "hash": "e88ac43eab0c31f595cbf64c65a3f59d7ceb36b83a2414ce769cafd1da234224",
+      "tag": "Media"
     },
     {
       "id": "unify_username_behavior",
@@ -3532,7 +4882,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Unify Username Behavior.plugin",
       "description": "Make channel username clicks copy username instead of share alert",
-      "hash": "e1662f3463bcea9da7ad03a8d383539651c22abe2c27e6533e72a132d5ac9f07"
+      "about": [
+        "Make channel username clicks copy username instead of share alert",
+        "Make channel username clicks copy username instead of share alert."
+      ],
+      "hash": "e1662f3463bcea9da7ad03a8d383539651c22abe2c27e6533e72a132d5ac9f07",
+      "tag": "Utility"
     },
     {
       "id": "unread_count_settings",
@@ -3545,7 +4900,12 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Unread Count Settings.plugin",
       "description": "Customize unread count display - show chat count, message count, or exclude archived",
-      "hash": "20cbf8e92dbbc3a011208d679c9732a4436afdb2e26a7049d8d0aeba334c8084"
+      "about": [
+        "Customize unread count display - show chat count, message count, or exclude archived",
+        "Настраивает unread count display - show chat count, message count, or exclude archived."
+      ],
+      "hash": "20cbf8e92dbbc3a011208d679c9732a4436afdb2e26a7049d8d0aeba334c8084",
+      "tag": "Utility"
     }
   ]
 }
