@@ -182,6 +182,7 @@ def loadConfig(configFile: str = "cfg.yml") -> Dict:
             "allowDowngrade": ("allow version downgrade? (y/n): ", bool),
             "manualInputDescriptions": ("manually input descriptions? (y/n): ", bool),
             "manualInputAbout": ("manually input about (EN/RU)? (y/n): ", bool),
+            "appendToLogs": ("append to logs instead of overwriting? (y/n): ", bool),
             "configPath": ("path to repository config? (default: config.json): ", str),
             "workingDir": ("path to dir working plugins? (default: workingdir): ", str),
             "backupDir": ("path to backup directory? (default: backups): ", str),
@@ -278,6 +279,7 @@ def createConfig(configFile: str = "cfg.yml") -> Dict:
     allowDowngrade = input("allow version downgrade? (y/n): ").lower() == 'y'
     manualInputDescriptions = input("manually input descriptions? (y/n): ").lower() == 'y'
     manualInputAbout = input("manually input about (EN/RU)? (y/n): ").lower() == 'y'
+    appendToLogs = input("append to logs instead of overwriting? (y/n): ").lower() == 'y'
 
     defaultConfigPath = "config.json"
     while True:
@@ -363,6 +365,7 @@ def createConfig(configFile: str = "cfg.yml") -> Dict:
         "allowDowngrade": allowDowngrade,
         "manualInputDescriptions": manualInputDescriptions,
         "manualInputAbout": manualInputAbout,
+        "appendToLogs": appendToLogs,
         "configPath": configPath,
         "workingDir": workingDir,
         "backupDir": backupDir,
@@ -512,11 +515,15 @@ def normalizeLoadedConfig(repoConfig: Dict):
             if '\\n' in desc:
                 plugin["description"] = desc.replace('\\n', '\n')
 
-def writeLatestLog(newPlugins: List[Dict], updatedPlugins: List[Dict], deletedPlugins: List[Dict], totalCount: int):
+def writeLatestLog(newPlugins: List[Dict], updatedPlugins: List[Dict], deletedPlugins: List[Dict], totalCount: int, appendMode: bool = False):
     latestLogPath = "latest.log"
 
     try:
-        with open(latestLogPath, 'w', encoding='utf-8') as f:
+        mode = 'a' if appendMode else 'w'
+        with open(latestLogPath, mode, encoding='utf-8') as f:
+            if appendMode:
+                f.write("\n" + "="*50 + "\n")
+            
             f.write(f"latest update: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
             f.write(f"total plugins: {totalCount}\n")
             f.write(f"added: {len(newPlugins)}\n")
@@ -540,15 +547,20 @@ def writeLatestLog(newPlugins: List[Dict], updatedPlugins: List[Dict], deletedPl
                 for plugin in deletedPlugins:
                     f.write(f"  - {plugin['name']} (id: {plugin['id']}, version: {plugin['version']})\n")
 
-        print(f"{Colors.BLUE}log written: {latestLogPath}{Colors.RESET}")
+        action = "appended to" if appendMode else "written"
+        print(f"{Colors.BLUE}log {action}: {latestLogPath}{Colors.RESET}")
     except Exception as e:
         print(f"{Colors.RED}log write failed {e}{Colors.RESET}")
 
-def writeForPost(newPlugins: List[Dict], updatedPlugins: List[Dict], deletedPlugins: List[Dict], totalCount: int):
+def writeForPost(newPlugins: List[Dict], updatedPlugins: List[Dict], deletedPlugins: List[Dict], totalCount: int, appendMode: bool = False):
     forPostPath = "forpost.txt"
 
     try:
-        with open(forPostPath, 'w', encoding='utf-8') as f:
+        mode = 'a' if appendMode else 'w'
+        with open(forPostPath, mode, encoding='utf-8') as f:
+            if appendMode:
+                f.write("\n" + "="*50 + "\n")
+            
             if newPlugins:
                 f.write(f"Added {len(newPlugins)} plugins\n\n")
                 for plugin in newPlugins:
@@ -569,7 +581,8 @@ def writeForPost(newPlugins: List[Dict], updatedPlugins: List[Dict], deletedPlug
 
             f.write(f"Total plugins: {totalCount}")
 
-        print(f"{Colors.BLUE}post file written: {forPostPath}{Colors.RESET}")
+        action = "appended to" if appendMode else "written"
+        print(f"{Colors.BLUE}post file {action}: {forPostPath}{Colors.RESET}")
     except Exception as e:
         print(f"{Colors.RED}post file write failed {e}{Colors.RESET}")
 
@@ -666,10 +679,12 @@ def updateConfigJson(config: Dict):
         print(f"{Colors.GREEN}added: {len(newPlugins)}{Colors.RESET}, {Colors.BLUE}updated: {len(updatedPlugins)}{Colors.RESET}")
 
         if config.get("writeLastLog", False):
-            writeLatestLog(newPlugins, updatedPlugins, [], len(repoConfig["plugins"]))
+            appendMode = config.get("appendToLogs", False)
+            writeLatestLog(newPlugins, updatedPlugins, [], len(repoConfig["plugins"]), appendMode)
 
         if config.get("createForPost", False):
-            writeForPost(newPlugins, updatedPlugins, [], len(repoConfig["plugins"]))
+            appendMode = config.get("appendToLogs", False)
+            writeForPost(newPlugins, updatedPlugins, [], len(repoConfig["plugins"]), appendMode)
     else:
         print("no new or updated plugins")
 
@@ -783,10 +798,12 @@ def deleteFiles(config: Dict):
         print(f"{filename} deleted from repository")
 
     if config.get("writeLastLog", False):
-        writeLatestLog([], [], [deletedPlugin], len(repoConfig["plugins"]))
+        appendMode = config.get("appendToLogs", False)
+        writeLatestLog([], [], [deletedPlugin], len(repoConfig["plugins"]), appendMode)
 
     if config.get("createForPost", False):
-        writeForPost([], [], [deletedPlugin], len(repoConfig["plugins"]))
+        appendMode = config.get("appendToLogs", False)
+        writeForPost([], [], [deletedPlugin], len(repoConfig["plugins"]), appendMode)
 
 def clearMissingPlugins(config: Dict):
     configPath = config["configPath"]
@@ -840,10 +857,12 @@ def clearMissingPlugins(config: Dict):
         print(f"remaining plugins: {len(pluginsToKeep)}")
 
         if config.get("writeLastLog", False):
-            writeLatestLog([], [], deletedPlugins, len(pluginsToKeep))
+            appendMode = config.get("appendToLogs", False)
+            writeLatestLog([], [], deletedPlugins, len(pluginsToKeep), appendMode)
 
         if config.get("createForPost", False):
-            writeForPost([], [], deletedPlugins, len(pluginsToKeep))
+            appendMode = config.get("appendToLogs", False)
+            writeForPost([], [], deletedPlugins, len(pluginsToKeep), appendMode)
     else:
         print("all plugins have corresponding files")
 
@@ -1158,10 +1177,12 @@ def resetAllPlugins(config: Dict):
     print(f"{Colors.BLUE}files processed: {filesProcessed}{Colors.RESET}")
 
     if config.get("writeLastLog", False):
-        writeLatestLog(newPlugins, [], [], len(newPlugins))
+        appendMode = config.get("appendToLogs", False)
+        writeLatestLog(newPlugins, [], [], len(newPlugins), appendMode)
 
     if config.get("createForPost", False):
-        writeForPost(newPlugins, [], [], len(newPlugins))
+        appendMode = config.get("appendToLogs", False)
+        writeForPost(newPlugins, [], [], len(newPlugins), appendMode)
 
 def createGitignore():
     gitignorePath = ".gitignore"
@@ -1196,7 +1217,34 @@ def createGitignore():
 
         print(f".gitignore created with: {', '.join(entriesToAdd)}")
 
-def showMenu():
+def clearLogs():
+    latestLogPath = "latest.log"
+    forPostPath = "forpost.txt"
+    
+    filesCleared = []
+    
+    if os.path.exists(latestLogPath):
+        try:
+            os.remove(latestLogPath)
+            filesCleared.append(latestLogPath)
+        except Exception as e:
+            print(f"{Colors.RED}failed to clear {latestLogPath}: {e}{Colors.RESET}")
+    
+    if os.path.exists(forPostPath):
+        try:
+            os.remove(forPostPath)
+            filesCleared.append(forPostPath)
+        except Exception as e:
+            print(f"{Colors.RED}failed to clear {forPostPath}: {e}{Colors.RESET}")
+    
+    if filesCleared:
+        print(f"{Colors.GREEN}cleared: {', '.join(filesCleared)}{Colors.RESET}")
+    else:
+        print(f"{Colors.YELLOW}no log files found to clear{Colors.RESET}")
+
+def showMenu(config: Dict):
+    appendToLogs = config.get("appendToLogs", False)
+    
     print()
     print(f"{Colors.BOLD}{Colors.CYAN}    menu    {Colors.RESET}")
     print(f"{Colors.GREEN}1{Colors.RESET}. add files")
@@ -1209,8 +1257,15 @@ def showMenu():
     print(f"{Colors.GREEN}8{Colors.RESET}. edit config values")
     print(f"{Colors.GREEN}9{Colors.RESET}. rewrite script cfg")
     print(f"{Colors.GREEN}10{Colors.RESET}. create .gitignore for cfg.yml")
-    print(f"{Colors.YELLOW}11{Colors.RESET}. reset (recheck all files)")
-    print(f"{Colors.RED}12{Colors.RESET}. exit")
+    
+    if not appendToLogs:
+        print(f"{Colors.YELLOW}11{Colors.RESET}. clear logs/forpost")
+        print(f"{Colors.YELLOW}12{Colors.RESET}. reset (recheck all files)")
+        print(f"{Colors.RED}13{Colors.RESET}. exit")
+    else:
+        print(f"{Colors.YELLOW}11{Colors.RESET}. reset (recheck all files)")
+        print(f"{Colors.RED}12{Colors.RESET}. exit")
+    
     print()
     choice = input(f"{Colors.CYAN}choose option: {Colors.RESET}").strip()
     return choice
@@ -1222,7 +1277,9 @@ if __name__ == "__main__":
         config = createConfig()
 
     while True:
-        choice = showMenu()
+        choice = showMenu(config)
+        
+        appendToLogs = config.get("appendToLogs", False)
 
         if choice == "1":
             updateConfigJson(config)
@@ -1245,9 +1302,21 @@ if __name__ == "__main__":
         elif choice == "10":
             createGitignore()
         elif choice == "11":
-            resetAllPlugins(config)
+            if not appendToLogs:
+                clearLogs()
+            else:
+                resetAllPlugins(config)
         elif choice == "12":
-            print("exit")
-            break
+            if not appendToLogs:
+                resetAllPlugins(config)
+            else:
+                print("exit")
+                break
+        elif choice == "13":
+            if not appendToLogs:
+                print("exit")
+                break
+            else:
+                print("invalid option")
         else:
             print("invalid option")
