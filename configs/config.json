@@ -45,7 +45,7 @@
         "quantahut"
       ],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/UiTweaks.plugin",
-      "description": "Well sometimes you just need to tweak things... (requires [QuantaHut](https://t.me/QuantaPlugins/228))",
+      "description": "Well sometimes you just need to tweak things...",
       "hash": "96d1c2c65c6609154c3838c2efd994626250a13668f67d0a11fc7367ef1509a1"
     },
     {
@@ -71,7 +71,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shexec.plugin",
-      "description": "Execute shell commands, subprocesses, and Junis [.sh/.sproc/.jn]",
+      "description": "Execute shell commands, subprocesses, and Junis.",
       "hash": "d793ba441f8c1e33808809bca8813d9f471ca8d120b80bab5776eb4189be3a4c"
     },
     {
@@ -97,7 +97,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/x0.plugin",
-      "description": "Загружает медиафайл (фото, видео, гиф, документ) на хостинг x0.at и отправляет полученную ссылку в чат. Для использования, ответьте на сообщение с медиафайлом командой .x0",
+      "description": "Uploads a media file (photo, video, GIF, document) to x0.at hosting and sends the resulting link to the chat. To use, reply to the message with the media file using the .x0 command.",
       "hash": "3a53e686bfbb5ac9f0bf759ebf09d67b7141977362ef58a7e4db0159cd98edca"
     },
     {
@@ -110,7 +110,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/modrinth.plugin",
-      "description": "Unknown",
+      "description": "Searching of things on modrinth",
       "hash": "467c1bd5d0ce0dde3261e8a62d19486915607388c5147ad588aa79d0bf9c6798"
     },
     {
@@ -123,7 +123,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/rekvv.plugin",
-      "description": "Отправляет указанные в настройках реквизиты по команде .rekv / обязательно посмотри .helprekv",
+      "description": "Sends the details specified in the settings on command",
       "hash": "9d06a522f2e1d9e30b5c9cd013a2323a50fa0b138a05d9c2b172889d3e4516fe"
     },
     {
@@ -136,7 +136,7 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/advcalc.plugin",
-      "description": "Unknown",
+      "description": "Just advanced calculator...",
       "hash": "67baabeddd0c0e0c09925f3ab56e40f6646483e580d0bc339f6484c815c8fa95"
     },
     {
@@ -149,12 +149,12 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/efch.plugin",
-      "description": "Unknown",
+      "description": "Display sys info",
       "hash": "c24422d49e1f39136c95768a042afbce7c16861a3d41d46d10c86923b12363e7"
     },
     {
       "id": "account_stats",
-      "name": "Статистика аккаунта",
+      "name": "Account stats",
       "author": "@gemeguardian",
       "version": "1.2",
       "state": "release",
@@ -162,13 +162,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/account_stats.plugin",
-      "description": "Показывает статистику по всем чатам аккаунта. Команда: .stats",
+      "description": "Shows statistics for all chats in the account.",
       "hash": "13e4b888991048f9bee53cd913ad713db379a38a0c5fda08d10008a399d04ab2"
     },
     {
       "id": "animated_chat_wallpaper",
       "name": "AnimatedChatWallpaper",
-      "author": "Unknown",
+      "author": "@sterepando",
       "version": "1.1",
       "state": "release",
       "icon": "exteraPlugins/0",
@@ -203,19 +203,6 @@
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Auto_Reply.plugin",
       "description": "Unknown",
       "hash": "d5d2437944059fd9695ca32b5b23f5e227bba93b348de7a5c65b28fcc8af563b"
-    },
-    {
-      "id": "emoji_master",
-      "name": "AutoSmile",
-      "author": "@DataNestUser",
-      "version": "1.0",
-      "state": "release",
-      "icon": "Unknown",
-      "suspicious": "false",
-      "dependencies": [],
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/AutoSmileRelease.plugin",
-      "description": "Ставит рандомное эмодзи в конце предложения",
-      "hash": "e87af0c93715418e11fd059b68aa6bd64df6c481fccde64fdd2af5792878e052"
     },
     {
       "id": "user_manager",
