@@ -1,0 +1,146 @@
+__name__ = "GoogleThat+"
+__description__ = "Creates search link [.search <query>] Fork by @shareui original plugin @zwylair."
+__icon__ = "zwyPluginsIcons/2"
+__id__ = "shareui_gtht"
+__version__ = "1.0.5"
+__author__ = "@shareui"
+__min_version__ = "11.12.1"
+
+from typing import Any, Optional
+from urllib.parse import quote
+
+from base_plugin import BasePlugin, HookResult, HookStrategy
+from client_utils import send_message, get_last_fragment, run_on_queue
+from android_utils import run_on_ui_thread, log
+from markdown_utils import parse_markdown
+from ui.settings import Header, Selector, Divider, Input, Switch
+from ui.alert import AlertDialogBuilder
+from ui.bulletin import BulletinHelper
+
+SEARCH_ENGINES = {
+    "Google": "https://www.google.com/search?q=",
+    "Bing": "https://www.bing.com/search?q=",
+    "Yahoo": "https://search.yahoo.com/search?p=",
+    "DuckDuckGo": "https://duckduckgo.com/?q=",
+    "Baidu": "https://www.baidu.com/s?wd=",
+    "Yandex": "https://yandex.com/search/?text=",
+    "Ecosia": "https://www.ecosia.org/search?q=",
+    "LetMeGoogleThatForYou": "https://letmegooglethat.com/?q="
+}
+DEFAULT_SEARCH_ENGINE = 0
+
+class GoogleThatPlugin(BasePlugin):
+
+    def on_plugin_load(self):
+        self.add_on_send_message_hook()
+        log(f"[{__id__}] Plugin loaded.")
+
+    def create_settings(self):
+        return [
+            Header(text="Основные настройки"),
+            Input(
+                key="gt_command",
+                text="Команда для поиска",
+                default=".search",
+                icon="input_bot1_remix"
+            ),
+            Selector(
+                key="search_engine",
+                text="Поисковая система",
+                default=DEFAULT_SEARCH_ENGINE,
+                icon="msg_language",
+                items=list(SEARCH_ENGINES.keys())
+            ),
+            Divider(),
+            Header(text="Настройки отображения"),
+            Switch(
+                key="show_final_link",
+                text="Добавлять '<-- жми' к ссылке",
+                subtext="В выключенном состоянии будет показана только ссылка 'Результат'",
+                default=True,
+                icon="msg_link"
+            ),
+        ]
+
+    def on_send_message_hook(self, account: int, params: Any) -> HookResult:
+        if not hasattr(params, 'message') or not isinstance(params.message, str):
+            return HookResult()
+
+        command = self.get_setting("gt_command", ".search")
+        msg_text = params.message
+        
+        if not msg_text.lower().startswith(command.lower() + " "):
+            return HookResult()
+
+        query = msg_text[len(command):].strip()
+        if not query:
+            return HookResult(strategy=HookStrategy.CANCEL)
+
+        spinner = self._show_loading_spinner()
+
+        run_on_queue(
+            lambda: self._perform_search(
+                query,
+                params.peer,
+                getattr(params, "replyToMsg", None),
+                spinner
+            )
+        )
+
+        return HookResult(strategy=HookStrategy.CANCEL)
+
+    def _perform_search(self, query: str, peer_id: int, reply_to: Optional[Any], spinner: AlertDialogBuilder):
+        try:
+            search_engine_index = self.get_setting("search_engine", DEFAULT_SEARCH_ENGINE)
+            search_engine_name = list(SEARCH_ENGINES.keys())[search_engine_index]
+            search_engine_url = list(SEARCH_ENGINES.values())[search_engine_index]
+            full_url = search_engine_url + quote(query)
+
+            show_final_link_text = self.get_setting("show_final_link", True)
+
+            message_parts = [
+                f"*Запрос:* `{query}`",
+                f"*Поисковик:* {search_engine_name}"
+            ]
+
+            link_text_pg = f"\n[Результат]({full_url})"
+            if show_final_link_text:
+                link_text_pg += " <-- жми"
+            
+            message_parts.append(link_text_pg)
+
+            message_text = "\n".join(message_parts)
+            
+            parsed_message = parse_markdown(message_text)
+            
+            message_params = {
+                "peer": peer_id,
+                "message": parsed_message.text,
+                "entities": [entity.to_tlrpc_object() for entity in parsed_message.entities],
+                "replyToMsg": reply_to
+            }
+            
+            run_on_ui_thread(lambda: self._send_and_dismiss(message_params, spinner))
+
+        except Exception as e:
+            log(f"[{__id__}] Search error: {e}")
+            run_on_ui_thread(lambda: (
+                spinner.dismiss() if spinner else None,
+                BulletinHelper.show_error(f"Ошибка: {e}")
+            ))
+
+    def _show_loading_spinner(self) -> Optional[AlertDialogBuilder]:
+        fragment = get_last_fragment()
+        if not fragment or not fragment.getParentActivity():
+            return None
+        
+        builder = AlertDialogBuilder(fragment.getParentActivity(), AlertDialogBuilder.ALERT_TYPE_SPINNER)
+        builder.set_title("Формирую ссылку...")
+        builder.set_cancelable(False)
+        builder.show()
+        return builder
+
+    def _send_and_dismiss(self, message_params: dict, spinner: Optional[AlertDialogBuilder]):
+        if spinner:
+            spinner.dismiss()
+        send_message(message_params)

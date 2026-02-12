@@ -23,7 +23,7 @@
         "Полноэкранный текстовый редактор для длинных сообщений с поддержкой форматирования и премиум эмодзи."
       ],
       "hash": "45a9f92828ed24f65fb07a3cd1cc1e98abce1479c38c08bc455e68f8e7d47f94",
-      "tag": "Media"
+      "tag": "Customization"
     },
     {
       "id": "quantahut",
@@ -61,7 +61,7 @@
         "Ну иногда просто нужно что-то подправить..."
       ],
       "hash": "96d1c2c65c6609154c3838c2efd994626250a13668f67d0a11fc7367ef1509a1",
-      "tag": "Utility"
+      "tag": "Customization"
     },
     {
       "id": "shareui_exterium",
@@ -97,7 +97,7 @@
         "Выполнение команд shell, subprocesses и Junis."
       ],
       "hash": "d793ba441f8c1e33808809bca8813d9f471ca8d120b80bab5776eb4189be3a4c",
-      "tag": "Fun"
+      "tag": "Utility"
     },
     {
       "id": "shareui_exteragit",
@@ -133,7 +133,7 @@
         "Загружает медиафайл на x0.at и отправляет ссылку."
       ],
       "hash": "3a53e686bfbb5ac9f0bf759ebf09d67b7141977362ef58a7e4db0159cd98edca",
-      "tag": "Media"
+      "tag": "Utility"
     },
     {
       "id": "shareui_modrinth",
@@ -223,7 +223,7 @@
         "Показывает статистику по всем чатам на аккаунте."
       ],
       "hash": "13e4b888991048f9bee53cd913ad713db379a38a0c5fda08d10008a399d04ab2",
-      "tag": "Admin"
+      "tag": "Utility"
     },
     {
       "id": "animated_chat_wallpaper",
@@ -241,7 +241,7 @@
         "Устанавливает URL-адрес MP4 в качестве анимированных обоев чата"
       ],
       "hash": "5a7221ea11ceadfa709bdee79357c5ef6ba56af605beb80daa3934d2c944ef50",
-      "tag": "Media"
+      "tag": "Customization"
     },
     {
       "id": "anti_spoiler",
@@ -259,7 +259,7 @@
         "Автоматически удаляет спойлеры из текста и мультимедиа."
       ],
       "hash": "090d24eebc02b6c2d0b7ff85e9c22bf5e09e705b38930cc47fd9be748bb060f4",
-      "tag": "Media"
+      "tag": "Utility"
     },
     {
       "id": "Auto_Reply",
@@ -277,7 +277,7 @@
         "Автоответчик"
       ],
       "hash": "d5d2437944059fd9695ca32b5b23f5e227bba93b348de7a5c65b28fcc8af563b",
-      "tag": "Unknown"
+      "tag": "Utility"
     },
     {
       "id": "user_manager",
@@ -295,7 +295,7 @@
         "Управляйте участниками чата/канала и массово удаляйте пользователей по критериям."
       ],
       "hash": "ec138451f2e83f1114698bbde440fd67dd927a26e34a742c27b906dbaf73fd62",
-      "tag": "Admin"
+      "tag": "Utility"
     },
     {
       "id": "timeGuA",
@@ -313,13 +313,13 @@
         "Неизвестный"
       ],
       "hash": "c58782d84e159d1bd0049a0340b41d75c73de5eb5bcd91e595fa5007c50849d6",
-      "tag": "Unknown"
+      "tag": "Unsotred"
     },
     {
       "id": "bot_login",
       "name": "Bot Login",
       "author": "@kvucoPlugins",
-      "version": "0.0.0",
+      "version": "AutoUpdate",
       "state": "release",
       "icon": "PISUN424242/9",
       "suspicious": "false",
@@ -331,25 +331,7 @@
         "Войдите в систему как бот, используя токен API."
       ],
       "hash": "6c8a1a7acdb7a53028e8ca6b60add40a2deda99587f7d7c61ef8f4b415c00d38",
-      "tag": "Utility"
-    },
-    {
-      "id": "chatInputLines",
-      "name": "Input Line",
-      "author": "@ArThirtyFour | @KangelPlugins",
-      "version": "1.0.0",
-      "state": "release",
-      "icon": "chaotianjiang/36",
-      "suspicious": "false",
-      "dependencies": [],
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/chat_input_lines.plugin",
-      "description": "Adjusts max lines of the chat input field",
-      "about": [
-        "Adjusts max lines of the chat input field",
-        "Регулирует максимальное количество строк в поле ввода чата."
-      ],
-      "hash": "02f88ea6dcf6bc4c16e1c7824a7694af69711e36d61707596df16c6731fd1eb4",
-      "tag": "Utility"
+      "tag": "Fun"
     },
     {
       "id": "chatexport",
@@ -367,7 +349,7 @@
         "Экспортируйте чаты в HTML/JSON/TXT со стилем и мультимедиа Telegram Desktop."
       ],
       "hash": "6006e9c85965b0652201f44d3da63bea502040fc5f276b6fadfc8c26035857c8",
-      "tag": "Media"
+      "tag": "Utility"
     },
     {
       "id": "Cherry_Badges",
@@ -386,24 +368,6 @@
       ],
       "hash": "82ce59035cbdf064b000f3a7c0de85ef67f64faac60f24d0dc45e118ccff7fea",
       "tag": "Customization"
-    },
-    {
-      "id": "cherry_header",
-      "name": "CherryHeader",
-      "author": "Unknown",
-      "version": "1.0",
-      "state": "release",
-      "icon": "exteraPlugins/0",
-      "suspicious": "false",
-      "dependencies": [],
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/CherryHeader.plugin",
-      "description": "Unknown",
-      "about": [
-        "Unknown",
-        "Неизвестный"
-      ],
-      "hash": "f6f758a32533a7dcbb38ec3b87da414d564108aab1cf32dc99e8013ff1fe09c6",
-      "tag": "Unknown"
     },
     {
       "id": "currency_converter",
@@ -462,20 +426,20 @@
     {
       "id": "custom_top_banner",
       "name": "CustomBanner",
-      "author": "@RnPlugins with @PluginIDE",
+      "author": "@RnPlugins",
       "version": "1.0.4",
       "state": "release",
       "icon": "sPluginIDE/32",
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/custom_banner.plugin",
-      "description": "Unknown",
+      "description": "Customizable banner on top.",
       "about": [
-        "Unknown",
-        "Неизвестный"
+        "Customizable banner on top.",
+        "Настраиваемый баннер сверху."
       ],
       "hash": "8a12c9d637a1c13a54a14c95e3050625ede6bc257d0ef1e1d2309ff07be22036",
-      "tag": "Unknown"
+      "tag": "Customization"
     },
     {
       "id": "dinorunner",
@@ -508,7 +472,7 @@
       "description": "Show Dota match history and match details.",
       "about": [
         "Show Dota match history and match details.",
-        "Показать историю матчей Dota и детали матчей."
+        "Показывает историю матчей Dota и детали матчей."
       ],
       "hash": "af903ca73e4b368e475de381db8d4c4607c904118d160718e962d9c0ded80cb8",
       "tag": "Utility"
@@ -526,10 +490,10 @@
       "description": "Easily download emojis and stickers by long-pressing on them in the context menu.",
       "about": [
         "Easily download emojis and stickers by long-pressing on them in the context menu.",
-        "Легко загружайте смайлы и стикеры, нажав и удерживая их в контекстном меню."
+        "Легко загружайте эмодзи и стикеры, нажав и удерживая их в контекстном меню."
       ],
       "hash": "4eea189e42874f26f5333c1ac3b61c657ebb3829c7ba0f0349d9fb64c1c35d75",
-      "tag": "Media"
+      "tag": "Utility"
     },
     {
       "id": "epicgames",
@@ -658,24 +622,6 @@
       "tag": "Utility"
     },
     {
-      "id": "fake_stars",
-      "name": "Fake Stars Payment",
-      "author": "tg://support",
-      "version": "0.4",
-      "state": "release",
-      "icon": "FinanceEmoji/0",
-      "suspicious": "false",
-      "dependencies": [],
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/FuckPayments.plugin",
-      "description": "Simulate Stars balance and payments.",
-      "about": [
-        "Simulate Stars balance and payments.",
-        "Имитируйте баланс и платежи Stars."
-      ],
-      "hash": "a04422678b8621411daf5a3fc05b30f2ae11277994ee3eb52f7a95bbd443c15a",
-      "tag": "Utility"
-    },
-    {
       "id": "fullscreen_music_player",
       "name": "Music Player",
       "author": "@hoprik",
@@ -703,13 +649,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/gift_id.plugin",
-      "description": "Unknown",
+      "description": "Shows gift ID in its info",
       "about": [
-        "Unknown",
-        "Неизвестный"
+        "Shows gift ID in its info",
+        "В информации о подарке отображается его идентификационный номер"
       ],
       "hash": "f87d409fcf3325ce428ebc3d6eb26276772fa5c221e6a7e701f4bbb076373239",
-      "tag": "Unknown"
+      "tag": "Unsotred"
     },
     {
       "id": "html_formatter",
@@ -793,13 +739,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/kangel_plugins_manager.plugin",
-      "description": "Unknown",
+      "description": "Just another plugin manager",
       "about": [
-        "Unknown",
-        "Неизвестный"
+        "Just another plugin manager",
+        "Просто другой плагин менеджер"
       ],
       "hash": "b75baec4e906cf068bdcdbaaa60e5523b2a3ad226dd0abf0adba47261654c4d1",
-      "tag": "Unknown"
+      "tag": "Unsotred"
     },
     {
       "id": "KWFilter",
@@ -814,7 +760,7 @@
       "description": "Hiding messages by keywords",
       "about": [
         "Hiding messages by keywords",
-        "Скрытие сообщений по ключевым словам"
+        "Скрывает сообщений по ключевым словам"
       ],
       "hash": "0a1a416eaac905fa1dbcc3341f46f68caff504f8bdaa6233fc973c962a74e38e",
       "tag": "Utility"
@@ -928,24 +874,6 @@
       "tag": "Media"
     },
     {
-      "id": "mathplug",
-      "name": "MathHelper",
-      "author": "@RussianDSG & @nedenchiz",
-      "version": "1.0",
-      "state": "release",
-      "icon": "🧮",
-      "suspicious": "false",
-      "dependencies": [],
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/math.plugin",
-      "description": "Evaluate math expressions.",
-      "about": [
-        "Evaluate math expressions.",
-        "Оцените математические выражения."
-      ],
-      "hash": "f8e913279ddd1330011626bae81a0b21faf2f39c426810439f43bea9fc0e085b",
-      "tag": "Utility"
-    },
-    {
       "id": "mediaupl",
       "name": "MediaUPL",
       "author": "@RnPlugins & @YouRooni",
@@ -958,7 +886,7 @@
       "description": "Add a media upload button.",
       "about": [
         "Add a media upload button.",
-        "Добавьте кнопку загрузки мультимедиа."
+        "Добавляет кнопку загрузки мультимедиа."
       ],
       "hash": "9476e3e9449e23a3260d51d2c607c42354c47bae1314f4d9035297008a9e5ca3",
       "tag": "Media"
@@ -976,7 +904,7 @@
       "description": "Analyze recent messages and generate summaries using AI.",
       "about": [
         "Analyze recent messages and generate summaries using AI.",
-        "Анализируйте последние сообщения и создавайте сводки с помощью ИИ."
+        "Анализирует последние сообщения и создает сводки с помощью ИИ."
       ],
       "hash": "d17951253f20dcc2f1288dbdcc88aad445f57228287243b7cff4384579919bc4",
       "tag": "Utility"
@@ -1011,8 +939,8 @@
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/mikoto_nikki.plugin",
       "description": "Read a visual novel inside Telegram.",
       "about": [
-        "Read a visual novel inside Telegram.",
-        "Прочтите визуальный роман в Telegram."
+        "Read a novel inside Telegram.",
+        "Прочтите новеллу в Telegram."
       ],
       "hash": "339073fb67ddf706f650aed318bd8133008d89425d1755a487cb477b3db7ab5c",
       "tag": "Utility"
@@ -1102,28 +1030,10 @@
       "description": "Hide gift buttons in chats and channels.",
       "about": [
         "Hide gift buttons in chats and channels.",
-        "Скрывайте кнопки подарков в чатах и ​​каналах."
+        "Скрывайте кнопки подарков в чатах и каналах."
       ],
       "hash": "ad4c04264a8a66b23ee999f7d8da1e33a59e2cc9673b2e41a7cfb99e3981ad3a",
       "tag": "Media"
-    },
-    {
-      "id": "nyashnosti",
-      "name": "Няшности",
-      "author": "@stdflush & @fergntye",
-      "version": "1.1.1",
-      "state": "release",
-      "icon": "forkozeki_by_fStikBot/4",
-      "suspicious": "false",
-      "dependencies": [],
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/nyashnosti.plugin",
-      "description": "NSFW content commands.",
-      "about": [
-        "NSFW content commands.",
-        "Команды содержимого NSFW."
-      ],
-      "hash": "d263e0a3975d1fc77b20f0ae4d1e57be16963ae014afa57e009783644edde52d",
-      "tag": "Fun"
     },
     {
       "id": "osu_mur_stats",
@@ -1162,24 +1072,6 @@
       "tag": "Utility"
     },
     {
-      "id": "phrase",
-      "name": "Орфография предложений",
-      "author": "@inclu_01 @nirs_offc and @buligaEplugins ",
-      "version": "2.0.0",
-      "state": "release",
-      "icon": "BuligaPlugins/1",
-      "suspicious": "false",
-      "dependencies": [],
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/phrase.plugin",
-      "description": "Improve outgoing text (spelling, casing, punctuation) using AI.",
-      "about": [
-        "Improve outgoing text (spelling, casing, punctuation) using AI.",
-        "Улучшите исходящий текст (орфографию, регистр, пунктуацию) с помощью ИИ."
-      ],
-      "hash": "a4993bd0e1d3344450c78b35baca0dee67aae9b4953f8cf8f591722eec835edd",
-      "tag": "Utility"
-    },
-    {
       "id": "plugin_creator",
       "name": "Plugin creator",
       "author": "@mr_Vestr",
@@ -1195,7 +1087,7 @@
         "Неизвестный"
       ],
       "hash": "7b5e0986149c36e594898e7f4ce69a8631ef8a0ffaa173c66f0978ae8deb3ddb",
-      "tag": "Unknown"
+      "tag": "Unsotred"
     },
     {
       "id": "always-tabs-forums",
@@ -1231,7 +1123,7 @@
         "Неизвестный"
       ],
       "hash": "abb25cb3133a92d9a7fe66ce83c30b5590f75ff885668e40f6428a344fdfe8d8",
-      "tag": "Unknown"
+      "tag": "Unsotred"
     },
     {
       "id": "Profile_Plugin",
@@ -1393,7 +1285,7 @@
         "Неизвестный"
       ],
       "hash": "00288f65e23a9f799a7d0417c62274f4a5d25987887d49e0aec6c2ad6bca49f1",
-      "tag": "Unknown"
+      "tag": "Unsotred"
     },
     {
       "id": "rename_sessions",
@@ -1591,7 +1483,7 @@
         "Неизвестный"
       ],
       "hash": "1e0f77f962de5322f8b00a160d6c63f6fdb1d2beb0c43d30a4c90557863b7cdf",
-      "tag": "Unknown"
+      "tag": "Unsotred"
     },
     {
       "id": "shazam_by_audio_pg",
@@ -1681,7 +1573,7 @@
         "Неизвестный"
       ],
       "hash": "6e82547dc73e3e4ff03d394392138665f432d0333a04f04c37da3ce8f0f23894",
-      "tag": "Unknown"
+      "tag": "Unsotred"
     },
     {
       "id": "templates",
@@ -1699,7 +1591,7 @@
         "Неизвестный"
       ],
       "hash": "03e7ec96cdd1b356a5b2ad96905bc404d1822079d2c2c7e87469d3143dc126e9",
-      "tag": "Unknown"
+      "tag": "Unsotred"
     },
     {
       "id": "text_animation",
@@ -1771,7 +1663,7 @@
         "Неизвестный"
       ],
       "hash": "dff1a11bb06623261b0b58636b7a29e154437665b26f08246a6044077a411371",
-      "tag": "Unknown"
+      "tag": "Unsotred"
     },
     {
       "id": "translatorplus",
@@ -1915,7 +1807,7 @@
         "Неизвестный"
       ],
       "hash": "4c133bb61223e11e9f51996e532cafb1af5abc5bf7bf760d815825c3c54c1a75",
-      "tag": "Unknown"
+      "tag": "Unsotred"
     },
     {
       "id": "articleViewerFix",
@@ -2491,7 +2383,7 @@
         "Неизвестный"
       ],
       "hash": "406a2b10142997ac8dbfa8ef04c82abb2de45192a4921ab6b14355c5ca474f3e",
-      "tag": "Unknown"
+      "tag": "Unsotred"
     },
     {
       "id": "cactuslib_mini",
@@ -2581,7 +2473,7 @@
         "Неизвестный"
       ],
       "hash": "72da04e3580decdc1da633bfa4d854122e02183d041fa0ed4e4bfc43b0a6e0dc",
-      "tag": "Unknown"
+      "tag": "Unsotred"
     },
     {
       "id": "quote_message_converter",
@@ -2689,7 +2581,7 @@
         "Неизвестный"
       ],
       "hash": "eb5f7e7052e14c19562fe04c0ab445d19ba4a10cf63743f89b1826a18f09bfed",
-      "tag": "Unknown"
+      "tag": "Unsotred"
     },
     {
       "id": "checkhost_network_by_mihailkotovski",
@@ -2743,7 +2635,7 @@
         "Неизвестный"
       ],
       "hash": "371b9968c9562416e4b250ede8e1457fe2bd21c389ffac6ac3dff4a84ce61935",
-      "tag": "Unknown"
+      "tag": "Unsotred"
     },
     {
       "id": "lrcfy",
@@ -2797,7 +2689,7 @@
         "Неизвестный"
       ],
       "hash": "700ea8a61f1befbf0540d64f65bba99ae260abc09a3c0fa925c10162b9d7e72b",
-      "tag": "Unknown"
+      "tag": "Unsotred"
     },
     {
       "id": "NoCallConfirmation",
@@ -2995,7 +2887,7 @@
         "Неизвестный"
       ],
       "hash": "6f7c970f99fa33e7742dcda0bcfe3a736528ce369d112bcddd76c48cf0e3881d",
-      "tag": "Unknown"
+      "tag": "Unsotred"
     },
     {
       "id": "ar34quotify",
@@ -3031,7 +2923,7 @@
         "Неизвестный"
       ],
       "hash": "f96dc76bc1c13293c2c4534f4e2d293ea88098dd23aac96a13d2e3e678045618",
-      "tag": "Unknown"
+      "tag": "Unsotred"
     },
     {
       "id": "zwyAdminTools",
@@ -3265,7 +3157,7 @@
         "Неизвестный"
       ],
       "hash": "158e18b3bc2144986054c9c0a3987e8b1476b6175b17a10ab5a2bb0360fc7b8b",
-      "tag": "Unknown"
+      "tag": "Unsotred"
     },
     {
       "id": "botsautofarm",
@@ -3481,7 +3373,7 @@
         "Неизвестный"
       ],
       "hash": "1239a1351867954cce6614a59d696cd48497b4bf8a147d7bb3e63561df2aaa7c",
-      "tag": "Unknown"
+      "tag": "Unsotred"
     },
     {
       "id": "premiumfeatures",
@@ -3499,7 +3391,7 @@
         "Неизвестный"
       ],
       "hash": "3036f2606027e560dd978931bd8d62d19e9e33b0ed5986f7cf4c607113876fdc",
-      "tag": "Unknown"
+      "tag": "Unsotred"
     },
     {
       "id": "rule34_search",
@@ -3517,7 +3409,7 @@
         "Неизвестный"
       ],
       "hash": "dc3d73fa818d1c60b251eafdf65f7c16fe554b468ffa1a51df1e5bdb6b224dc4",
-      "tag": "Unknown"
+      "tag": "Unsotred"
     },
     {
       "id": "shareui_github",
@@ -3535,7 +3427,7 @@
         "Неизвестный"
       ],
       "hash": "430ad0c3a84def6d53af89c144a050b04bb3ce5cac00b29246f9b438f703cf4f",
-      "tag": "Unknown"
+      "tag": "Unsotred"
     },
     {
       "id": "voice_changer",
@@ -3571,7 +3463,7 @@
         "Неизвестный"
       ],
       "hash": "276da633d8fd0cd0c03651428f9b81d56b15ce4cdc904cfc8e94fc3ea48a446c",
-      "tag": "Unknown"
+      "tag": "Unsotred"
     },
     {
       "id": "alwaysShowDownloadManager",
@@ -3715,7 +3607,7 @@
         "Неизвестный"
       ],
       "hash": "7fd24814e1b51b115e467c2c38e168b46f4237a8d4733db95a06a747a6398bfa",
-      "tag": "Unknown"
+      "tag": "Unsotred"
     },
     {
       "id": "weather",
@@ -4473,7 +4365,7 @@
         "Неизвестный"
       ],
       "hash": "a09f0c6113ffaab40a5e3d3acb06b3abd62853f169997f642bcd34febf5034e8",
-      "tag": "Unknown"
+      "tag": "Unsotred"
     },
     {
       "id": "delete_with_duration",
@@ -4901,7 +4793,7 @@
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/No Quote.plugin",
       "about": [
         "Stops goofy-ahh Telegram from adding quotes when you forward messages",
-        "Не позволяет Telegram тупо-ааа добавлять кавычки при пересылке сообщений"
+        "Не позволяет Telegram добавлять кавычки при пересылке сообщений"
       ],
       "description": "Stops goofy-ahh Telegram from adding quotes when you forward messages",
       "hash": "10d38e1b561fdb0bc371ec06c51a19a6e3540a1256c7b481193e494cc607f59e"
@@ -4922,6 +4814,23 @@
       ],
       "description": "Application speed optimization",
       "hash": "c96c7f8862c75d5c13b4041d1d36ed70a2285ff1902c291d44e5b98a42323d63"
+    },
+    {
+      "id": "shareui_gtht",
+      "name": "GoogleThat+",
+      "author": "@shareui",
+      "version": "1.0.5",
+      "state": "release",
+      "icon": "zwyPluginsIcons/2",
+      "suspicious": "false",
+      "dependencies": [],
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/googlethatfork.plugin",
+      "about": [
+        "Creates search link.",
+        "Создает ссылку для поиска."
+      ],
+      "description": "Creates search link.",
+      "hash": "3c9092ca482c58709a2f80261e45aa25a1bfb939bbb550b9790b709df403202b"
     }
   ]
 }
