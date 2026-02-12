@@ -20,7 +20,7 @@
       "description": "Full-screen text editor for long messages with formatting & emoji support.",
       "about": [
         "Full-screen text editor for long messages with formatting & emoji support.",
-        "Полноэкранный текстовый редактор для длинных сообщений с поддержкой форматирования и смайлов."
+        "Полноэкранный текстовый редактор для длинных сообщений с поддержкой форматирования и премиум эмодзи."
       ],
       "hash": "45a9f92828ed24f65fb07a3cd1cc1e98abce1479c38c08bc455e68f8e7d47f94",
       "tag": "Media"
@@ -94,7 +94,7 @@
       "description": "Execute shell commands, subprocesses, and Junis.",
       "about": [
         "Execute shell commands, subprocesses, and Junis.",
-        "Выполнение команд оболочки, подпроцессов и Junis."
+        "Выполнение команд shell, subprocesses и Junis."
       ],
       "hash": "d793ba441f8c1e33808809bca8813d9f471ca8d120b80bab5776eb4189be3a4c",
       "tag": "Fun"
@@ -109,10 +109,10 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/exteraGit.plugin",
-      "description": "Search GitHub and GitLab.",
+      "description": "Search engine GitHub and GitLab.",
       "about": [
-        "Search GitHub and GitLab.",
-        "Найдите GitHub и GitLab."
+        "Search engine GitHub and GitLab.",
+        "Поисковик GitHub и GitLab."
       ],
       "hash": "487448f4fcc7e726f0d8846c6d0c9cc5fc5b908d5b730c81e0f49d6f2ba8e40e",
       "tag": "Utility"
@@ -130,7 +130,7 @@
       "description": "Upload media to x0.at and send the link.",
       "about": [
         "Upload media to x0.at and send the link.",
-        "Загрузите медиафайл на x0.at и отправьте ссылку."
+        "Загружает медиафайл на x0.at и отправляет ссылку."
       ],
       "hash": "3a53e686bfbb5ac9f0bf759ebf09d67b7141977362ef58a7e4db0159cd98edca",
       "tag": "Media"
@@ -148,7 +148,7 @@
       "description": "Searching of things on modrinth",
       "about": [
         "Searching of things on modrinth",
-        "Поиск вещей на модринте"
+        "Поиск чего-то на modrinth"
       ],
       "hash": "467c1bd5d0ce0dde3261e8a62d19486915607388c5147ad588aa79d0bf9c6798",
       "tag": "Utility"
@@ -166,7 +166,7 @@
       "description": "Send configured details on demand.",
       "about": [
         "Send configured details on demand.",
-        "Отправляйте настроенные данные по запросу."
+        "Отправляйте настроенные реквизиты по запросу."
       ],
       "hash": "9d06a522f2e1d9e30b5c9cd013a2323a50fa0b138a05d9c2b172889d3e4516fe",
       "tag": "Utility"
@@ -202,7 +202,7 @@
       "description": "Display sys info",
       "about": [
         "Display sys info",
-        "Отобразить системную информацию"
+        "Отображает системную информацию"
       ],
       "hash": "c24422d49e1f39136c95768a042afbce7c16861a3d41d46d10c86923b12363e7",
       "tag": "Utility"
@@ -220,7 +220,7 @@
       "description": "Shows statistics for all chats in the account.",
       "about": [
         "Shows statistics for all chats in the account.",
-        "Показывает статистику по всем чатам в аккаунте."
+        "Показывает статистику по всем чатам на аккаунте."
       ],
       "hash": "13e4b888991048f9bee53cd913ad713db379a38a0c5fda08d10008a399d04ab2",
       "tag": "Admin"
@@ -238,7 +238,7 @@
       "description": "Set MP4 URL as animated chat wallpaper",
       "about": [
         "Set MP4 URL as animated chat wallpaper",
-        "Установить URL-адрес MP4 в качестве анимированных обоев чата"
+        "Устанавливает URL-адрес MP4 в качестве анимированных обоев чата"
       ],
       "hash": "5a7221ea11ceadfa709bdee79357c5ef6ba56af605beb80daa3934d2c944ef50",
       "tag": "Media"
@@ -271,10 +271,10 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Auto_Reply.plugin",
-      "description": "Unknown",
+      "description": "Answering machine",
       "about": [
-        "Unknown",
-        "Неизвестный"
+        "Answering machine",
+        "Автоответчик"
       ],
       "hash": "d5d2437944059fd9695ca32b5b23f5e227bba93b348de7a5c65b28fcc8af563b",
       "tag": "Unknown"
