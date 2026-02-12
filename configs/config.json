@@ -4905,6 +4905,23 @@
       ],
       "description": "Stops goofy-ahh Telegram from adding quotes when you forward messages",
       "hash": "10d38e1b561fdb0bc371ec06c51a19a6e3540a1256c7b481193e494cc607f59e"
+    },
+    {
+      "id": "exitfy",
+      "name": "exitFy",
+      "author": "Unknown",
+      "version": "1.0.0",
+      "state": "release",
+      "icon": "exitFy/0",
+      "suspicious": "false",
+      "dependencies": [],
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/exitfy.plugin",
+      "about": [
+        "Application speed optimization",
+        "Оптимизация скорости работы приложения"
+      ],
+      "description": "Application speed optimization",
+      "hash": "c96c7f8862c75d5c13b4041d1d36ed70a2285ff1902c291d44e5b98a42323d63"
     }
   ]
 }
