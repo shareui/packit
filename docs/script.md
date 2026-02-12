@@ -10,7 +10,7 @@
 
 Script for managing plugin repository configuration files.
 
-Download: https://github.com/shareui/packit/blob/main/add.py
+Download: https://github.com/shareui/packit/blob/main/scripts/main.py
 
 > IMPORTANT TO KNOW: This script was created for personal use but I decided to publish It
 
@@ -22,7 +22,7 @@ This script automates the process of adding, updating, and managing plugins in a
 
 On first run, the script creates a configuration file (cfg.yml) with the following settings:
 
-- addAbout: Include "about" field in plugin entries
+- addAbout: Include "about" field in plugin entries (auto-translates description to Russian if available)
 - addDescription: Include "description" field in plugin entries
 - addHash: Include SHA256 hash for each plugin
 - writeLastLog: Generate a log file after updates
@@ -31,9 +31,10 @@ On first run, the script creates a configuration file (cfg.yml) with the followi
 - allowDowngrade: Allow version downgrade without confirmation (default: false)
 - manualInputDescriptions: Manually input descriptions during plugin addition
 - manualInputAbout: Manually input about text in English and Russian
-- configPath: Path to repository config file (default: config.json)
-- workingDir: Directory containing plugin files (default: workingdir)
-- backupDir: Directory for backups (default: backups)
+- appendToLogs: Append to log files instead of overwriting (default: false)
+- configPath: Path to repository config file (default: config.json) - supports relative paths with `..`
+- workingDir: Directory containing plugin files (default: workingdir) - supports relative paths with `..`
+- backupDir: Directory for backups (default: backups) - supports relative paths with `..`
 - stateKeywords: Keywords for version states (default: alpha,beta,dev,rc,release,rel,stable)
 - rawDirUrl: Base URL for plugin downloads (default: https://raw.githubusercontent.com/user/repo/refs/heads/main/plugins)
 
@@ -50,6 +51,28 @@ The script extracts the following metadata from plugin files:
 - __dependencies__: List of plugin dependencies
 
 ### Features
+
+#### Auto-Translation
+
+When `addAbout` is enabled (default), the script automatically translates plugin descriptions to Russian:
+
+- Detects if description is in Cyrillic (>80% Cyrillic characters)
+- If description is in English: translates to Russian using `googletrans`
+- Format: `"about": ["English description", "Русский перевод"]`
+- If description is in Russian: `"about": ["Русское описание", "Русское описание"]`
+- If translation unavailable: `"about": ["English description"]`
+- Requires: `pip install googletrans==4.0.0-rc1`
+
+**Note:** Translation adds 0.5 second delay between plugins to avoid rate limiting.
+
+#### Relative Paths Support
+
+All path inputs (configPath, workingDir, backupDir) support relative paths with `..`:
+
+Examples:
+- From `/scripts/main.py` to `/plugins`: enter `../plugins`
+- From `/project/tools/main.py` to `/project/data`: enter `../../data`
+- Paths are automatically resolved to absolute paths and saved in config
 
 #### 1. Add Files
 
@@ -111,6 +134,29 @@ Allows reconfiguration of the script settings by recreating the cfg.yml file.
 #### 10. Create .gitignore for cfg.yml
 
 Creates or updates .gitignore file to exclude cfg.yml from version control.
+
+#### 11. Clear Logs/ForPost
+
+Removes latest.log and forpost.txt files if they exist. No confirmation needed.
+
+#### 12. Reset Plugin Key
+
+Removes a specific field from all plugins in config.json:
+
+- Shows available keys from first plugin
+- Asks which key to remove (e.g., hash, about, state)
+- Removes that key from ALL plugins
+- Creates backup before changes
+- Requires confirmation
+
+Common use cases:
+- Remove `hash`: regenerate all hashes on next run
+- Remove `about`: regenerate with new translations
+- Remove `state`: reset version states
+
+#### 13. Reset (Recheck All Files)
+
+Completely regenerates config.json by rescanning all files in working directory. Creates backup before changes.
 
 ### Version Management
 
@@ -179,7 +225,9 @@ Each plugin entry in config.json contains:
 - suspicious: Security flag (always "false")
 - dependencies: Array of dependency IDs
 - link: Download URL (constructed from rawDirUrl and filename)
-- about: Plugin name (optional)
+- about: Plugin description in multiple languages (optional)
+  - If auto-translation enabled: `["English", "Русский"]`
+  - Format: Array with English as first element, Russian as second
 - description: Plugin description (optional)
 - hash: SHA256 hash (optional)
 
@@ -197,7 +245,10 @@ Run the script and select an option from the menu:
 8. Edit config values - Modify specific cfg.yml fields
 9. Rewrite script cfg - Reconfigure script settings
 10. Create .gitignore for cfg.yml - Add cfg.yml to gitignore
-11. Exit - Quit the script
+11. Clear logs/forpost - Remove log files
+12. Reset plugin key - Remove specific field from all plugins
+13. Reset (recheck all files) - Regenerate entire config
+14. Exit - Quit the script
 
 ---
 
@@ -205,7 +256,7 @@ Run the script and select an option from the menu:
 
 Скрипт для управления конфигурационными файлами репозитория плагинов.
 
-Скачать: https://github.com/shareui/packit/blob/main/add.py
+Скачать: https://github.com/shareui/packit/blob/main/scripts/main.py
 
 > ВАЖНО ЗНАТЬ: Этот скрипт был создан для личного использования, но я решил опубликовать его
 
@@ -217,7 +268,7 @@ Run the script and select an option from the menu:
 
 При первом запуске скрипт создаёт конфигурационный файл (cfg.yml) со следующими настройками:
 
-- addAbout: Включать поле "about" в записи плагина
+- addAbout: Включать поле "about" в записи плагина (автоматически переводит description на русский, если доступно)
 - addDescription: Включать поле "description" в записи плагина
 - addHash: Включать SHA256 хеш для каждого плагина
 - writeLastLog: Генерировать лог-файл после обновлений
@@ -226,9 +277,10 @@ Run the script and select an option from the menu:
 - allowDowngrade: Разрешить понижение версии без подтверждения (по умолчанию: false)
 - manualInputDescriptions: Вручную вводить описания при добавлении плагина
 - manualInputAbout: Вручную вводить текст about на английском и русском
-- configPath: Путь к конфигурационному файлу репозитория (по умолчанию: config.json)
-- workingDir: Директория с файлами плагинов (по умолчанию: workingdir)
-- backupDir: Директория для резервных копий (по умолчанию: backups)
+- appendToLogs: Добавлять в лог-файлы вместо перезаписи (по умолчанию: false)
+- configPath: Путь к конфигурационному файлу репозитория (по умолчанию: config.json) - поддерживает относительные пути с `..`
+- workingDir: Директория с файлами плагинов (по умолчанию: workingdir) - поддерживает относительные пути с `..`
+- backupDir: Директория для резервных копий (по умолчанию: backups) - поддерживает относительные пути с `..`
 - stateKeywords: Ключевые слова для состояний версии (по умолчанию: alpha,beta,dev,rc,release,rel,stable)
 - rawDirUrl: Базовый URL для загрузки плагинов (по умолчанию: https://raw.githubusercontent.com/user/repo/refs/heads/main/plugins)
 
@@ -245,6 +297,28 @@ Run the script and select an option from the menu:
 - __dependencies__: Список зависимостей плагина
 
 ### Функции
+
+#### Автоматический перевод
+
+Когда включён `addAbout` (по умолчанию), скрипт автоматически переводит описания плагинов на русский:
+
+- Определяет, является ли описание кириллическим (>80% символов кириллицы)
+- Если описание на английском: переводит на русский через `googletrans`
+- Формат: `"about": ["English description", "Русский перевод"]`
+- Если описание на русском: `"about": ["Русское описание", "Русское описание"]`
+- Если перевод недоступен: `"about": ["English description"]`
+- Требуется: `pip install googletrans==4.0.0-rc1`
+
+**Примечание:** Перевод добавляет задержку 0.5 секунды между плагинами во избежание rate limiting.
+
+#### Поддержка относительных путей
+
+Все поля ввода путей (configPath, workingDir, backupDir) поддерживают относительные пути с `..`:
+
+Примеры:
+- Из `/scripts/main.py` в `/plugins`: введите `../plugins`
+- Из `/project/tools/main.py` в `/project/data`: введите `../../data`
+- Пути автоматически преобразуются в абсолютные и сохраняются в конфиге
 
 #### 1. Add Files (Добавить файлы)
 
@@ -306,6 +380,29 @@ Run the script and select an option from the menu:
 #### 10. Create .gitignore for cfg.yml (Создать .gitignore для cfg.yml)
 
 Создаёт или обновляет файл .gitignore, чтобы исключить cfg.yml из системы контроля версий.
+
+#### 11. Clear Logs/ForPost (Очистить логи/ForPost)
+
+Удаляет файлы latest.log и forpost.txt, если они существуют. Подтверждение не требуется.
+
+#### 12. Reset Plugin Key (Сбросить ключ плагина)
+
+Удаляет определённое поле из всех плагинов в config.json:
+
+- Показывает доступные ключи из первого плагина
+- Спрашивает, какой ключ удалить (например, hash, about, state)
+- Удаляет этот ключ из ВСЕХ плагинов
+- Создаёт резервную копию перед изменениями
+- Требует подтверждения
+
+Частые случаи использования:
+- Удалить `hash`: пересоздать все хеши при следующем запуске
+- Удалить `about`: пересоздать с новыми переводами
+- Удалить `state`: сбросить состояния версий
+
+#### 13. Reset (Recheck All Files) (Сброс - перепроверка всех файлов)
+
+Полностью пересоздаёт config.json, пересканировав все файлы в рабочей директории. Создаёт резервную копию перед изменениями.
 
 ### Управление версиями
 
@@ -374,7 +471,9 @@ Total plugins: {количество}
 - suspicious: Флаг безопасности (всегда "false")
 - dependencies: Массив ID зависимостей
 - link: URL загрузки (сконструированный из rawDirUrl и имени файла)
-- about: Имя плагина (опционально)
+- about: Описание плагина на нескольких языках (опционально)
+  - Если включён автоперевод: `["English", "Русский"]`
+  - Формат: Массив с английским как первый элемент, русским как второй
 - description: Описание плагина (опционально)
 - hash: SHA256 хеш (опционально)
 
@@ -392,4 +491,9 @@ Total plugins: {количество}
 8. Edit config values - Изменить конкретные поля cfg.yml
 9. Rewrite script cfg - Переконфигурировать настройки скрипта
 10. Create .gitignore for cfg.yml - Добавить cfg.yml в gitignore
-11. Exit - Выйти из скрипта
+11. Clear logs/forpost - Удалить лог-файлы
+12. Reset plugin key - Удалить определённое поле из всех плагинов
+13. Reset (recheck all files) - Пересоздать весь конфиг
+14. Exit - Выйти из скрипта
+
+привет артур

@@ -20,7 +20,7 @@
       "description": "Full-screen text editor for long messages with formatting & emoji support.",
       "about": [
         "Full-screen text editor for long messages with formatting & emoji support.",
-        "Full-screen text editor for long messages with formatting & emoji support."
+        "Полноэкранный текстовый редактор для длинных сообщений с поддержкой форматирования и смайлов."
       ],
       "hash": "45a9f92828ed24f65fb07a3cd1cc1e98abce1479c38c08bc455e68f8e7d47f94",
       "tag": "Media"
@@ -38,7 +38,7 @@
       "description": "Library for Quanta plugins",
       "about": [
         "Library for Quanta plugins",
-        "Library for Quanta plugins."
+        "Библиотека плагинов Quanta"
       ],
       "hash": "013d3bbc59895161469c48713c2819920e71966d16d213966ea014e12468aba6",
       "tag": "Library"
@@ -58,7 +58,7 @@
       "description": "Well sometimes you just need to tweak things...",
       "about": [
         "Well sometimes you just need to tweak things...",
-        "Набор небольших улучшений и твиков."
+        "Ну иногда просто нужно что-то подправить..."
       ],
       "hash": "96d1c2c65c6609154c3838c2efd994626250a13668f67d0a11fc7367ef1509a1",
       "tag": "Utility"
@@ -76,7 +76,7 @@
       "description": "Disable plugins while the app is in the background.",
       "about": [
         "Disable plugins while the app is in the background.",
-        "Отключает plugins while the app is in the background."
+        "Отключите плагины, пока приложение работает в фоновом режиме."
       ],
       "hash": "8718a383566c3478f34debf0f181d054a2ef9685c7dd41b7bda6c0b2ce32b6f9",
       "tag": "Utility"
@@ -94,7 +94,7 @@
       "description": "Execute shell commands, subprocesses, and Junis.",
       "about": [
         "Execute shell commands, subprocesses, and Junis.",
-        "Execute shell commands, subprocesses, and Junis."
+        "Выполнение команд оболочки, подпроцессов и Junis."
       ],
       "hash": "d793ba441f8c1e33808809bca8813d9f471ca8d120b80bab5776eb4189be3a4c",
       "tag": "Fun"
@@ -112,7 +112,7 @@
       "description": "Search GitHub and GitLab.",
       "about": [
         "Search GitHub and GitLab.",
-        "Ищет GitHub and GitLab."
+        "Найдите GitHub и GitLab."
       ],
       "hash": "487448f4fcc7e726f0d8846c6d0c9cc5fc5b908d5b730c81e0f49d6f2ba8e40e",
       "tag": "Utility"
@@ -130,7 +130,7 @@
       "description": "Upload media to x0.at and send the link.",
       "about": [
         "Upload media to x0.at and send the link.",
-        "Загружает media to x0.at and send the link."
+        "Загрузите медиафайл на x0.at и отправьте ссылку."
       ],
       "hash": "3a53e686bfbb5ac9f0bf759ebf09d67b7141977362ef58a7e4db0159cd98edca",
       "tag": "Media"
@@ -148,7 +148,7 @@
       "description": "Searching of things on modrinth",
       "about": [
         "Searching of things on modrinth",
-        "Searching of things on modrinth."
+        "Поиск вещей на модринте"
       ],
       "hash": "467c1bd5d0ce0dde3261e8a62d19486915607388c5147ad588aa79d0bf9c6798",
       "tag": "Utility"
@@ -166,7 +166,7 @@
       "description": "Send configured details on demand.",
       "about": [
         "Send configured details on demand.",
-        "Send configured details on demand."
+        "Отправляйте настроенные данные по запросу."
       ],
       "hash": "9d06a522f2e1d9e30b5c9cd013a2323a50fa0b138a05d9c2b172889d3e4516fe",
       "tag": "Utility"
@@ -184,7 +184,7 @@
       "description": "Just advanced calculator...",
       "about": [
         "Just advanced calculator...",
-        "Продвинутый калькулятор."
+        "Просто продвинутый калькулятор..."
       ],
       "hash": "67baabeddd0c0e0c09925f3ab56e40f6646483e580d0bc339f6484c815c8fa95",
       "tag": "Utility"
@@ -202,7 +202,7 @@
       "description": "Display sys info",
       "about": [
         "Display sys info",
-        "Показывает информацию о системе."
+        "Отобразить системную информацию"
       ],
       "hash": "c24422d49e1f39136c95768a042afbce7c16861a3d41d46d10c86923b12363e7",
       "tag": "Utility"
@@ -220,7 +220,7 @@
       "description": "Shows statistics for all chats in the account.",
       "about": [
         "Shows statistics for all chats in the account.",
-        "Показывает statistics for all chats in the account."
+        "Показывает статистику по всем чатам в аккаунте."
       ],
       "hash": "13e4b888991048f9bee53cd913ad713db379a38a0c5fda08d10008a399d04ab2",
       "tag": "Admin"
@@ -238,7 +238,7 @@
       "description": "Set MP4 URL as animated chat wallpaper",
       "about": [
         "Set MP4 URL as animated chat wallpaper",
-        "Устанавливает ссылку на MP4 as animated chat wallpaper."
+        "Установить URL-адрес MP4 в качестве анимированных обоев чата"
       ],
       "hash": "5a7221ea11ceadfa709bdee79357c5ef6ba56af605beb80daa3934d2c944ef50",
       "tag": "Media"
@@ -256,7 +256,7 @@
       "description": "Automatically removes spoilers from text and media.",
       "about": [
         "Automatically removes spoilers from text and media.",
-        "Automatically removes spoilers from text and media."
+        "Автоматически удаляет спойлеры из текста и мультимедиа."
       ],
       "hash": "090d24eebc02b6c2d0b7ff85e9c22bf5e09e705b38930cc47fd9be748bb060f4",
       "tag": "Media"
@@ -274,7 +274,7 @@
       "description": "Unknown",
       "about": [
         "Unknown",
-        "Unknown"
+        "Неизвестный"
       ],
       "hash": "d5d2437944059fd9695ca32b5b23f5e227bba93b348de7a5c65b28fcc8af563b",
       "tag": "Unknown"
@@ -292,7 +292,7 @@
       "description": "Manage chat/channel members and bulk-remove users by criteria.",
       "about": [
         "Manage chat/channel members and bulk-remove users by criteria.",
-        "Управляет chat/channel members and bulk-remove users by criteria."
+        "Управляйте участниками чата/канала и массово удаляйте пользователей по критериям."
       ],
       "hash": "ec138451f2e83f1114698bbde440fd67dd927a26e34a742c27b906dbaf73fd62",
       "tag": "Admin"
@@ -310,7 +310,7 @@
       "description": "Unknown",
       "about": [
         "Unknown",
-        "Unknown"
+        "Неизвестный"
       ],
       "hash": "c58782d84e159d1bd0049a0340b41d75c73de5eb5bcd91e595fa5007c50849d6",
       "tag": "Unknown"
@@ -328,7 +328,7 @@
       "description": "Log in as a bot using an API token.",
       "about": [
         "Log in as a bot using an API token.",
-        "Log in as a bot using an API-токен."
+        "Войдите в систему как бот, используя токен API."
       ],
       "hash": "6c8a1a7acdb7a53028e8ca6b60add40a2deda99587f7d7c61ef8f4b415c00d38",
       "tag": "Utility"
@@ -346,7 +346,7 @@
       "description": "Adjusts max lines of the chat input field",
       "about": [
         "Adjusts max lines of the chat input field",
-        "Adjusts max lines of the поле ввода чата."
+        "Регулирует максимальное количество строк в поле ввода чата."
       ],
       "hash": "02f88ea6dcf6bc4c16e1c7824a7694af69711e36d61707596df16c6731fd1eb4",
       "tag": "Utility"
@@ -364,7 +364,7 @@
       "description": "Export chats to HTML/JSON/TXT with Telegram Desktop style and media.",
       "about": [
         "Export chats to HTML/JSON/TXT with Telegram Desktop style and media.",
-        "Export chats to HTML/JSON/TXT with Telegram Desktop style and media."
+        "Экспортируйте чаты в HTML/JSON/TXT со стилем и мультимедиа Telegram Desktop."
       ],
       "hash": "6006e9c85965b0652201f44d3da63bea502040fc5f276b6fadfc8c26035857c8",
       "tag": "Media"
@@ -382,7 +382,7 @@
       "description": "Integration of Cherrygram badges into exteraGram.",
       "about": [
         "Integration of Cherrygram badges into exteraGram.",
-        "Integration of Cherrygram badges into exteraGram."
+        "Интеграция значков Cherrygram в exteraGram."
       ],
       "hash": "82ce59035cbdf064b000f3a7c0de85ef67f64faac60f24d0dc45e118ccff7fea",
       "tag": "Customization"
@@ -400,7 +400,7 @@
       "description": "Unknown",
       "about": [
         "Unknown",
-        "Unknown"
+        "Неизвестный"
       ],
       "hash": "f6f758a32533a7dcbb38ec3b87da414d564108aab1cf32dc99e8013ff1fe09c6",
       "tag": "Unknown"
@@ -418,7 +418,7 @@
       "description": "Convert between fiat and cryptocurrencies using live exchange rates.",
       "about": [
         "Convert between fiat and cryptocurrencies using live exchange rates.",
-        "Конвертирует between fiat and cryptocurrencies using live exchange rates."
+        "Конвертируйте фиатные деньги и криптовалюты, используя текущие обменные курсы."
       ],
       "hash": "8735b1d35b5004669de0efd674b995744291c61606669e28bdde4533de6db320",
       "tag": "Utility"
@@ -436,7 +436,7 @@
       "description": "Encrypt and decrypt text with a password.",
       "about": [
         "Encrypt and decrypt text with a password.",
-        "Шифрует and decrypt text with a password."
+        "Шифрование и расшифровка текста с помощью пароля."
       ],
       "hash": "4d8d65811b4592720e4f66ac9d15f4babe44388e723fb1f414efb9bb57a53342",
       "tag": "Utility"
@@ -454,7 +454,7 @@
       "description": "Track cryptocurrency exchange rates.",
       "about": [
         "Track cryptocurrency exchange rates.",
-        "Отслеживает cryptocurrency exchange rates."
+        "Отслеживайте курсы обмена криптовалют."
       ],
       "hash": "f21f77fc364bbbeb2233373629ed8f3f0684bbc8f04cd579b78b396df61f5828",
       "tag": "Utility"
@@ -472,7 +472,7 @@
       "description": "Unknown",
       "about": [
         "Unknown",
-        "Unknown"
+        "Неизвестный"
       ],
       "hash": "8a12c9d637a1c13a54a14c95e3050625ede6bc257d0ef1e1d2309ff07be22036",
       "tag": "Unknown"
@@ -490,7 +490,7 @@
       "description": "Play the Chrome dinosaur runner game.",
       "about": [
         "Play the Chrome dinosaur runner game.",
-        "Запускает игру: the Chrome dinosaur runner game."
+        "Сыграйте в игру Chrome о беге за динозаврами."
       ],
       "hash": "e7ea9807f59f46d87d291a9ca74a693ac98e52df0162bc62b7c8e6c4fcf2aa8c",
       "tag": "Game"
@@ -508,7 +508,7 @@
       "description": "Show Dota match history and match details.",
       "about": [
         "Show Dota match history and match details.",
-        "Показывает Dota match history and match details."
+        "Показать историю матчей Dota и детали матчей."
       ],
       "hash": "af903ca73e4b368e475de381db8d4c4607c904118d160718e962d9c0ded80cb8",
       "tag": "Utility"
@@ -526,7 +526,7 @@
       "description": "Easily download emojis and stickers by long-pressing on them in the context menu.",
       "about": [
         "Easily download emojis and stickers by long-pressing on them in the context menu.",
-        "Easily download emojis and stickers by long-pressing on them in the контекстном меню."
+        "Легко загружайте смайлы и стикеры, нажав и удерживая их в контекстном меню."
       ],
       "hash": "4eea189e42874f26f5333c1ac3b61c657ebb3829c7ba0f0349d9fb64c1c35d75",
       "tag": "Media"
@@ -544,7 +544,7 @@
       "description": "Show your current Epic Games game and library.",
       "about": [
         "Show your current Epic Games game and library.",
-        "Показывает your current Epic Games game and library."
+        "Покажите свою текущую игру и библиотеку Epic Games."
       ],
       "hash": "7ba633a8e8a7f73de8e4011bb3fe46c72e79862389be3714f5edc68f21cd5ee2",
       "tag": "Library"
@@ -562,7 +562,7 @@
       "description": "Allows you to set custom ",
       "about": [
         "Allows you to set custom ",
-        "Allows you to set custom."
+        "Позволяет установить пользовательские"
       ],
       "hash": "f9ed34b4f907fee4ecd2f6d72edd554a5ddb2587c9511ec0adf4e0188a112514",
       "tag": "Utility"
@@ -580,7 +580,7 @@
       "description": "Add small Telegram UI/behavior tweaks.",
       "about": [
         "Add small Telegram UI/behavior tweaks.",
-        "Добавляет small Telegram UI/behavior tweaks."
+        "Добавьте небольшие настройки пользовательского интерфейса/поведения Telegram."
       ],
       "hash": "7d4b85f7662d7f5ee59a7d6aa0b24eaf4fa23a6b6da313046c2aef213824e685",
       "tag": "Customization"
@@ -598,7 +598,7 @@
       "description": "*Locally* modify stars balance in your profile",
       "about": [
         "*Locally* modify stars balance in your profile",
-        "*Locally* modify stars balance in your profile."
+        "*Локально* измените баланс звезд в своем профиле."
       ],
       "hash": "30b848816c4aa5b0e9d5a0be847037cd3d9809c4e5f5d6b8c01f3d8abce1dc83",
       "tag": "Utility"
@@ -616,7 +616,7 @@
       "description": "View and edit text files inside Telegram.",
       "about": [
         "View and edit text files inside Telegram.",
-        "View and edit text files inside Telegram."
+        "Просматривайте и редактируйте текстовые файлы внутри Telegram."
       ],
       "hash": "a37a8ddf588e612b96411e86e783a65ecebace7d4cffc842fbd24ac2b989f5ca",
       "tag": "Utility"
@@ -634,7 +634,7 @@
       "description": "Change the profile avatar endpoint.",
       "about": [
         "Change the profile avatar endpoint.",
-        "Change the profile avatar endpoint."
+        "Измените конечную точку аватара профиля."
       ],
       "hash": "d9b82c797ad0a6e2ba30b9f9297668c20b7e0ac5de75b786b194d0e87c36a7ae",
       "tag": "Utility"
@@ -652,7 +652,7 @@
       "description": "Forces the app to be always on the edge",
       "about": [
         "Forces the app to be always on the edge",
-        "Forces the app to be always on the edge."
+        "Заставляет приложение всегда быть на переднем крае"
       ],
       "hash": "1b8d4a82c7e4f30e884a7bfaa85c82c791dda3a22658b0c71925838f0389b01c",
       "tag": "Utility"
@@ -670,7 +670,7 @@
       "description": "Simulate Stars balance and payments.",
       "about": [
         "Simulate Stars balance and payments.",
-        "Simulate Stars balance and payments."
+        "Имитируйте баланс и платежи Stars."
       ],
       "hash": "a04422678b8621411daf5a3fc05b30f2ae11277994ee3eb52f7a95bbd443c15a",
       "tag": "Utility"
@@ -688,7 +688,7 @@
       "description": "Full-screen music player.",
       "about": [
         "Full-screen music player.",
-        "Full-screen music player."
+        "Полноэкранный музыкальный проигрыватель."
       ],
       "hash": "9a6f2c15a52901f36b30a6922ac84aa07612f67af45d8144b88e55a10437b5a8",
       "tag": "Media"
@@ -706,7 +706,7 @@
       "description": "Unknown",
       "about": [
         "Unknown",
-        "Unknown"
+        "Неизвестный"
       ],
       "hash": "f87d409fcf3325ce428ebc3d6eb26276772fa5c221e6a7e701f4bbb076373239",
       "tag": "Unknown"
@@ -724,7 +724,7 @@
       "description": "Convert HTML markup to Telegram formatting.",
       "about": [
         "Convert HTML markup to Telegram formatting.",
-        "Конвертирует HTML markup to Telegram formatting."
+        "Преобразование HTML-разметки в формат Telegram."
       ],
       "hash": "5331ed0f0a03f3cf83031432ecbb46c49f32b8239ea6d15a44c30eb7b7955835",
       "tag": "Utility"
@@ -742,7 +742,7 @@
       "description": "Simulate chat activity statuses (e.g., typing, voice, recording).",
       "about": [
         "Simulate chat activity statuses (e.g., typing, voice, recording).",
-        "Simulate chat activity statuses (e.g., typing, voice, recording)."
+        "Имитировать статусы активности чата (например, набор текста, голос, запись)."
       ],
       "hash": "6be16c6fbe4ccfc36d2ca63705b61bfb2d34772a386b802fa453138d78da9373",
       "tag": "Network"
@@ -760,7 +760,7 @@
       "description": "Show Telegram notifications locally inside the app.",
       "about": [
         "Show Telegram notifications locally inside the app.",
-        "Показывает Telegram notifications locally inside the app."
+        "Показывать уведомления Telegram локально внутри приложения."
       ],
       "hash": "443a0fc813b6c4398f48e577071b7d970e8576f816766d8c40a53cc4a54ae1fc",
       "tag": "Customization"
@@ -778,7 +778,7 @@
       "description": "Select a message by double-tapping like on iOS.",
       "about": [
         "Select a message by double-tapping like on iOS.",
-        "Выбирает a message by double-tapping like on iOS."
+        "Выберите сообщение двойным нажатием, как в iOS."
       ],
       "hash": "1ca104ce6e10ece42f8f6f6fa0020808361b6aaa41ded5c72b0e7793149f1fe8",
       "tag": "Network"
@@ -796,7 +796,7 @@
       "description": "Unknown",
       "about": [
         "Unknown",
-        "Unknown"
+        "Неизвестный"
       ],
       "hash": "b75baec4e906cf068bdcdbaaa60e5523b2a3ad226dd0abf0adba47261654c4d1",
       "tag": "Unknown"
@@ -814,7 +814,7 @@
       "description": "Hiding messages by keywords",
       "about": [
         "Hiding messages by keywords",
-        "Скрывает messages by keywords."
+        "Скрытие сообщений по ключевым словам"
       ],
       "hash": "0a1a416eaac905fa1dbcc3341f46f68caff504f8bdaa6233fc973c962a74e38e",
       "tag": "Utility"
@@ -832,7 +832,7 @@
       "description": "Transliterate outgoing messages between Cyrillic and Latin Russian.",
       "about": [
         "Transliterate outgoing messages between Cyrillic and Latin Russian.",
-        "Транслитерирует исходящие сообщения between Cyrillic and Latin Russian."
+        "Транслитерация исходящих сообщений между кириллицей и латинским русским языком."
       ],
       "hash": "1c4ef450fcb7b214a4b7def109bfd2fa787ba07649e64e274729a2cd99a1dc8e",
       "tag": "Utility"
@@ -850,7 +850,7 @@
       "description": "Read message text aloud using system text-to-speech.",
       "about": [
         "Read message text aloud using system text-to-speech.",
-        "Озвучивает message text aloud using system синтез речи."
+        "Прочитайте текст сообщения вслух, используя системный синтезатор речи."
       ],
       "hash": "35fb9eba473ce4ee8f35c49579dd5cb9aaa862c9670cd84c56524df0a0bcac8f",
       "tag": "Utility"
@@ -868,7 +868,7 @@
       "description": "Hide messages from selected users locally.",
       "about": [
         "Hide messages from selected users locally.",
-        "Скрывает messages from selected users locally."
+        "Скрыть сообщения от выбранных пользователей локально."
       ],
       "hash": "c3980504822900ea6321917ae0e41b71b4869df5fb85b9b766024e2cbe8c1f9e",
       "tag": "Utility"
@@ -886,7 +886,7 @@
       "description": "Analyze the local database (scan, search, identify, export).",
       "about": [
         "Analyze the local database (scan, search, identify, export).",
-        "Анализирует the local database (scan, search, identify, export)."
+        "Анализ локальной базы данных (сканирование, поиск, идентификация, экспорт)."
       ],
       "hash": "b4fb07831af63e7fd8beba4367830356de793359d58aa34efadcca23deaf464a",
       "tag": "Utility"
@@ -904,7 +904,7 @@
       "description": "Display song lyrics in Telegram.",
       "about": [
         "Display song lyrics in Telegram.",
-        "Display song lyrics в Telegram."
+        "Отображение текста песни в Telegram."
       ],
       "hash": "134faa2db4c11abf3af396ac110a9c178000d8781118a55cd76c32dd08960632",
       "tag": "Media"
@@ -922,7 +922,7 @@
       "description": "Add Genius as a lyrics provider for Reach Text.",
       "about": [
         "Add Genius as a lyrics provider for Reach Text.",
-        "Добавляет Genius as a lyrics provider for Reach Text."
+        "Добавьте Genius в качестве поставщика текстов для Reach Text."
       ],
       "hash": "b97ca78ef14e85fabe6b06a05092dec8a9d74e351e12a90dad26a96855906628",
       "tag": "Media"
@@ -940,7 +940,7 @@
       "description": "Evaluate math expressions.",
       "about": [
         "Evaluate math expressions.",
-        "Вычисляет math expressions."
+        "Оцените математические выражения."
       ],
       "hash": "f8e913279ddd1330011626bae81a0b21faf2f39c426810439f43bea9fc0e085b",
       "tag": "Utility"
@@ -958,7 +958,7 @@
       "description": "Add a media upload button.",
       "about": [
         "Add a media upload button.",
-        "Добавляет a media upload button."
+        "Добавьте кнопку загрузки мультимедиа."
       ],
       "hash": "9476e3e9449e23a3260d51d2c607c42354c47bae1314f4d9035297008a9e5ca3",
       "tag": "Media"
@@ -976,7 +976,7 @@
       "description": "Analyze recent messages and generate summaries using AI.",
       "about": [
         "Analyze recent messages and generate summaries using AI.",
-        "Анализирует recent messages and generate summaries using ИИ."
+        "Анализируйте последние сообщения и создавайте сводки с помощью ИИ."
       ],
       "hash": "d17951253f20dcc2f1288dbdcc88aad445f57228287243b7cff4384579919bc4",
       "tag": "Utility"
@@ -994,7 +994,7 @@
       "description": "Forward messages from one chat to another with optional attribution, batching, and delays.",
       "about": [
         "Forward messages from one chat to another with optional attribution, batching, and delays.",
-        "Forward messages from one chat to another with optional attribution, batching, and delays."
+        "Пересылайте сообщения из одного чата в другой с возможностью дополнительной атрибуции, пакетной обработки и задержек."
       ],
       "hash": "597eb2324034be0d9b87dc49952855c01f9cfcd4a2ecb0cbfcac1eef1b3c337c",
       "tag": "Utility"
@@ -1012,7 +1012,7 @@
       "description": "Read a visual novel inside Telegram.",
       "about": [
         "Read a visual novel inside Telegram.",
-        "Озвучивает a visual novel inside Telegram."
+        "Прочтите визуальный роман в Telegram."
       ],
       "hash": "339073fb67ddf706f650aed318bd8133008d89425d1755a487cb477b3db7ab5c",
       "tag": "Utility"
@@ -1030,7 +1030,7 @@
       "description": "Track music listening stats (time, top tracks/artists) and a daily goal.",
       "about": [
         "Track music listening stats (time, top tracks/artists) and a daily goal.",
-        "Отслеживает music listening stats (time, top tracks/artists) and a daily goal."
+        "Отслеживайте статистику прослушивания музыки (время, лучшие треки/исполнители) и ежедневную цель."
       ],
       "hash": "fddabb45ea52c1d13b2140f40cf580393dcb562512a8fda9ad8f8bb66ef737e3",
       "tag": "Media"
@@ -1048,7 +1048,7 @@
       "description": "Calendar with reminders.",
       "about": [
         "Calendar with reminders.",
-        "Calendar with reminders."
+        "Календарь с напоминаниями."
       ],
       "hash": "4dc79fd8f430fbbde72576c085018cb97243632c63a055cb2f1748a3a0a3bf21",
       "tag": "Utility"
@@ -1066,7 +1066,7 @@
       "description": "Search Google and open results in Telegram's built-in browser.",
       "about": [
         "Search Google and open results in Telegram's built-in browser.",
-        "Ищет Google and open results в Telegram's built-in browser."
+        "Выполните поиск в Google и откройте результаты во встроенном браузере Telegram."
       ],
       "hash": "b15775b3d19d719c96f4eaad6ee4b49340671db950582a7f39b95c16e47fac8f",
       "tag": "Customization"
@@ -1084,7 +1084,7 @@
       "description": "Remove blur effects from the app.",
       "about": [
         "Remove blur effects from the app.",
-        "Убирает blur effects from the app."
+        "Удалите эффекты размытия из приложения."
       ],
       "hash": "934d77fd51ce5cccb166192b0443bdecee8b2be820ac2f24d873124806e01be0",
       "tag": "Customization"
@@ -1102,7 +1102,7 @@
       "description": "Hide gift buttons in chats and channels.",
       "about": [
         "Hide gift buttons in chats and channels.",
-        "Скрывает gift buttons in chats and channels."
+        "Скрывайте кнопки подарков в чатах и ​​каналах."
       ],
       "hash": "ad4c04264a8a66b23ee999f7d8da1e33a59e2cc9673b2e41a7cfb99e3981ad3a",
       "tag": "Media"
@@ -1120,7 +1120,7 @@
       "description": "NSFW content commands.",
       "about": [
         "NSFW content commands.",
-        "NSFW content commands."
+        "Команды содержимого NSFW."
       ],
       "hash": "d263e0a3975d1fc77b20f0ae4d1e57be16963ae014afa57e009783644edde52d",
       "tag": "Fun"
@@ -1138,7 +1138,7 @@
       "description": "Search osu! beatmaps and user profiles.",
       "about": [
         "Search osu! beatmaps and user profiles.",
-        "Ищет osu! beatmaps and user profiles."
+        "Ищите осу! карты битов и профили пользователей."
       ],
       "hash": "55a72b787096a92b3524a6f70cc048462974a9b9773a2c67ac616117ff409e98",
       "tag": "Utility"
@@ -1156,7 +1156,7 @@
       "description": "Universal panic passcode for Telegram forks",
       "about": [
         "Universal panic passcode for Telegram forks",
-        "Universal panic passcode for Telegram forks."
+        "Универсальный пароль для паники для форков Telegram"
       ],
       "hash": "95ea766f6501d0e6bc118fa62d48ad52cc5885f1a7677ae9efb86baecb2c36cf",
       "tag": "Utility"
@@ -1174,7 +1174,7 @@
       "description": "Improve outgoing text (spelling, casing, punctuation) using AI.",
       "about": [
         "Improve outgoing text (spelling, casing, punctuation) using AI.",
-        "Improve outgoing text (spelling, casing, punctuation) using ИИ."
+        "Улучшите исходящий текст (орфографию, регистр, пунктуацию) с помощью ИИ."
       ],
       "hash": "a4993bd0e1d3344450c78b35baca0dee67aae9b4953f8cf8f591722eec835edd",
       "tag": "Utility"
@@ -1192,7 +1192,7 @@
       "description": "Unknown",
       "about": [
         "Unknown",
-        "Unknown"
+        "Неизвестный"
       ],
       "hash": "7b5e0986149c36e594898e7f4ce69a8631ef8a0ffaa173c66f0978ae8deb3ddb",
       "tag": "Unknown"
@@ -1210,7 +1210,7 @@
       "description": "Enable tab view in all forums",
       "about": [
         "Enable tab view in all forums",
-        "Включает tab view in all forums."
+        "Включить просмотр вкладок на всех форумах"
       ],
       "hash": "58386f825adabb27b7d4b16c26e8c73d3223cd94d2fea93f55ae6ad87cf56518",
       "tag": "Utility"
@@ -1228,7 +1228,7 @@
       "description": "Unknown",
       "about": [
         "Unknown",
-        "Unknown"
+        "Неизвестный"
       ],
       "hash": "abb25cb3133a92d9a7fe66ce83c30b5590f75ff885668e40f6428a344fdfe8d8",
       "tag": "Unknown"
@@ -1246,7 +1246,7 @@
       "description": "Show user profiles.",
       "about": [
         "Show user profiles.",
-        "Показывает user profiles."
+        "Показать профили пользователей."
       ],
       "hash": "c97b1e50a2eec17e8c26d6d334edac380c0de9eaaaac6f2089170545ceded7f1",
       "tag": "Utility"
@@ -1264,7 +1264,7 @@
       "description": "Send predefined quick replies.",
       "about": [
         "Send predefined quick replies.",
-        "Send predefined quick replies."
+        "Отправляйте предопределенные быстрые ответы."
       ],
       "hash": "ce35de80f2cf469c223e0072470404ed0c5d45d917866dce50355e4b9e654261",
       "tag": "Customization"
@@ -1282,7 +1282,7 @@
       "description": "Create pixel-perfect quotes from selected messages.",
       "about": [
         "Create pixel-perfect quotes from selected messages.",
-        "Создает pixel-perfect quotes from selected messages."
+        "Создавайте точные цитаты из выбранных сообщений."
       ],
       "hash": "d0d21c942272d91cd463e7e16d1f272bbbbc9fe91feafe718f70ffa5a6eef58f",
       "tag": "Utility"
@@ -1300,7 +1300,7 @@
       "description": "Generates a quote sticker from a message or text using @QuotLyBot.",
       "about": [
         "Generates a quote sticker from a message or text using @QuotLyBot.",
-        "Generates a quote sticker from a message or text using @QuotLyBot."
+        "Создает наклейку с цитатой из сообщения или текста с помощью @QuotLyBot."
       ],
       "hash": "64964aaab330ca767ee70c2a0ee83b612f39dcf3ebc0b5f02dde1e49403d0b8c",
       "tag": "Media"
@@ -1318,7 +1318,7 @@
       "description": "Generate random numbers.",
       "about": [
         "Generate random numbers.",
-        "Генерирует random numbers."
+        "Генерация случайных чисел."
       ],
       "hash": "b7846424f8b28d3cd50ca59143b02dda6d85bc6453d6b3e141de742989521a1b",
       "tag": "Utility"
@@ -1336,7 +1336,7 @@
       "description": "Enable ghost mode, save deleted messages and more!",
       "about": [
         "Enable ghost mode, save deleted messages and more!",
-        "Включает ghost mode, save deleted messages and more!"
+        "Включите режим призрака, сохраните удаленные сообщения и многое другое!"
       ],
       "hash": "9522f7afeb0336f8fafa25afb8b258dd297530a5eab83c02eb0af369abc71ca3",
       "tag": "Utility"
@@ -1354,7 +1354,7 @@
       "description": "TDesktop-like relative time display.",
       "about": [
         "TDesktop-like relative time display.",
-        "TDesktop-like relative time display."
+        "Отображение относительного времени в стиле TDesktop."
       ],
       "hash": "14ccc28ef9ec5f0c8e93457134beefa489ef973ccee70f90b25190ccc0b81115",
       "tag": "Utility"
@@ -1372,7 +1372,7 @@
       "description": "Create reminders.",
       "about": [
         "Create reminders.",
-        "Создает reminders."
+        "Создавайте напоминания."
       ],
       "hash": "30eb43a7c2e22bc61a4b77457a92b2454b782f73c5d3b798b4985a963bf7f81c",
       "tag": "Utility"
@@ -1390,7 +1390,7 @@
       "description": "Unknown",
       "about": [
         "Unknown",
-        "Unknown"
+        "Неизвестный"
       ],
       "hash": "00288f65e23a9f799a7d0417c62274f4a5d25987887d49e0aec6c2ad6bca49f1",
       "tag": "Unknown"
@@ -1408,7 +1408,7 @@
       "description": "Local names for active devices (long press on session)",
       "about": [
         "Local names for active devices (long press on session)",
-        "Local names for active devices (long press on session)."
+        "Локальные имена для активных устройств (длительное нажатие во время сеанса)"
       ],
       "hash": "7e4f1ebaa49adc16bd715ecb3d6a6586a7593c3b1e6c9c81d84aab697298fcfa",
       "tag": "Utility"
@@ -1426,7 +1426,7 @@
       "description": "Automatically replace configured text patterns before sending messages.",
       "about": [
         "Automatically replace configured text patterns before sending messages.",
-        "Automatically replace configured text patterns before sending messages."
+        "Автоматически заменяйте настроенные текстовые шаблоны перед отправкой сообщений."
       ],
       "hash": "fbbf120c0d2dd44c5e8861b15ae54904b2b109d9d7fca0b7216496bf70628f66",
       "tag": "Utility"
@@ -1444,7 +1444,7 @@
       "description": "Share the current track as an audio file or track card.",
       "about": [
         "Share the current track as an audio file or track card.",
-        "Share the current track as an audio file or track card."
+        "Поделитесь текущим треком в виде аудиофайла или карты трека."
       ],
       "hash": "b47b8e0fa78ba18e4f11e2c69f929cb89d08a8b8487bc1e57417d79627500922",
       "tag": "Media"
@@ -1462,7 +1462,7 @@
       "description": "Triggers Ripple on each UI touch",
       "about": [
         "Triggers Ripple on each UI touch",
-        "Triggers Ripple on each UI touch."
+        "Запускает Ripple при каждом касании пользовательского интерфейса."
       ],
       "hash": "1d0e2bf24278cc316c0d41b6422ab4f8f013e2438f0dbe02a146fe21e2843f33",
       "tag": "Network"
@@ -1480,7 +1480,7 @@
       "description": "Allows you to send videos as round videos and music",
       "about": [
         "Allows you to send videos as round videos and music",
-        "Allows you to send videos as round videos and music."
+        "Позволяет отправлять видео в виде круглых видеороликов и музыки."
       ],
       "hash": "976485f92865bab8a999e9921162135e08482b15ec0dd1759d1a1146812c2433",
       "tag": "Media"
@@ -1498,7 +1498,7 @@
       "description": "Edit video messages before sending.",
       "about": [
         "Edit video messages before sending.",
-        "Редактирует видеосообщениях before sending."
+        "Редактируйте видеосообщения перед отправкой."
       ],
       "hash": "8475aefe251b29d45aeb71db9374f69b71121e7ed510216ace51e31c86e1d519",
       "tag": "Media"
@@ -1516,7 +1516,7 @@
       "description": "Remove duplicate messages from Saved Messages.",
       "about": [
         "Remove duplicate messages from Saved Messages.",
-        "Убирает duplicate messages from Избранном."
+        "Удалите повторяющиеся сообщения из сохраненных сообщений."
       ],
       "hash": "5687fb4e6b528ed7c4a12742f04d518fdf20c2bcd9bb64beccf2cdfadac4ba54",
       "tag": "Utility"
@@ -1534,7 +1534,7 @@
       "description": "Show elapsed and total time for voice messages.",
       "about": [
         "Show elapsed and total time for voice messages.",
-        "Показывает elapsed and total time for голосовых сообщениях."
+        "Показать прошедшее и общее время голосовых сообщений."
       ],
       "hash": "f919af6dbb8f2caed73b51a5426ed1c1429f418b81c3e06730a2e48664536037",
       "tag": "Media"
@@ -1552,7 +1552,7 @@
       "description": "Re-send messages from another device.",
       "about": [
         "Re-send messages from another device.",
-        "Повторно отправляет messages from another device."
+        "Повторно отправьте сообщения с другого устройства."
       ],
       "hash": "848667ae56b4594475745e0f4fb026b1960f430fe4b2ff08d2a57d204b31c0e6",
       "tag": "Utility"
@@ -1570,7 +1570,7 @@
       "description": "Add custom send sounds and images.",
       "about": [
         "Add custom send sounds and images.",
-        "Добавляет custom send sounds and images."
+        "Добавляйте собственные звуки и изображения для отправки."
       ],
       "hash": "8173a0854111aab031457a005312a0feaf9dddfe1f622c9e8f7c5562d701ca8d",
       "tag": "Media"
@@ -1588,7 +1588,7 @@
       "description": "Unknown",
       "about": [
         "Unknown",
-        "Unknown"
+        "Неизвестный"
       ],
       "hash": "1e0f77f962de5322f8b00a160d6c63f6fdb1d2beb0c43d30a4c90557863b7cdf",
       "tag": "Unknown"
@@ -1606,7 +1606,7 @@
       "description": "Identify music from an audio file or voice message.",
       "about": [
         "Identify music from an audio file or voice message.",
-        "Определяет music from an audio file or voice message."
+        "Определите музыку из аудиофайла или голосового сообщения."
       ],
       "hash": "b4c7f6663d392bfcd762843c57c9e78559804ebfc47778512308fa73d60544ca",
       "tag": "Media"
@@ -1624,7 +1624,7 @@
       "description": "|lIl|IlIl|IlI|lIl|IlIl|IlI",
       "about": [
         "|lIl|IlIl|IlI|lIl|IlIl|IlI",
-        "|lIl|IlIl|IlI|lIl|IlIl|IlI"
+        "|lIl|IlIl|IlI|lIl|IlIl|Или"
       ],
       "hash": "b5109c225147423fee7efd070983b02b2a2a6a3b709dedaf60e9a758deaa9c59",
       "tag": "Utility"
@@ -1642,7 +1642,7 @@
       "description": "Test your internet speed.",
       "about": [
         "Test your internet speed.",
-        "Test your internet speed."
+        "Проверьте скорость вашего интернета."
       ],
       "hash": "5023b70711f054334cf16cd0610fb8d748eb53e6a8e050ccf8460eb8d1d06d60",
       "tag": "Utility"
@@ -1660,7 +1660,7 @@
       "description": "Remove spoilers from text and media.",
       "about": [
         "Remove spoilers from text and media.",
-        "Убирает spoilers from text and media."
+        "Удалите спойлеры из текста и медиа."
       ],
       "hash": "4779c2d285587d81a2a8837c110f50bbac31c11a1ef3562327c316159facdddd",
       "tag": "Media"
@@ -1678,7 +1678,7 @@
       "description": "Unknown",
       "about": [
         "Unknown",
-        "Unknown"
+        "Неизвестный"
       ],
       "hash": "6e82547dc73e3e4ff03d394392138665f432d0333a04f04c37da3ce8f0f23894",
       "tag": "Unknown"
@@ -1696,7 +1696,7 @@
       "description": "Unknown",
       "about": [
         "Unknown",
-        "Unknown"
+        "Неизвестный"
       ],
       "hash": "03e7ec96cdd1b356a5b2ad96905bc404d1822079d2c2c7e87469d3143dc126e9",
       "tag": "Unknown"
@@ -1714,7 +1714,7 @@
       "description": "Animation of text appearance with Blur, Slide, Scale, Rotate, Thanos effects + Liquid cursor + Spoilers",
       "about": [
         "Animation of text appearance with Blur, Slide, Scale, Rotate, Thanos effects + Liquid cursor + Spoilers",
-        "Animation of text appearance with Blur, Slide, Scale, Rotate, Thanos effects + Liquid cursor + Spoilers."
+        "Анимация появления текста с эффектами Blur, Slide, Scale, Rotate, Thanos + Жидкий курсор + Спойлеры"
       ],
       "hash": "93d3fb937083a1c63765418982e5dc3eaab6c0ada0e59fa5d55b5902852bcae0",
       "tag": "Customization"
@@ -1732,7 +1732,7 @@
       "description": "Change the style of your messages.",
       "about": [
         "Change the style of your messages.",
-        "Change the style of your messages."
+        "Измените стиль своих сообщений."
       ],
       "hash": "1708edc148e1530ce85154d927d52b311c4a47a3ed9dc2ccee4b4b0c5d172cd3",
       "tag": "Utility"
@@ -1750,7 +1750,7 @@
       "description": "Replaces Telegram",
       "about": [
         "Replaces Telegram",
-        "Replaces Telegram."
+        "Заменяет Телеграм"
       ],
       "hash": "63f9ff18b7a6f7e4d500b9d2c2eb63e1fe58605e0dcfb2dad136ce63f23d161a",
       "tag": "Utility"
@@ -1768,7 +1768,7 @@
       "description": "Unknown",
       "about": [
         "Unknown",
-        "Unknown"
+        "Неизвестный"
       ],
       "hash": "dff1a11bb06623261b0b58636b7a29e154437665b26f08246a6044077a411371",
       "tag": "Unknown"
@@ -1786,7 +1786,7 @@
       "description": "Ultra-fast multi-provider translation for Telegram with in-message support",
       "about": [
         "Ultra-fast multi-provider translation for Telegram with in-message support",
-        "Ultra-fast multi-provider translation for Telegram with in-message support."
+        "Сверхбыстрый мультипровайдерский перевод для Telegram с поддержкой в ​​сообщениях"
       ],
       "hash": "2d5d7e6fb5caf3025a70e31be05633615f0d336d61ab0f6860f773d281cec240",
       "tag": "Utility"
@@ -1804,7 +1804,7 @@
       "description": "Remove limits on adding stickers to favorites",
       "about": [
         "Remove limits on adding stickers to favorites",
-        "Убирает limits on adding stickers to favorites."
+        "Снимите ограничения на добавление стикеров в избранное"
       ],
       "hash": "fd190d8feea3af69794da712ced7794ce66cb3b4eee083dc12f31e983022acc7",
       "tag": "Media"
@@ -1822,7 +1822,7 @@
       "description": "Removes the limit on the number of Saved GIFs via Xposed hooks",
       "about": [
         "Removes the limit on the number of Saved GIFs via Xposed hooks",
-        "Removes the limit on the number of Saved GIFs via Xposed hooks."
+        "Убирает ограничение на количество сохраненных GIF-файлов с помощью хуков Xposed."
       ],
       "hash": "76bba7450f75d4a3a46b48d0d533fa7ab87e1cfaa9834e26847a5028da601d7c",
       "tag": "Media"
@@ -1840,7 +1840,7 @@
       "description": "Pin unlimited chats and channels locally.",
       "about": [
         "Pin unlimited chats and channels locally.",
-        "Закрепляет unlimited chats and channels locally."
+        "Закрепляйте неограниченное количество чатов и каналов локально."
       ],
       "hash": "18b6f2206d83dc29560b3034a91b3f2eee944b0175481a87e1e549fc4eaf7701",
       "tag": "Utility"
@@ -1858,7 +1858,7 @@
       "description": "Summarize unread messages with AI providers by clicking the unread badge",
       "about": [
         "Summarize unread messages with AI providers by clicking the unread badge",
-        "Суммирует unread messages with ИИ providers by clicking the бейдж непрочитанного."
+        "Обобщите непрочитанные сообщения поставщикам ИИ, щелкнув значок непрочитанных сообщений."
       ],
       "hash": "734b7f9c1981ec39937e6c9d9472b103c85e3bdc946c754a44ee00a2b14a51e3",
       "tag": "AI"
@@ -1876,7 +1876,7 @@
       "description": "Automatically add timestamps when replying to media messages.",
       "about": [
         "Automatically add timestamps when replying to media messages.",
-        "Automatically add timestamps when replying to media messages."
+        "Автоматически добавляйте временные метки при ответе на мультимедийные сообщения."
       ],
       "hash": "19d27fa56cba0e39a3aa7bdfa5c919fa24a772e7242ac53333fb097f718935de",
       "tag": "Media"
@@ -1894,7 +1894,7 @@
       "description": "Universal voice transcription search with UI",
       "about": [
         "Universal voice transcription search with UI",
-        "Universal voice transcription search with UI."
+        "Универсальный поиск по транскрипции голоса с пользовательским интерфейсом"
       ],
       "hash": "5d37361cd08ff666455eef86667b7d4ac0a9966259429cc2fbddaf770396dff4",
       "tag": "Network"
@@ -1912,7 +1912,7 @@
       "description": "Unknown",
       "about": [
         "Unknown",
-        "Unknown"
+        "Неизвестный"
       ],
       "hash": "4c133bb61223e11e9f51996e532cafb1af5abc5bf7bf760d815825c3c54c1a75",
       "tag": "Unknown"
@@ -1930,7 +1930,7 @@
       "description": "Disable the swipe-to-close gesture in the in-app browser.",
       "about": [
         "Disable the swipe-to-close gesture in the in-app browser.",
-        "Отключает the swipe-to-close gesture во встроенном браузере."
+        "Отключите жест смахивания для закрытия в браузере приложения."
       ],
       "hash": "5babeeaa2769ce66b9780aa0d9967f2a8e612cbcff09bcbbbd1e00e187bd95e7",
       "tag": "Network"
@@ -1948,7 +1948,7 @@
       "description": "Play Rock-Paper-Scissors.",
       "about": [
         "Play Rock-Paper-Scissors.",
-        "Запускает игру: Rock-Paper-Scissors."
+        "Игра «Камень-ножницы-бумага»."
       ],
       "hash": "d100fd7c430fba32117d35e66bf7bcbfdd2f6b80121763e8c369fc372a981af6",
       "tag": "Game"
@@ -1966,7 +1966,7 @@
       "description": "Automatically translate outgoing messages.",
       "about": [
         "Automatically translate outgoing messages.",
-        "Automatically translate исходящие сообщения."
+        "Автоматический перевод исходящих сообщений."
       ],
       "hash": "322447a9a621e0a3442987aea27d84d8b4408417dd5e0814f22bf64d9079e494",
       "tag": "Utility"
@@ -1984,7 +1984,7 @@
       "description": "Modifies specific URLs (Twitter, TikTok, Reddit, Instagram, Pixiv) for better previews.",
       "about": [
         "Modifies specific URLs (Twitter, TikTok, Reddit, Instagram, Pixiv) for better previews.",
-        "Modifies specific URLs (Twitter, TikTok, Reddit, Instagram, Pixiv) for better previews."
+        "Изменяет определенные URL-адреса (Twitter, TikTok, Reddit, Instagram, Pixiv) для улучшения предварительного просмотра."
       ],
       "hash": "1816fce5d5fcff368838cfdd84c0575453c6e98fb616443dbcd4ef14c8caaf9d",
       "tag": "Utility"
@@ -2002,7 +2002,7 @@
       "description": "calculator with UI interface",
       "about": [
         "calculator with UI interface",
-        "Калькулятор с интерфейсом."
+        "калькулятор с пользовательским интерфейсом"
       ],
       "hash": "22cf327190b9b8fb448c54d6031189ea3acf48a8ca2600753de872e77ea10cbf",
       "tag": "Customization"
@@ -2020,7 +2020,7 @@
       "description": "Send a random cat image.",
       "about": [
         "Send a random cat image.",
-        "Send a random cat image."
+        "Отправьте случайное изображение кошки."
       ],
       "hash": "571b81fcfc04a059ce42012ce5808ae95265e8aa1ba53f318a1d029c19e15b69",
       "tag": "Media"
@@ -2038,7 +2038,7 @@
       "description": "Browse and search available commands.",
       "about": [
         "Browse and search available commands.",
-        "Browse and search available commands."
+        "Просмотр и поиск доступных команд."
       ],
       "hash": "389b208b5c43dbbf4a6f929e4f42c1ad44aafd15da207866ab55774a11e44490",
       "tag": "Utility"
@@ -2056,7 +2056,7 @@
       "description": "Plugin for tracking cryptocurrency rates and conversion",
       "about": [
         "Plugin for tracking cryptocurrency rates and conversion",
-        "Plugin for tracking cryptocurrency rates and conversion."
+        "Плагин для отслеживания курсов и конвертации криптовалют"
       ],
       "hash": "2f6b006aef59299720c3c889113580b9652dafd52b0dca63087b5dc043b8b331",
       "tag": "Utility"
@@ -2074,7 +2074,7 @@
       "description": "Convert currencies.",
       "about": [
         "Convert currencies.",
-        "Конвертирует currencies."
+        "Конвертируйте валюты."
       ],
       "hash": "980158d0e2944cd6fd3f84885ae881c1c774abb11edb45e839bf9165f7790f13",
       "tag": "Utility"
@@ -2092,7 +2092,7 @@
       "description": "Customize FAB (Floating Action Button)",
       "about": [
         "Customize FAB (Floating Action Button)",
-        "Настраивает FAB (Floating Action Button)."
+        "Настройка FAB (плавающая кнопка действия)"
       ],
       "hash": "37787ba8a6e2bdb6825689c6aaa15877e1cf9eec0e4cd4246607b5d81b070178",
       "tag": "Customization"
@@ -2110,7 +2110,7 @@
       "description": "Show days remaining until your birthday.",
       "about": [
         "Show days remaining until your birthday.",
-        "Показывает days remaining until your birthday."
+        "Покажите дни, оставшиеся до вашего дня рождения."
       ],
       "hash": "f0b06fc36dab92e7eabd418ca187e004394f5ea81a2d98cfa40c8cdac658c5cc",
       "tag": "Utility"
@@ -2128,7 +2128,7 @@
       "description": "Download and send media from supported services.",
       "about": [
         "Download and send media from supported services.",
-        "Скачивает and send media from supported services."
+        "Загружайте и отправляйте медиафайлы из поддерживаемых служб."
       ],
       "hash": "ae82002ae793bf0bc622501d1b928d8e0c1f9d5dbc34243c93f585ab0aa96340",
       "tag": "Media"
@@ -2146,7 +2146,7 @@
       "description": "Swipe the folders until your fingers rub off! (requires zwylib)",
       "about": [
         "Swipe the folders until your fingers rub off! (requires zwylib)",
-        "Добавляет управление папками свайпами."
+        "Проведите по папкам, пока пальцы не сотрутся! (требуется zwylib)"
       ],
       "hash": "2fee8fb98e517a90fa0cd13164aab11422de0236fca9cddfb640e6624ad9205c",
       "tag": "Network"
@@ -2164,7 +2164,7 @@
       "description": "Checks Extera plugin code for security risks using Google Gemini API.",
       "about": [
         "Checks Extera plugin code for security risks using Google Gemini API.",
-        "Checks Extera plugin code for security risks using Google Gemini API."
+        "Проверяет код плагина Extera на наличие угроз безопасности с помощью API Google Gemini."
       ],
       "hash": "36e882eeab9c170df73c189f27048ac5a205f68be7046804977c6664826deaea",
       "tag": "AI"
@@ -2182,7 +2182,7 @@
       "description": "Search Google.",
       "about": [
         "Search Google.",
-        "Ищет Google."
+        "Найдите в Google."
       ],
       "hash": "9770a505e9bdc67609b1ccbe71ba153e7de3a89de4102331a4274e8dbc66ee42",
       "tag": "Utility"
@@ -2200,7 +2200,7 @@
       "description": "Fix hashtag tap behavior in chats.",
       "about": [
         "Fix hashtag tap behavior in chats.",
-        "Исправляет hashtag tap behavior in chats."
+        "Исправлено поведение касания хэштега в чатах."
       ],
       "hash": "f6f12a24ce46021ba1d6067f9c85c8e83ab16c79ae9557753bfeae733bbf95b7",
       "tag": "Customization"
@@ -2218,7 +2218,7 @@
       "description": "Show the current Last.fm track.",
       "about": [
         "Show the current Last.fm track.",
-        "Показывает the current Last.fm track."
+        "Показать текущий трек Last.fm."
       ],
       "hash": "e4139a75048aed8159bfa1d61128c767e865b18165a21f5a410284ec3d24e5e7",
       "tag": "Utility"
@@ -2236,7 +2236,7 @@
       "description": "Play Minesweeper.",
       "about": [
         "Play Minesweeper.",
-        "Запускает игру: Minesweeper."
+        "Играйте в Сапёра."
       ],
       "hash": "580547076901abaef1add0d1b32d16edce65dead59af1089885a2e0069a6f079",
       "tag": "Game"
@@ -2254,7 +2254,7 @@
       "description": "Removes the limit of 100 forward messages (requires zwylib)",
       "about": [
         "Removes the limit of 100 forward messages (requires zwylib)",
-        "Removes the limit of 100 forward messages (requires zwylib)."
+        "Удаляет ограничение в 100 пересылаемых сообщений (требуется zwylib)"
       ],
       "hash": "c9a15fccc6cd735f31cf07626f82d501e967d63f48c889b46d7430a05d01cc54",
       "tag": "Customization"
@@ -2272,7 +2272,7 @@
       "description": "Disables blurry overlay for Video Messages.",
       "about": [
         "Disables blurry overlay for Video Messages.",
-        "Отключает blurry overlay for Video Messages."
+        "Отключает размытое наложение для видеосообщений."
       ],
       "hash": "bcef5231c9f56ff91c3e5ab8008ae561c76e983c65c95b204958f870b436eb0b",
       "tag": "Media"
@@ -2290,7 +2290,7 @@
       "description": "Makes your messages extra cute with many adorable styles!",
       "about": [
         "Makes your messages extra cute with many adorable styles!",
-        "Makes your messages extra cute with many adorable styles!"
+        "Делает ваши сообщения еще более милыми благодаря множеству очаровательных стилей!"
       ],
       "hash": "dd08ad0800656b1571cb997fddeb207fe6815d2cb040e493e6430c09512e133b",
       "tag": "Fun"
@@ -2308,7 +2308,7 @@
       "description": "Show Telegram response latency.",
       "about": [
         "Show Telegram response latency.",
-        "Показывает Telegram response latency."
+        "Показать задержку ответа Telegram."
       ],
       "hash": "24ce403052ea2626f58687e2a0fdf556ea9b7997fcd77b131147a7f5c37c6d9b",
       "tag": "Utility"
@@ -2326,7 +2326,7 @@
       "description": "Ping-Pong game. Launch the game in the side menu on the left in the chat list.",
       "about": [
         "Ping-Pong game. Launch the game in the side menu on the left in the chat list.",
-        "Ping-Pong game. Launch the game in the side menu on the left in the списке чатов."
+        "Игра в пинг-понг. Запустите игру в боковом меню слева в списке чатов."
       ],
       "hash": "9336dacf48a22d2fd8bb9353a61d990aa359737709766f6e03bf7cdfaf0897b0",
       "tag": "Network"
@@ -2344,7 +2344,7 @@
       "description": "Manage locally installed plugins.",
       "about": [
         "Manage locally installed plugins.",
-        "Управляет locally installed plugins."
+        "Управление локально установленными плагинами."
       ],
       "hash": "ff32359355132ae180e68ef0e1c734599a97f18c0d4af69791cff20d5ad10aa2",
       "tag": "Utility"
@@ -2362,7 +2362,7 @@
       "description": "Adds a menu for quick access to other plugins",
       "about": [
         "Adds a menu for quick access to other plugins",
-        "Добавляет a menu for quick access to other plugins."
+        "Добавляет меню для быстрого доступа к другим плагинам."
       ],
       "hash": "47c7330b77e8380f491b6a8249f38c0557661556809ce245d344d11b6d6e92dd",
       "tag": "Customization"
@@ -2380,7 +2380,7 @@
       "description": "Send reply as a quote with the text of the message (requires zwylib)",
       "about": [
         "Send reply as a quote with the text of the message (requires zwylib)",
-        "Send reply as a quote with the text of the message (requires zwylib)."
+        "Отправить ответ в виде цитаты с текстом сообщения (требуется zwylib)"
       ],
       "hash": "c220de0ba576eecb165c9f4707c110e7d3ac2a442a41625a07106f3a9e84269e",
       "tag": "Customization"
@@ -2398,7 +2398,7 @@
       "description": "Quote messages.",
       "about": [
         "Quote messages.",
-        "Quote messages."
+        "Цитировать сообщения."
       ],
       "hash": "e11847f8c2791803cd5b78df6fe3872cb673cf4193caae24eb235b81e23c076e",
       "tag": "Utility"
@@ -2416,7 +2416,7 @@
       "description": "Share the currently playing Spotify track.",
       "about": [
         "Share the currently playing Spotify track.",
-        "Share the currently playing Spotify track."
+        "Поделитесь текущим треком Spotify."
       ],
       "hash": "2f8896d1f2e09d058b668a023863d036d1166afb62a25add8235b06a7dbf7bf4",
       "tag": "Utility"
@@ -2434,7 +2434,7 @@
       "description": "Improve text using AI (rewrite, fix, add emojis).",
       "about": [
         "Improve text using AI (rewrite, fix, add emojis).",
-        "Improve text using ИИ (rewrite, fix, add emojis)."
+        "Улучшайте текст с помощью ИИ (переписывайте, исправляйте, добавляйте смайлы)."
       ],
       "hash": "0a5abd7783606c8b98b242b774c2b99c70923387117ecb21673ac3a33b54da7c",
       "tag": "Media"
@@ -2452,7 +2452,7 @@
       "description": "Show your current Steam game and library.",
       "about": [
         "Show your current Steam game and library.",
-        "Показывает your current Steam game and library."
+        "Покажите свою текущую игру и библиотеку Steam."
       ],
       "hash": "b8c745c293bbeb54c057a187959c9807dab382aced46edc3e911278d8f50b51e",
       "tag": "Library"
@@ -2470,7 +2470,7 @@
       "description": "Convert text to speech.",
       "about": [
         "Convert text to speech.",
-        "Конвертирует text to speech."
+        "Преобразование текста в речь."
       ],
       "hash": "bfb82ae8c2e6ad15862b2a28deebec963739cca3a97e776667ee0f89ddf88729",
       "tag": "Utility"
@@ -2488,7 +2488,7 @@
       "description": "Unknown",
       "about": [
         "Unknown",
-        "Unknown"
+        "Неизвестный"
       ],
       "hash": "406a2b10142997ac8dbfa8ef04c82abb2de45192a4921ab6b14355c5ca474f3e",
       "tag": "Unknown"
@@ -2506,7 +2506,7 @@
       "description": "Mini version of CactusLib :D",
       "about": [
         "Mini version of CactusLib :D",
-        "Мини-библиотека CactusLib."
+        "Мини-версия CactusLib :D"
       ],
       "hash": "6d94c166bf3ec639f4f035de8e27c4c7025c409fb7e0f8966f218a250b24e59b",
       "tag": "Library"
@@ -2524,7 +2524,7 @@
       "description": "Create demotivator posters from images.",
       "about": [
         "Create demotivator posters from images.",
-        "Создает demotivator posters from images."
+        "Создавайте плакаты-демотиваторы из изображений."
       ],
       "hash": "2b0f86e96eac2acb53cab6d333ec1179193567a96b324438a47283bf127bbca3",
       "tag": "Media"
@@ -2542,7 +2542,7 @@
       "description": "Play a hidden-object game to find all gems.",
       "about": [
         "Play a hidden-object game to find all gems.",
-        "Запускает игру: a hidden-object game to find all gems."
+        "Сыграйте в игру «поиск предметов», чтобы найти все драгоценные камни."
       ],
       "hash": "0df2667a5c287663559ec19abc14c39af2d76ce2baa7f514819fac0539057225",
       "tag": "Game"
@@ -2560,7 +2560,7 @@
       "description": "Show GitHub user info and activity.",
       "about": [
         "Show GitHub user info and activity.",
-        "Показывает GitHub user info and activity."
+        "Покажите информацию и активность пользователя GitHub."
       ],
       "hash": "090f7d7e7fbbb66677263b1503fefa3dc4f2fb4926bfd9a1c899b44fe7f8ea39",
       "tag": "Utility"
@@ -2578,7 +2578,7 @@
       "description": "Unknown",
       "about": [
         "Unknown",
-        "Unknown"
+        "Неизвестный"
       ],
       "hash": "72da04e3580decdc1da633bfa4d854122e02183d041fa0ed4e4bfc43b0a6e0dc",
       "tag": "Unknown"
@@ -2596,7 +2596,7 @@
       "description": "Replace messages with a random quote.",
       "about": [
         "Replace messages with a random quote.",
-        "Заменяет messages with a random quote."
+        "Замените сообщения случайной цитатой."
       ],
       "hash": "c696514faf2a8a1a3ae65c30a5f89d3ae55c8e2bae035437e58fced0c71db27f",
       "tag": "Utility"
@@ -2614,7 +2614,7 @@
       "description": "Allows to set custom resolution and bitrate for round videos.",
       "about": [
         "Allows to set custom resolution and bitrate for round videos.",
-        "Allows to set custom resolution and bitrate for round videos."
+        "Позволяет устанавливать собственное разрешение и битрейт для круглых видео."
       ],
       "hash": "fca14b0307ee0bb29f15464fd74f7dbb52714d8ebd5123559d2d1658e750cc43",
       "tag": "Media"
@@ -2650,7 +2650,7 @@
       "description": "Play Tic-Tac-Toe against the AI. Access via 3dot chat menu.",
       "about": [
         "Play Tic-Tac-Toe against the AI. Access via 3dot chat menu.",
-        "Запускает игру: Tic-Tac-Toe against the ИИ. Access via 3dot chat menu."
+        "Играйте в крестики-нолики против ИИ. Доступ через меню чата 3dot."
       ],
       "hash": "aca94378b110e72a149912f3b37b749f4e59ccd80ddb0a149a905d3d63f298ae",
       "tag": "Game"
@@ -2668,7 +2668,7 @@
       "description": "Fastboot ROM fetcher",
       "about": [
         "Fastboot ROM fetcher",
-        "Ищет и скачивает Fastboot ROM."
+        "Сборщик ПЗУ Fastboot"
       ],
       "hash": "87dcc4f576bacd426c52777d6e97bf503b47a6baee5a19ea0a3fd57005cfd92c",
       "tag": "Utility"
@@ -2686,7 +2686,7 @@
       "description": "Unknown",
       "about": [
         "Unknown",
-        "Unknown"
+        "Неизвестный"
       ],
       "hash": "eb5f7e7052e14c19562fe04c0ab445d19ba4a10cf63743f89b1826a18f09bfed",
       "tag": "Unknown"
@@ -2704,7 +2704,7 @@
       "description": "Check IP, DNS, and network connectivity via check-host.net.",
       "about": [
         "Check IP, DNS, and network connectivity via check-host.net.",
-        "Check IP, DNS, and network connectivity via check-host.net."
+        "Проверьте IP, DNS и сетевое подключение через check-host.net."
       ],
       "hash": "d241af8088fba6ac96189628af11ddef6262952d44abd678c7eafcc8f1b03d50",
       "tag": "Network"
@@ -2722,7 +2722,7 @@
       "description": "Fetch song lyrics from Genius.",
       "about": [
         "Fetch song lyrics from Genius.",
-        "Fetch song lyrics from Genius."
+        "Загрузите тексты песен из Genius."
       ],
       "hash": "7a930d7882ff4f93dcecaa8542a5efc645321fe724732c1040e293bc321f7d70",
       "tag": "Media"
@@ -2740,7 +2740,7 @@
       "description": "Unknown",
       "about": [
         "Unknown",
-        "Unknown"
+        "Неизвестный"
       ],
       "hash": "371b9968c9562416e4b250ede8e1457fe2bd21c389ffac6ac3dff4a84ce61935",
       "tag": "Unknown"
@@ -2758,7 +2758,7 @@
       "description": "Fetch song lyrics.",
       "about": [
         "Fetch song lyrics.",
-        "Fetch song lyrics."
+        "Получить текст песни."
       ],
       "hash": "97a1982455f166f9bc5dab50053dc077280b933a00ac4cabaa30e83120be0186",
       "tag": "Media"
@@ -2776,7 +2776,7 @@
       "description": "Track how many messages you send and show statistics.",
       "about": [
         "Track how many messages you send and show statistics.",
-        "Отслеживает how many messages you send and show statistics."
+        "Отслеживайте, сколько сообщений вы отправляете, и показывайте статистику."
       ],
       "hash": "c3c2b53efa88e4feeaa488ff9472a3199ced08774ca49b9fceae22868dfd4839",
       "tag": "Utility"
@@ -2794,7 +2794,7 @@
       "description": "Unknown",
       "about": [
         "Unknown",
-        "Unknown"
+        "Неизвестный"
       ],
       "hash": "700ea8a61f1befbf0540d64f65bba99ae260abc09a3c0fa925c10162b9d7e72b",
       "tag": "Unknown"
@@ -2812,7 +2812,7 @@
       "description": "Remove the call confirmation popup.",
       "about": [
         "Remove the call confirmation popup.",
-        "Убирает the call confirmation popup."
+        "Удалить всплывающее окно подтверждения звонка."
       ],
       "hash": "d8ad54a8dc2a61af04ec67a6bb3dee3d0a0b26bbd1f0087f68f78ee280db0ba4",
       "tag": "Utility"
@@ -2830,7 +2830,7 @@
       "description": "Delete all your own messages in a chat or group.",
       "about": [
         "Delete all your own messages in a chat or group.",
-        "Delete all your own messages in a chat or group."
+        "Удалите все свои сообщения в чате или группе."
       ],
       "hash": "036e62e74e4afa08ec57d10b70e01008601c20e1b268c38c860dbf64666a2a14",
       "tag": "Utility"
@@ -2848,7 +2848,7 @@
       "description": "Generate color palettes from text or images.",
       "about": [
         "Generate color palettes from text or images.",
-        "Генерирует color palettes from text or images."
+        "Создавайте цветовые палитры из текста или изображений."
       ],
       "hash": "7cbb14e40b7ca0eb4bb2b2120698882856cb31cd0e1a4fc02bf290617e2e63d7",
       "tag": "Media"
@@ -2866,7 +2866,7 @@
       "description": "Play Battleship.",
       "about": [
         "Play Battleship.",
-        "Запускает игру: Battleship."
+        "Играйте в «Морской бой»."
       ],
       "hash": "696973e70d360bdb2b4aec6e6a9a449da8c7351a5e21688674e89fc3797429d7",
       "tag": "Game"
@@ -2884,7 +2884,7 @@
       "description": "Show holidays for a given date.",
       "about": [
         "Show holidays for a given date.",
-        "Показывает holidays for a given date."
+        "Показывать праздники для указанной даты."
       ],
       "hash": "b292813f2e9d2762b6d2e2a69cfdcfc959b7c7608ea48c61defff9f4c4a81b6f",
       "tag": "Utility"
@@ -2902,7 +2902,7 @@
       "description": "Copy and restore user profile information.",
       "about": [
         "Copy and restore user profile information.",
-        "Копирует and restore user profile information."
+        "Скопируйте и восстановите информацию профиля пользователя."
       ],
       "hash": "f23ac187f964bcf35e91779158114118111756b30b4d98483958bd679548a093",
       "tag": "Utility"
@@ -2938,7 +2938,7 @@
       "description": "Extract premium emoji document IDs and send them in chat.",
       "about": [
         "Extract premium emoji document IDs and send them in chat.",
-        "Extract премиум-эмодзи document IDs and send them in chat."
+        "Извлеките идентификаторы документов Emoji премиум-класса и отправьте их в чат."
       ],
       "hash": "d823098e07099f537165e967096cf86dbabb6d5b26845bec2890ffb0ffab2c59",
       "tag": "Media"
@@ -2956,7 +2956,7 @@
       "description": "Show information about Telegram gifts.",
       "about": [
         "Show information about Telegram gifts.",
-        "Показывает information about Telegram gifts."
+        "Показать информацию о подарках Telegram."
       ],
       "hash": "852eb1ae85b3824ec07e81baf131c70b7498acb33c3f2339f4ade2cc36437c57",
       "tag": "Media"
@@ -2974,27 +2974,9 @@
       "description": "Unlock Local Premium",
       "about": [
         "Unlock Local Premium",
-        "Unlock Local Premium."
+        "Разблокировать локальный премиум"
       ],
       "hash": "3129289bf102aeb1b9dd74d88342a96f159f2cc2c1a31e161d3be41095e2d27a",
-      "tag": "Utility"
-    },
-    {
-      "id": "no_quote_forward",
-      "name": "No-Quote Forward",
-      "author": "@luvztroy",
-      "version": "1.0.0",
-      "state": "release",
-      "icon": "luvztroyIcons/8",
-      "suspicious": "false",
-      "dependencies": [],
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/No Quote.plugin",
-      "description": "Stops goofy-ahh Telegram from adding quotes when you forward messages",
-      "about": [
-        "Stops goofy-ahh Telegram from adding quotes when you forward messages",
-        "Отключает добавление кавычек при пересылке сообщений."
-      ],
-      "hash": "cc98d5f6d8b662f3b2455433303ab5b0c4647e4b6dd7dc71bab4aad3002b09e9",
       "tag": "Utility"
     },
     {
@@ -3010,7 +2992,7 @@
       "description": "Unknown",
       "about": [
         "Unknown",
-        "Unknown"
+        "Неизвестный"
       ],
       "hash": "6f7c970f99fa33e7742dcda0bcfe3a736528ce369d112bcddd76c48cf0e3881d",
       "tag": "Unknown"
@@ -3028,7 +3010,7 @@
       "description": "Create real and fake message quotes.",
       "about": [
         "Create real and fake message quotes.",
-        "Создает real and fake цитаты сообщений."
+        "Создавайте настоящие и поддельные цитаты из сообщений."
       ],
       "hash": "cda37e83e8b5d60c5f144a9d3ed09840fa8cf695132301906751184e89bf6f27",
       "tag": "Utility"
@@ -3046,7 +3028,7 @@
       "description": "Unknown",
       "about": [
         "Unknown",
-        "Unknown"
+        "Неизвестный"
       ],
       "hash": "f96dc76bc1c13293c2c4534f4e2d293ea88098dd23aac96a13d2e3e678045618",
       "tag": "Unknown"
@@ -3064,7 +3046,7 @@
       "description": "Admin utilities.",
       "about": [
         "Admin utilities.",
-        "Admin utilities."
+        "Административные утилиты."
       ],
       "hash": "b4f2bce88070172f95be90d7064a8778deba83f3785e5e05a778f1a439395eb4",
       "tag": "Admin"
@@ -3100,7 +3082,7 @@
       "description": "Create a search link.",
       "about": [
         "Create a search link.",
-        "Создает a search link."
+        "Создайте ссылку для поиска."
       ],
       "hash": "be08e58086d97bc6360e8cca9a480ab72b041176ad3a8447b07319e488ebb7f2",
       "tag": "Utility"
@@ -3118,7 +3100,7 @@
       "description": "Generate QR codes.",
       "about": [
         "Generate QR codes.",
-        "Генерирует QR codes."
+        "Генерируйте QR-коды."
       ],
       "hash": "d0a83a0d6f09c7eb6c11e99ab892d738199d9adb9ca1ba437cacf5da426e2fe6",
       "tag": "Utility"
@@ -3154,7 +3136,7 @@
       "description": "Roleplay command shortcuts.",
       "about": [
         "Roleplay command shortcuts.",
-        "Roleplay command shortcuts."
+        "Сочетания команд для ролевых игр."
       ],
       "hash": "e3010c8a5ec907006eb19073c461c2ed6fe3b0aa20414e1ff5bc53cded0b522f",
       "tag": "Utility"
@@ -3172,7 +3154,7 @@
       "description": "Search Wikipedia.",
       "about": [
         "Search Wikipedia.",
-        "Ищет Wikipedia."
+        "Ищите в Википедии."
       ],
       "hash": "fb310109eb8312e48edd3f9e181eddb5efd08cc57c3ea23c1bc99acb75cb5e5d",
       "tag": "Network"
@@ -3190,7 +3172,7 @@
       "description": "Gets Pokemon information",
       "about": [
         "Gets Pokemon information",
-        "Gets Pokemon information."
+        "Получает информацию о покемонах"
       ],
       "hash": "ab695075c94cb34f6cce8854a8d926a28eb5b727115e7ec848ae37cfdf5c9745",
       "tag": "Utility"
@@ -3208,7 +3190,7 @@
       "description": "Auto-fix sentence capitalization and ending punctuation.",
       "about": [
         "Auto-fix sentence capitalization and ending punctuation.",
-        "Auto-fix sentence capitalization and ending punctuation."
+        "Автоматическое исправление заглавных букв предложений и окончание пунктуации."
       ],
       "hash": "3d8e3a01c73106bacb94e95825f7891e4fc60f9726aec6586b3c7d3a857fdeca",
       "tag": "Utility"
@@ -3226,7 +3208,7 @@
       "description": "Share the currently playing Yandex Music track.",
       "about": [
         "Share the currently playing Yandex Music track.",
-        "Share the currently playing Yandex Music track."
+        "Поделитесь воспроизводимым в данный момент треком Яндекс Музыки."
       ],
       "hash": "3ce58baee63544adb8f1b06877d9644afc7040a4021b85bfc7c5c4db9cdc8b40",
       "tag": "Media"
@@ -3244,7 +3226,7 @@
       "description": "Transform message text into different formats.",
       "about": [
         "Transform message text into different formats.",
-        "Transform message text into different formats."
+        "Преобразуйте текст сообщения в разные форматы."
       ],
       "hash": "62ce3966d59a6a85f3c6289d13eb67c492b8cc030eec069c5df66cfae486dbba",
       "tag": "Utility"
@@ -3280,7 +3262,7 @@
       "description": "Unknown",
       "about": [
         "Unknown",
-        "Unknown"
+        "Неизвестный"
       ],
       "hash": "158e18b3bc2144986054c9c0a3987e8b1476b6175b17a10ab5a2bb0360fc7b8b",
       "tag": "Unknown"
@@ -3298,7 +3280,7 @@
       "description": "Automate farming for supported bot games.",
       "about": [
         "Automate farming for supported bot games.",
-        "Automate farming for supported bot games."
+        "Автоматизируйте фарм для поддерживаемых игр с ботами."
       ],
       "hash": "0c306f5517dc566d185ac7baf4535dce9256e432d7028886aed41a9da862acd7",
       "tag": "Utility"
@@ -3316,7 +3298,7 @@
       "description": "Create demotivators from replied photos.",
       "about": [
         "Create demotivators from replied photos.",
-        "Создает demotivators from replied photos."
+        "Создавайте демотиваторы из отвеченных фотографий."
       ],
       "hash": "24a13ba25289f07261b67fbd59b214278bfe31f45bada2f1e21820eb04d0a3eb",
       "tag": "Fun"
@@ -3334,7 +3316,7 @@
       "description": "Show an in-app log overlay.",
       "about": [
         "Show an in-app log overlay.",
-        "Показывает an in-app log overlay."
+        "Показывать наложение журнала в приложении."
       ],
       "hash": "07d52b4df30bb70b42e2ce5f8bcdce4b6080c61a7f6373e8b869cdc241465ff6",
       "tag": "Utility"
@@ -3352,7 +3334,7 @@
       "description": "Add extra Telegram features and toggles.",
       "about": [
         "Add extra Telegram features and toggles.",
-        "Добавляет extra Telegram features and toggles."
+        "Добавьте дополнительные функции и переключатели Telegram."
       ],
       "hash": "aac7bee07a6b00474f0e0fa87c33b221d66798ae759fe9160c8ddfb4a41a990c",
       "tag": "Utility"
@@ -3370,7 +3352,7 @@
       "description": "Remove repeated messages and locally add a repeat counter.",
       "about": [
         "Remove repeated messages and locally add a repeat counter.",
-        "Убирает repeated messages and locally add a repeat counter."
+        "Удалите повторяющиеся сообщения и локально добавьте счетчик повторов."
       ],
       "hash": "60ef076435084a33d3935d35d43d9b9b8196861ab73d20f1ab677adfd887ebab",
       "tag": "Utility"
@@ -3388,7 +3370,7 @@
       "description": "Add a customizable signature to outgoing messages.",
       "about": [
         "Add a customizable signature to outgoing messages.",
-        "Добавляет a customizable signature to исходящие сообщения."
+        "Добавляйте настраиваемую подпись к исходящим сообщениям."
       ],
       "hash": "1f5766cecc2fc79e771d67d86f3434cc617c7abcc2b10f320f5780ecb6b321fa",
       "tag": "Utility"
@@ -3406,7 +3388,7 @@
       "description": "Play chess in a draggable overlay window.",
       "about": [
         "Play chess in a draggable overlay window.",
-        "Запускает игру: chess in a draggable overlay window."
+        "Играйте в шахматы в перетаскиваемом окне."
       ],
       "hash": "3194e2eb7f1248a7a6de1178b84b0ed539da55460cb0757122d57cae2d3371d4",
       "tag": "Game"
@@ -3424,7 +3406,7 @@
       "description": "Shorten URLs.",
       "about": [
         "Shorten URLs.",
-        "Shorten URLs."
+        "Сократите URL-адреса."
       ],
       "hash": "162a5ad7ddd0e98143af2651169035a8c72eb0b49ad9ea31fadafe12c2ed5438",
       "tag": "Utility"
@@ -3442,7 +3424,7 @@
       "description": "Check the age of a Telegram account.",
       "about": [
         "Check the age of a Telegram account.",
-        "Check the age of a Telegram account."
+        "Проверьте возраст аккаунта Telegram."
       ],
       "hash": "d356ae61065f82dd016a04bf8ecd099eb7bdba55de6a8735005d547317ceea50",
       "tag": "Utility"
@@ -3460,7 +3442,7 @@
       "description": "Apply effects to images.",
       "about": [
         "Apply effects to images.",
-        "Применяет effects to images."
+        "Применяйте эффекты к изображениям."
       ],
       "hash": "5f38e2258dee57510b36af80cbeb97d451b1c3bd0afcb43eadeb4c3c2f32e9c9",
       "tag": "Media"
@@ -3478,7 +3460,7 @@
       "description": "Fetch a random Lightshot image.",
       "about": [
         "Fetch a random Lightshot image.",
-        "Fetch a random Lightshot image."
+        "Получите случайное изображение Lightshot."
       ],
       "hash": "b550eff6908d0f23fd830a27dbd1916fdefb51444df731198a19e11e58927112",
       "tag": "Media"
@@ -3496,7 +3478,7 @@
       "description": "Unknown",
       "about": [
         "Unknown",
-        "Unknown"
+        "Неизвестный"
       ],
       "hash": "1239a1351867954cce6614a59d696cd48497b4bf8a147d7bb3e63561df2aaa7c",
       "tag": "Unknown"
@@ -3514,7 +3496,7 @@
       "description": "Unknown",
       "about": [
         "Unknown",
-        "Unknown"
+        "Неизвестный"
       ],
       "hash": "3036f2606027e560dd978931bd8d62d19e9e33b0ed5986f7cf4c607113876fdc",
       "tag": "Unknown"
@@ -3532,7 +3514,7 @@
       "description": "Unknown",
       "about": [
         "Unknown",
-        "Unknown"
+        "Неизвестный"
       ],
       "hash": "dc3d73fa818d1c60b251eafdf65f7c16fe554b468ffa1a51df1e5bdb6b224dc4",
       "tag": "Unknown"
@@ -3550,7 +3532,7 @@
       "description": "Unknown",
       "about": [
         "Unknown",
-        "Unknown"
+        "Неизвестный"
       ],
       "hash": "430ad0c3a84def6d53af89c144a050b04bb3ce5cac00b29246f9b438f703cf4f",
       "tag": "Unknown"
@@ -3586,7 +3568,7 @@
       "description": "Unknown",
       "about": [
         "Unknown",
-        "Unknown"
+        "Неизвестный"
       ],
       "hash": "276da633d8fd0cd0c03651428f9b81d56b15ce4cdc904cfc8e94fc3ea48a446c",
       "tag": "Unknown"
@@ -3658,7 +3640,7 @@
       "description": "Create shortcuts to open Telegram links and internal screens.",
       "about": [
         "Create shortcuts to open Telegram links and internal screens.",
-        "Создает shortcuts to open Telegram links and internal screens."
+        "Создавайте ярлыки для открытия ссылок и внутренних экранов Telegram."
       ],
       "hash": "03d7dcd84114c4359e34c28498e4ab70dcc4078711329d0cfbcb983f172f2f38",
       "tag": "Utility"
@@ -3676,7 +3658,7 @@
       "description": "Remove http:// and https:// from outgoing links.",
       "about": [
         "Remove http:// and https:// from outgoing links.",
-        "Убирает http:// and https:// from outgoing links."
+        "Удалите http:// и https:// из исходящих ссылок."
       ],
       "hash": "1a12a9f278f432810badabba9b72c0c961b2922ecebf89bcd12cf058afe39140",
       "tag": "Network"
@@ -3694,7 +3676,7 @@
       "description": "Sync premium emoji, even if you dont have premium!",
       "about": [
         "Sync premium emoji, even if you dont have premium!",
-        "Sync премиум-эмодзи, even if you dont have premium!"
+        "Синхронизируйте премиум-смайлы, даже если у вас нет премиум-смайлов!"
       ],
       "hash": "6fb666a9bff39487ee262acfaa3268caa4425484cbcb5a391c0cad32a2d5e047",
       "tag": "Media"
@@ -3712,7 +3694,7 @@
       "description": "Send predefined quick replies.",
       "about": [
         "Send predefined quick replies.",
-        "Send predefined quick replies."
+        "Отправляйте предопределенные быстрые ответы."
       ],
       "hash": "b81d66ca57bbcfecdf14e31842b6a7cc044246aac9b90a5387da3e757e06b884",
       "tag": "Customization"
@@ -3730,7 +3712,7 @@
       "description": "Unknown",
       "about": [
         "Unknown",
-        "Unknown"
+        "Неизвестный"
       ],
       "hash": "7fd24814e1b51b115e467c2c38e168b46f4237a8d4733db95a06a747a6398bfa",
       "tag": "Unknown"
@@ -3748,7 +3730,7 @@
       "description": "Show current weather.",
       "about": [
         "Show current weather.",
-        "Показывает current weather."
+        "Показать текущую погоду."
       ],
       "hash": "2f2619aca7dba8fb0e0a2ddca6a15c4836d3e80d4f80aa1f0a0550ef08ab9738",
       "tag": "Utility"
@@ -3766,7 +3748,7 @@
       "description": "Expand audio message bubbles for longer recordings",
       "about": [
         "Expand audio message bubbles for longer recordings",
-        "Expand audio message bubbles for longer recordings."
+        "Расширяйте пузыри аудиосообщений для более длительных записей."
       ],
       "hash": "affe08ca9be949db09ebed1bed35b6aa0044377983c08fb81f9512cce24c8e07",
       "tag": "Media"
@@ -3784,7 +3766,7 @@
       "description": "Always show ",
       "about": [
         "Always show ",
-        "Always show."
+        "Всегда показывать"
       ],
       "hash": "3b7ccb4734e42aa42469b60840b9d99c78f53d9db60f841cf0db338aa2c74e2c",
       "tag": "Utility"
@@ -3802,7 +3784,7 @@
       "description": "Increase the character limit for AI assistant role from 1024 to 9999",
       "about": [
         "Increase the character limit for AI assistant role from 1024 to 9999",
-        "Increase the character limit for ИИ assistant role from 1024 to 9999."
+        "Увеличьте лимит персонажей для роли помощника ИИ с 1024 до 9999."
       ],
       "hash": "3b96e2464b63315e9dd64a462188cb090dcac17c4c751f486e63334e3f3e078c",
       "tag": "AI"
@@ -3820,7 +3802,7 @@
       "description": "Always show the proxy button in the action bar",
       "about": [
         "Always show the proxy button in the action bar",
-        "Always show the proxy button in the action bar."
+        "Всегда показывать кнопку прокси на панели действий"
       ],
       "hash": "c9fe55037ec66c405da0ac08225bc9480b86af22535da6943bc18ebeaae9b6b0",
       "tag": "Network"
@@ -3838,7 +3820,7 @@
       "description": "Bookmark messages in chats to easily find them later",
       "about": [
         "Bookmark messages in chats to easily find them later",
-        "Добавляет закладки на messages in chats to easily find them later."
+        "Добавляйте сообщения в закладки в чатах, чтобы легко найти их позже."
       ],
       "hash": "0183b28d5d30ab366a838db1e958b8dfb5bdde221f8557bff73b4d9190c7dfee",
       "tag": "Utility"
@@ -3856,7 +3838,7 @@
       "description": "Add Code and Mention formatting options to text selection menu",
       "about": [
         "Add Code and Mention formatting options to text selection menu",
-        "Добавляет Code and Mention formatting options to text selection menu."
+        "Добавьте параметры форматирования кода и упоминания в меню выбора текста."
       ],
       "hash": "601c25059db5ab6c4b83f4a5b24f4e08823a175b3a6fff3a2459a01341f8261a",
       "tag": "Utility"
@@ -3874,7 +3856,7 @@
       "description": "Show confirmation dialogs for various actions like stickers, voice, commands, etc..",
       "about": [
         "Show confirmation dialogs for various actions like stickers, voice, commands, etc..",
-        "Показывает confirmation dialogs for various actions like stickers, voice, commands, etc."
+        "Показывать диалоговые окна подтверждения для различных действий, таких как наклейки, голос, команды и т. д."
       ],
       "hash": "84855c1f41ad944b4fbd2cf52d01f7c2e68ae8f51b1730f5ed205672d4825a92",
       "tag": "Media"
@@ -3892,7 +3874,7 @@
       "description": "Prevent Telegram from automatically adding your token into web links",
       "about": [
         "Prevent Telegram from automatically adding your token into web links",
-        "Предотвращает Telegram from automatically adding your token into web links."
+        "Запретите Telegram автоматически добавлять ваш токен в веб-ссылки"
       ],
       "hash": "c82d7def16ecad8cbb4d9f19a717395aeeb1a5ed46b66e55b23d6f1ed02eccc8",
       "tag": "Utility"
@@ -3910,7 +3892,7 @@
       "description": "Disable emoji suggestions while typing",
       "about": [
         "Disable emoji suggestions while typing",
-        "Отключает emoji suggestions while typing."
+        "Отключить предложения смайлов при вводе текста"
       ],
       "hash": "661b852c4a6467e5378a64c1fa3ba22661c0aafdd91bed7379e916aa63667e83",
       "tag": "Media"
@@ -3928,7 +3910,7 @@
       "description": "Add folder tabs to the share sheet dialog for quick filtering",
       "about": [
         "Add folder tabs to the share sheet dialog for quick filtering",
-        "Добавляет folder tabs to the меню «Поделиться» dialog for quick filtering."
+        "Добавьте вкладки папок в диалоговое окно общего доступа к листу для быстрой фильтрации."
       ],
       "hash": "416b0f9ca36229f954232474696baf662c72238976bad4a20bcf2688aaa2bf00",
       "tag": "Customization"
@@ -3946,7 +3928,7 @@
       "description": "Add ",
       "about": [
         "Add ",
-        "Add."
+        "Добавлять"
       ],
       "hash": "14afd482e2a5332eb0ea620f895299155565621ed36606d61713747a0bfa86a5",
       "tag": "Utility"
@@ -3964,7 +3946,7 @@
       "description": "Long-press theme button to toggle visibility of other accounts in drawer",
       "about": [
         "Long-press theme button to toggle visibility of other accounts in drawer",
-        "Long-press theme button to toggle visibility of other accounts in drawer."
+        "Нажмите и удерживайте кнопку темы, чтобы переключить видимость других учетных записей в ящике."
       ],
       "hash": "57f1824b4105efa844a25245ea075636783abbc8997f2d0221a41b4bf2de7643",
       "tag": "Customization"
@@ -3982,7 +3964,7 @@
       "description": "Hide the bot button in the chat input field",
       "about": [
         "Hide the bot button in the chat input field",
-        "Скрывает the bot button in the поле ввода чата."
+        "Скрыть кнопку бота в поле ввода чата"
       ],
       "hash": "f5eeb6c4e03b1c2dce3d94edfef6de0a0e6c7a44057b029c2c6fece6443780d6",
       "tag": "Customization"
@@ -4000,7 +3982,7 @@
       "description": "Hide other users",
       "about": [
         "Hide other users",
-        "Скрывает other users."
+        "Скрыть других пользователей"
       ],
       "hash": "23e22a2f0ef5a45558aa02ebbd4be3e0989263bf0d3d46d67c4976bb9bc35ac0",
       "tag": "Utility"
@@ -4018,7 +4000,7 @@
       "description": "Hide star reactions from reaction menu and message cells",
       "about": [
         "Hide star reactions from reaction menu and message cells",
-        "Скрывает star reactions from reaction menu and message cells."
+        "Скрыть звездные реакции из меню реакций и ячеек сообщений"
       ],
       "hash": "3840c8d38c3193487b7e52c3ca78b94d8bf2d6c93e7a125cc5e48556dde8b352",
       "tag": "Utility"
@@ -4036,7 +4018,7 @@
       "description": "Translate messages inline",
       "about": [
         "Translate messages inline",
-        "Переводит messages inline."
+        "Переводить сообщения онлайн"
       ],
       "hash": "eebe8a8060b2365a8fbd29588cde2709a6104d0c31376a392dc3653a4a5d6c42",
       "tag": "Utility"
@@ -4054,7 +4036,7 @@
       "description": "Stop auto-playing next voice/video message after current one ends",
       "about": [
         "Stop auto-playing next voice/video message after current one ends",
-        "Останавливает auto-playing next voice/video message after current one ends."
+        "Прекратить автоматическое воспроизведение следующего голосового/видеосообщения после завершения текущего."
       ],
       "hash": "272c1645a157c6da699203a3312b1dcfcda6ad6be96c4eafc31a3bf8b2f3242d",
       "tag": "Media"
@@ -4090,7 +4072,7 @@
       "description": "Enable playback speed control for all music files regardless of duration",
       "about": [
         "Enable playback speed control for all music files regardless of duration",
-        "Включает playback speed control for all music files regardless of duration."
+        "Включить управление скоростью воспроизведения для всех музыкальных файлов независимо от их продолжительности."
       ],
       "hash": "7c5a0e808cf99f82ee149c6ded705fcef3514e62a54a72ab13fd56435b7e6360",
       "tag": "Media"
@@ -4108,7 +4090,7 @@
       "description": "Makes chat previews non-clickable and adds Open Profile/Open Chat buttons",
       "about": [
         "Makes chat previews non-clickable and adds Open Profile/Open Chat buttons",
-        "Makes превью чатов non-clickable and adds Open Profile/Open Chat buttons."
+        "Делает предварительный просмотр чата неактивным и добавляет кнопки «Открыть профиль» / «Открыть чат»."
       ],
       "hash": "c8e7c69900389098f4c33989e59612ff0e05a0f12fcea39e90d2a68c3320da4b",
       "tag": "Customization"
@@ -4126,7 +4108,7 @@
       "description": "Pin your favorite reactions to appear first in the reaction picker",
       "about": [
         "Pin your favorite reactions to appear first in the reaction picker",
-        "Закрепляет your favorite reactions to appear first in the выбор реакций."
+        "Закрепите свои любимые реакции, чтобы они отображались первыми в списке реакций."
       ],
       "hash": "5b9a53aecd039f9c57bc78d1d74d9a06806e2906799ec82173d0b48a362cf571",
       "tag": "Utility"
@@ -4144,7 +4126,7 @@
       "description": "Automatically select Common Groups tab instead of Gifts in user profiles",
       "about": [
         "Automatically select Common Groups tab instead of Gifts in user profiles",
-        "Automatically select Common Groups tab instead of Gifts в профилях пользователей."
+        "Автоматически выбирать вкладку «Общие группы» вместо «Подарки» в профилях пользователей."
       ],
       "hash": "46f3c22cafdc96c3246f34b710c67c6bf857b618a127a1c36c0d94eaa2b1122e",
       "tag": "Media"
@@ -4162,7 +4144,7 @@
       "description": "Remove ",
       "about": [
         "Remove ",
-        "Remove."
+        "Удалять"
       ],
       "hash": "8459380b090b43c167821b607036b2acc6c35297e2590e115fe12650cd096ec3",
       "tag": "Utility"
@@ -4180,7 +4162,7 @@
       "description": "Long press reply button to reply to selected message in another chat",
       "about": [
         "Long press reply button to reply to selected message in another chat",
-        "Long press reply button to reply to selected message in another chat."
+        "Нажмите и удерживайте кнопку ответа, чтобы ответить на выбранное сообщение в другом чате."
       ],
       "hash": "c79c6a53eb175299f2185211525d2c20e54310be331fc3551e002bae7aeff235",
       "tag": "Customization"
@@ -4200,7 +4182,7 @@
       "description": "Add ",
       "about": [
         "Add ",
-        "Add."
+        "Добавлять"
       ],
       "hash": "682b60758e17bafaff4e5a94d6f6ce24eb925eed0ee2fb1297b0753ff14ae406",
       "tag": "Utility"
@@ -4218,7 +4200,7 @@
       "description": "Search for users or chats by their ID in the search field",
       "about": [
         "Search for users or chats by their ID in the search field",
-        "Ищет for users or chats by their ID in the search field."
+        "Поиск пользователей или чатов по их идентификатору в поле поиска"
       ],
       "hash": "6ee5d2faecc85164292d7eb4e3fb33309cf8895c5de23e0d8ff12f8723e3bf51",
       "tag": "Utility"
@@ -4236,7 +4218,7 @@
       "description": "Select all shared media with one click",
       "about": [
         "Select all shared media with one click",
-        "Выбирает all shared media with one click."
+        "Выберите все общие медиафайлы одним щелчком мыши"
       ],
       "hash": "0bc437d2728f056257853a33dad20fabce6857330242c5c664a12b93a16ff29a",
       "tag": "Media"
@@ -4254,7 +4236,7 @@
       "description": "Send media from link previews",
       "about": [
         "Send media from link previews",
-        "Send media from превью ссылок."
+        "Отправка медиафайлов из предварительного просмотра ссылок"
       ],
       "hash": "174cfe41f70603c2ee96b37f1a063281b9dc60539adf9cfe41c6c476c985f114",
       "tag": "Media"
@@ -4272,7 +4254,7 @@
       "description": "Add personal account option when selecting ",
       "about": [
         "Add personal account option when selecting ",
-        "Добавляет personal account option when selecting."
+        "Добавить опцию личного кабинета при выборе"
       ],
       "hash": "c8d809d8e60c122331402349572525efb5fdcb33f6eecfadc1e62edfe9562f72",
       "tag": "Utility"
@@ -4290,7 +4272,7 @@
       "description": "Summarize recent chat messages using AI",
       "about": [
         "Summarize recent chat messages using AI",
-        "Суммирует recent chat messages using ИИ."
+        "Обобщение последних сообщений чата с помощью ИИ"
       ],
       "hash": "5cb953ce3e4e94a20bf4e53a1ce2016ce6a52f6a83e4e0b9ed1c072a80ac2215",
       "tag": "AI"
@@ -4308,7 +4290,7 @@
       "description": "Control swipe gestures in various contexts",
       "about": [
         "Control swipe gestures in various contexts",
-        "Control swipe gestures in various contexts."
+        "Управление жестами смахивания в различных контекстах"
       ],
       "hash": "1308fe911aa2e4bad309d1373af32ce8cc5fe099046e41fd0c6ef96fcb33ea23",
       "tag": "Network"
@@ -4326,7 +4308,7 @@
       "description": "Show ",
       "about": [
         "Show ",
-        "Show."
+        "Показывать"
       ],
       "hash": "76cd57a193c519dffa0d2fcb4ec17815478bdb0140a5d50924692c41d07efba3",
       "tag": "Utility"
@@ -4344,7 +4326,7 @@
       "description": "Show unread badge on back button",
       "about": [
         "Show unread badge on back button",
-        "Показывает бейдж непрочитанного on back button."
+        "Показывать значок непрочитанного на кнопке «Назад»"
       ],
       "hash": "4fb3d6f44316867b126422b73b7aadf891aa790dc5804124dbf2bf70629dea36",
       "tag": "Customization"
@@ -4362,7 +4344,7 @@
       "description": "Switch between accounts in chat",
       "about": [
         "Switch between accounts in chat",
-        "Переключает between accounts in chat."
+        "Переключение между аккаунтами в чате"
       ],
       "hash": "a7a794da0db315a8958aca6086cc1306a8004de59a1cc2a8b9b23b57e91c8c2d",
       "tag": "Utility"
@@ -4380,7 +4362,7 @@
       "description": "Always show the download manager button in the action bar",
       "about": [
         "Always show the download manager button in the action bar",
-        "Always show the менеджер загрузок button in the action bar."
+        "Всегда показывать кнопку диспетчера загрузок на панели действий."
       ],
       "hash": "109c3f42c57b884064ab93105e12b11d5b579ef544283f8658685436bb3abef4",
       "tag": "Customization"
@@ -4398,7 +4380,7 @@
       "description": "Always show the schedule button in the chat input field",
       "about": [
         "Always show the schedule button in the chat input field",
-        "Always show the schedule button in the поле ввода чата."
+        "Всегда показывать кнопку расписания в поле ввода чата"
       ],
       "hash": "2d8bf1dcbc74dfe4d773e7413a70c72725763c0e3dab28ff405093de5963ad77",
       "tag": "Customization"
@@ -4416,7 +4398,7 @@
       "description": "Show confirmation dialog before opening Telegram and AyuGram deep links",
       "about": [
         "Show confirmation dialog before opening Telegram and AyuGram deep links",
-        "Показывает confirmation dialog before opening Telegram and AyuGram deep links."
+        "Показывать диалоговое окно подтверждения перед открытием глубоких ссылок Telegram и AyuGram."
       ],
       "hash": "2fe26b5b5b2e0883e7d47edfed302846010862eda3ffb7eccfb79b2769ca68a8",
       "tag": "Utility"
@@ -4434,7 +4416,7 @@
       "description": "Show mutual contact status in user profiles",
       "about": [
         "Show mutual contact status in user profiles",
-        "Показывает mutual contact status в профилях пользователей."
+        "Показывать статус взаимного контакта в профилях пользователей"
       ],
       "hash": "eda97fc28cbdf4e99c97f842662cee550cd5519d54b853764f155a6978fbf1ea",
       "tag": "Utility"
@@ -4452,7 +4434,7 @@
       "description": "Customize message receive sound and vibration",
       "about": [
         "Customize message receive sound and vibration",
-        "Настраивает message receive sound and vibration."
+        "Настройте сообщение, получите звук и вибрацию"
       ],
       "hash": "c1711e191b76a90f83ee1e541c57944bf2124188ad7b4532bcc62c1bb4fa1d34",
       "tag": "Customization"
@@ -4470,7 +4452,7 @@
       "description": "Manage individual user privacy settings from their profile.",
       "about": [
         "Manage individual user privacy settings from their profile.",
-        "Управляет individual user privacy settings from their profile."
+        "Управляйте настройками конфиденциальности отдельных пользователей из их профиля."
       ],
       "hash": "2f9653a86345d6463e931de96529c06c4bab4fcbac4683b6239775190bed29d6",
       "tag": "Utility"
@@ -4488,7 +4470,7 @@
       "description": "Unknown",
       "about": [
         "Unknown",
-        "Unknown"
+        "Неизвестный"
       ],
       "hash": "a09f0c6113ffaab40a5e3d3acb06b3abd62853f169997f642bcd34febf5034e8",
       "tag": "Unknown"
@@ -4506,7 +4488,7 @@
       "description": "Add duration selection to delete messages bottom sheet (OctoGram style)",
       "about": [
         "Add duration selection to delete messages bottom sheet (OctoGram style)",
-        "Добавляет duration selection to delete messages bottom sheet (OctoGram style)."
+        "Добавлен выбор продолжительности для удаления нижнего листа сообщений (стиль OctoGram)"
       ],
       "hash": "dfd2483213c97773fcecb274ae1b9c764ab125d251bfe9a64c45a1077f9d1a26",
       "tag": "Utility"
@@ -4524,7 +4506,7 @@
       "description": "Add ",
       "about": [
         "Add ",
-        "Add."
+        "Добавлять"
       ],
       "hash": "91536da310036ded7b2c269ca022dba2abe56b72c3eaa05330fbfd9216783f70",
       "tag": "Utility"
@@ -4560,7 +4542,7 @@
       "description": "Add gift to drawer for quick access",
       "about": [
         "Add gift to drawer for quick access",
-        "Добавляет gift to drawer for quick access."
+        "Добавьте подарок в ящик для быстрого доступа"
       ],
       "hash": "16a0f192f5bf7967ff54a6a86e1989778850ab11299a279ca23c90ef035bc336",
       "tag": "Media"
@@ -4578,7 +4560,7 @@
       "description": "Hide the archived chats folder from the chat list and/or drawer",
       "about": [
         "Hide the archived chats folder from the chat list and/or drawer",
-        "Скрывает the archived chats folder from the списке чатов and/or drawer."
+        "Скрыть папку заархивированных чатов из списка чатов и/или ящика."
       ],
       "hash": "8684ecc916acbe672586ac8e5071c99dfb59c2f345d804199d30b1bd97a634de",
       "tag": "Customization"
@@ -4596,7 +4578,7 @@
       "description": "Hide the birthday setup alert in the dialogs list",
       "about": [
         "Hide the birthday setup alert in the dialogs list",
-        "Скрывает the birthday setup alert in the dialogs list."
+        "Скрыть оповещение о настройке дня рождения в списке диалогов"
       ],
       "hash": "9873186fa7d464870dbcee900d722c8453d6e2bded797c3e08a175a2d115ba5f",
       "tag": "Utility"
@@ -4614,7 +4596,7 @@
       "description": "Hide the ",
       "about": [
         "Hide the ",
-        "Скрывает the."
+        "Скрыть"
       ],
       "hash": "7b8122b03ed6cba41349ea3fcfdde8d5edb8694e37de6020c15dbaa0aefa1540",
       "tag": "Utility"
@@ -4632,7 +4614,7 @@
       "description": "Hide specific folders from the tab bar",
       "about": [
         "Hide specific folders from the tab bar",
-        "Скрывает specific folders from the tab bar."
+        "Скрыть определенные папки на панели вкладок"
       ],
       "hash": "4b4a8042011a6092971f2cadc31d5984e0b064cba7a7b6e5f816b176aaaabe59",
       "tag": "Customization"
@@ -4650,7 +4632,7 @@
       "description": "Hide the annoying ahh-HD icon from the media picker",
       "about": [
         "Hide the annoying ahh-HD icon from the media picker",
-        "Скрывает the annoying ahh-HD icon from the media picker."
+        "Скройте надоедливый значок ahh-HD из средства выбора медиафайлов."
       ],
       "hash": "9ef8eb27abd01e46e43b5680c728448a3068c04561a9b8e820a05aa338db5a32",
       "tag": "Media"
@@ -4668,7 +4650,7 @@
       "description": "Hide ",
       "about": [
         "Hide ",
-        "Hide."
+        "Скрывать"
       ],
       "hash": "f7d4b281d0416fe1ffc2b1f8629a3ebc71e2de7ebc470e751aed2032d493e192",
       "tag": "Utility"
@@ -4686,7 +4668,7 @@
       "description": "Open user profile directly when clicking on join request in group",
       "about": [
         "Open user profile directly when clicking on join request in group",
-        "Open user profile directly when clicking on join request in group."
+        "Открыть профиль пользователя напрямую при нажатии на запрос на вступление в группу"
       ],
       "hash": "c62060ef7e183055f021a86f854c7cf28e2a135a85420320fe688187ae15d86d",
       "tag": "Utility"
@@ -4704,7 +4686,7 @@
       "description": "Customize message swipe actions.",
       "about": [
         "Customize message swipe actions.",
-        "Настраивает message swipe actions."
+        "Настройте действия по перелистыванию сообщений."
       ],
       "hash": "981a82affd4c472ff4d5950e6eb2f7b9b6f436cd30bdc0f84b9e5f7b044fdc32",
       "tag": "Network"
@@ -4722,7 +4704,7 @@
       "description": "Shows owned/admin channels and groups on drawer long-click",
       "about": [
         "Shows owned/admin channels and groups on drawer long-click",
-        "Показывает owned/admin channels and groups on drawer long-click."
+        "Показывает принадлежащие/административные каналы и группы при длительном щелчке на ящике."
       ],
       "hash": "169cb84e6708ec27ab712a872e612c72155e254972cf9ae894eba79ab2e54a7d",
       "tag": "Admin"
@@ -4740,7 +4722,7 @@
       "description": "View recently opened chats from drawer",
       "about": [
         "View recently opened chats from drawer",
-        "View recently opened chats from drawer."
+        "Просмотр недавно открытых чатов из ящика"
       ],
       "hash": "fa4b25dc7c601a1a1435e6b9e19e489f0b3b801c0517ea19a81e5d721c4d99e3",
       "tag": "Customization"
@@ -4758,7 +4740,7 @@
       "description": "Remove chat from all folders before leaving",
       "about": [
         "Remove chat from all folders before leaving",
-        "Убирает chat from all folders before leaving."
+        "Удалить чат из всех папок перед выходом"
       ],
       "hash": "4ebad113ac50f9239f589339d5e1411faede3e924a12903d1555766b67fc403c",
       "tag": "Customization"
@@ -4776,7 +4758,7 @@
       "description": "Remove the greeting sticker shown when starting a new chat",
       "about": [
         "Remove the greeting sticker shown when starting a new chat",
-        "Убирает the greeting sticker shown when starting a new chat."
+        "Удалите стикер-приветствие, отображаемый при запуске нового чата."
       ],
       "hash": "0463779c44428067933851504abaa60aba30f8cecf3b0adedd091508e427f8aa",
       "tag": "Media"
@@ -4794,7 +4776,7 @@
       "description": "Search messages by its ID",
       "about": [
         "Search messages by its ID",
-        "Ищет messages by its ID."
+        "Поиск сообщений по идентификатору"
       ],
       "hash": "00b6fa3215508e2e1c49a296c1cbc689ec963cdb756bf464ca140091847d061b",
       "tag": "Utility"
@@ -4812,7 +4794,7 @@
       "description": "Filter messages by type in chat search",
       "about": [
         "Filter messages by type in chat search",
-        "Фильтрует messages by type in chat search."
+        "Фильтрация сообщений по типу в поиске чата"
       ],
       "hash": "0f36f337d150f84dfcca13ae68a7d4aedc3dd7d656d3bd3d20484f6fd0fd0433",
       "tag": "Utility"
@@ -4830,7 +4812,7 @@
       "description": "Add ",
       "about": [
         "Add ",
-        "Add."
+        "Добавлять"
       ],
       "hash": "c358cc094303a0fb6f3b9df2258c2186c57d0b8de0833da6f7de68dd5386843f",
       "tag": "Utility"
@@ -4848,7 +4830,7 @@
       "description": "Send comment after forward",
       "about": [
         "Send comment after forward",
-        "Send comment after forward."
+        "Отправить комментарий после пересылки"
       ],
       "hash": "10044f539636dc6ce754029b2f0cc771835dbf6549592849582cbc281af46a1f",
       "tag": "Utility"
@@ -4866,7 +4848,7 @@
       "description": "Add sleep timer option to music player - automatically pause after set duration",
       "about": [
         "Add sleep timer option to music player - automatically pause after set duration",
-        "Добавляет sleep timer option to music player - automatically pause after set duration."
+        "Добавьте опцию таймера сна в музыкальный проигрыватель — автоматическая пауза после установленной продолжительности."
       ],
       "hash": "e88ac43eab0c31f595cbf64c65a3f59d7ceb36b83a2414ce769cafd1da234224",
       "tag": "Media"
@@ -4884,7 +4866,7 @@
       "description": "Make channel username clicks copy username instead of share alert",
       "about": [
         "Make channel username clicks copy username instead of share alert",
-        "Make channel username clicks copy username instead of share alert."
+        "Сделать так, чтобы клики по имени пользователя на канале копировали имя пользователя вместо оповещения о публикации"
       ],
       "hash": "e1662f3463bcea9da7ad03a8d383539651c22abe2c27e6533e72a132d5ac9f07",
       "tag": "Utility"
@@ -4902,10 +4884,27 @@
       "description": "Customize unread count display - show chat count, message count, or exclude archived",
       "about": [
         "Customize unread count display - show chat count, message count, or exclude archived",
-        "Настраивает unread count display - show chat count, message count, or exclude archived."
+        "Настройте отображение количества непрочитанных сообщений — покажите количество чатов, количество сообщений или исключите заархивированные."
       ],
       "hash": "20cbf8e92dbbc3a011208d679c9732a4436afdb2e26a7049d8d0aeba334c8084",
       "tag": "Utility"
+    },
+    {
+      "id": "no_quote_forward",
+      "name": "No-Quote Forward",
+      "author": "@luvztroy",
+      "version": "1.0.0",
+      "state": "release",
+      "icon": "luvztroyIcons/8",
+      "suspicious": "false",
+      "dependencies": [],
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/No Quote.plugin",
+      "about": [
+        "Stops goofy-ahh Telegram from adding quotes when you forward messages",
+        "Не позволяет Telegram тупо-ааа добавлять кавычки при пересылке сообщений"
+      ],
+      "description": "Stops goofy-ahh Telegram from adding quotes when you forward messages",
+      "hash": "10d38e1b561fdb0bc371ec06c51a19a6e3540a1256c7b481193e494cc607f59e"
     }
   ]
 }
