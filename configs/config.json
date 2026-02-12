@@ -1019,21 +1019,20 @@
     },
     {
       "id": "fuck_gifts",
-      "name": "no gifts",
+      "name": "No Gifts",
       "author": "@feature_plugins",
-      "version": "1.1",
+      "version": "2.3",
       "state": "release",
       "icon": "feature_plugins/1",
       "suspicious": "false",
       "dependencies": [],
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/NoGifts.plugin",
-      "description": "Hide gift buttons in chats and channels.",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/fuck_gifts.plugin",
       "about": [
         "Hide gift buttons in chats and channels.",
         "Скрывайте кнопки подарков в чатах и каналах."
       ],
-      "hash": "ad4c04264a8a66b23ee999f7d8da1e33a59e2cc9673b2e41a7cfb99e3981ad3a",
-      "tag": "Media"
+      "description": "Hide gift buttons in chats and channels.",
+      "hash": "2c95f4f70cbfa5349e47adc02c203e3e805450b8d0a721a989184c9e9923ec5e"
     },
     {
       "id": "osu_mur_stats",
@@ -1795,19 +1794,18 @@
       "id": "web_file_manager",
       "name": "Web File Manager",
       "author": "@SaturnFake",
-      "version": "1.0.0",
-      "state": "release",
-      "icon": "exteraPlugins/1",
+      "version": "1.0.4",
+      "state": "beta",
+      "icon": "Unknown",
       "suspicious": "false",
       "dependencies": [],
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/Web-Files-Manager.plugin",
-      "description": "Unknown",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/web_file_manager.plugin",
       "about": [
         "Unknown",
         "Неизвестный"
       ],
-      "hash": "4c133bb61223e11e9f51996e532cafb1af5abc5bf7bf760d815825c3c54c1a75",
-      "tag": "Unsotred"
+      "description": "Unknown",
+      "hash": "9fdf12dd0c74720cd63503ba16d66de338432a04e20c0b0e08b3ad9f8b76a09b"
     },
     {
       "id": "articleViewerFix",
@@ -4801,19 +4799,19 @@
     {
       "id": "exitfy",
       "name": "exitFy",
-      "author": "Unknown",
-      "version": "1.0.0",
+      "author": "Community",
+      "version": "1.0.8",
       "state": "release",
       "icon": "exitFy/0",
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/exitfy.plugin",
       "about": [
-        "Application speed optimization",
-        "Оптимизация скорости работы приложения"
+        "Application download speed optimization",
+        "Оптимизация скорости загрузки приложений"
       ],
-      "description": "Application speed optimization",
-      "hash": "c96c7f8862c75d5c13b4041d1d36ed70a2285ff1902c291d44e5b98a42323d63"
+      "description": "Application download speed optimization",
+      "hash": "750306e1cc106e6c441d18e56515c0168b523d65d36faacb324659079a86a69d"
     },
     {
       "id": "shareui_gtht",
@@ -4831,6 +4829,56 @@
       ],
       "description": "Creates search link.",
       "hash": "3c9092ca482c58709a2f80261e45aa25a1bfb939bbb550b9790b709df403202b"
+    },
+    {
+      "id": "ExteraRSS",
+      "name": "ExteraRSS",
+      "author": "@RoflPlugins",
+      "version": "1.0",
+      "state": "release",
+      "icon": "RoflPlugins/15",
+      "suspicious": "false",
+      "dependencies": [],
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/ExteraRSS.plugin",
+      "about": [
+        "RSS + Telegram в одной ленте."
+      ],
+      "description": "RSS + Telegram в одной ленте.",
+      "hash": "91a143116a477cdf33a1cb769713d65b1f1c100203d2d0f11e3e19f1746ac2a3"
+    },
+    {
+      "id": "multilink",
+      "name": "MultiLink",
+      "author": "@kchemniy & @oodze",
+      "version": "0.1",
+      "state": "beta",
+      "icon": "EKCTEPArAM/36",
+      "suspicious": "false",
+      "dependencies": [],
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/multilink.plugin",
+      "about": [
+        "Adds a customizable link to your profile. / Добавляет настраиваемую ссылку в профиль.",
+        "Добавляет настраиваемую ссылку в ваш профиль. / Добавляет настраиваемую ссылку в профиль."
+      ],
+      "description": "Adds a customizable link to your profile. / Добавляет настраиваемую ссылку в профиль.",
+      "hash": "38c0a5de5258f37ef3ba7061e3248e8b8c720e14f1272845d76edbd0a54058b1"
+    },
+    {
+      "id": "post_assistant",
+      "name": "Post Assistant",
+      "author": "@kelynnq | @kelynplugins",
+      "version": "1.0.0",
+      "state": "release",
+      "icon": "immortal05_09/1",
+      "suspicious": "false",
+      "dependencies": [],
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/post_assistant.plugin",
+      "about": [
+        "Assistant in creating posts.",
+        "Помощник в создании постов."
+      ],
+      "description": "Assistant in creating posts.",
+      "hash": "1c1449fe3649e3541e95ccc029b0eec7aca54974b30bf5f87c40e7dc448fac4c"
     }
   ]
 }

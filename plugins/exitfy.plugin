@@ -1,9 +1,9 @@
 import threading
 import time
 import socket
-import random
 from typing import Optional, List, Tuple
 import requests
+from java.util import Locale
 from base_plugin import BasePlugin, AppEvent, MethodHook, MenuItemData, MenuItemType
 from hook_utils import find_class
 from android_utils import run_on_ui_thread
@@ -20,23 +20,41 @@ from org.telegram.ui import LaunchActivity
 
 __id__ = "exitfy"
 __name__ = "exitFy"
-__description__ = "Application speed optimization"
+__description__ = "Application download speed optimization"
 __icon__ = "exitFy/0"
-__author__ = "///"
-__version__ = "1.0.0"
+__author__ = "Community"
+__version__ = "1.0.8"
 __min_version__ = "12.1.1"
 
 API_URLS = {
     0: ["https://exitfy.ishrimp.xyz/proxy/single/de/experimental"],
-    1: ["https://a.stemstep.cloud/proxy/socks"],
+    1: ["https://exitfy.vpnetproxy.xyz/proxy/latest"],
+    2: ["https://a.stemstep.cloud/proxy/socks"],
 }
 
 SPONSOR_TEXT = {
     0: "Sponsor by: @invisibleshrimp",
-    1: "Sponsor by: @sworklevpn",
+    1: "Sponsor by: @vpnetvpn",
+    2: "Sponsor by: @sworklevpnbot",
 }
 
-CHECK_INTERVAL_SEC = 60
+TRANSLATIONS = {
+    "settings_header": ("Настройки", "Settings"),
+    "enable_plugin": ("Включить плагин", "Enable plugin"),
+    "select_provider": ("Выбрать провайдера", "Select provider"),
+    "auto_switch": ("Автопереключение", "Auto switch"),
+    "refresh": ("Обновить", "Refresh"),
+    "open_tg_settings": ("Открыть настройки Telegram", "Open Telegram settings"),
+    "menu_settings": ("Настройки exitFy", "exitFy Settings"),
+}
+
+
+def Z(key: str):
+    lang = Locale.getDefault().getLanguage()
+    idx = 0 if str(lang).startswith("ru") else 1
+    return TRANSLATIONS.get(key, (None, None))[idx]
+
+CHECK_INTERVAL_SEC = 5
 
 def _prefs():
     ctx = ApplicationLoader.applicationContext
@@ -327,13 +345,6 @@ def _apply_proxy_info(info: SharedConfig.ProxyInfo):
         pass
 
 
-def _fetch_first_link(proxy_type: int) -> Optional[str]:
-    links = _fetch_links(proxy_type)
-    if links:
-        return links[0]
-    return None
-
-
 def _fetch_links(proxy_type: int) -> List[str]:
     urls = API_URLS.get(proxy_type) or []
     out: List[str] = []
@@ -537,6 +548,7 @@ class ExitfyPlugin(BasePlugin):
     def __init__(self):
         super().__init__()
         self._refresh_lock = threading.Lock()
+        self._watchdog_token = 0
         self._active = False
         self._hooks_installed = False
         self._sync_hooks_installed = False
@@ -550,19 +562,13 @@ class ExitfyPlugin(BasePlugin):
             if not first_done:
                 _set_tg_proxy_enabled(True)
                 try:
+                    self.set_setting("tg_proxy_enabled", True, reload_settings=False)
+                except:
+                    pass
+                try:
                     ed = _prefs().edit()
                     ed.putBoolean("first_auto_enable_done", True)
                     ed.commit()
-                except:
-                    pass
-        except:
-            pass
-
-        try:
-            if not bool(_tg_proxy_enabled()):
-                _set_tg_proxy_enabled(True)
-                try:
-                    self.set_setting("tg_proxy_enabled", True, reload_settings=False)
                 except:
                     pass
         except:
@@ -572,7 +578,18 @@ class ExitfyPlugin(BasePlugin):
             MenuItemData(
                 menu_type=MenuItemType.CHAT_ACTION_MENU,
                 item_id="exitfy_proxy_open",
-                text="Настройки exitFy",
+                text=Z("menu_settings"),
+                icon="msg_settings",
+                priority=1000,
+                on_click=self._open_plugin_settings,
+            )
+        )
+
+        self.add_menu_item(
+            MenuItemData(
+                menu_type=MenuItemType.DRAWER_MENU,
+                item_id="exitfy_proxy_open_drawer",
+                text=Z("menu_settings"),
                 icon="msg_settings",
                 priority=1000,
                 on_click=self._open_plugin_settings,
@@ -581,10 +598,115 @@ class ExitfyPlugin(BasePlugin):
 
         self._install_redirect_hooks()
         self._install_sync_hooks()
-        self._select_best_provider_and_refresh(manual=True)
+        try:
+            auto_switch = bool(self.get_setting("auto_switch", True))
+        except:
+            auto_switch = True
+        if auto_switch:
+            self._select_best_provider_and_refresh(manual=True)
+        else:
+            self.refresh_proxy(manual=True)
 
     def on_plugin_unload(self):
         self._active = False
+
+    def _get_any_connection_state(self) -> Optional[int]:
+        try:
+            for ac in range(UserConfig.MAX_ACCOUNT_COUNT):
+                try:
+                    cm = ConnectionsManager.getInstance(ac)
+                    if cm is None:
+                        continue
+                    return int(cm.getConnectionState())
+                except:
+                    continue
+        except:
+            pass
+        return None
+
+    def _apply_proxy_link(self, link: str):
+        try:
+            info = _parse_proxy_link(str(link))
+        except:
+            info = None
+        if not info:
+            return
+        try:
+            _apply_proxy_info(info)
+        except:
+            pass
+        try:
+            _set_last_applied_link(str(link))
+        except:
+            pass
+
+    def _start_connect_watchdog(self, ordered_links: List[str], applied_link: str):
+        try:
+            self._watchdog_token = int(self._watchdog_token) + 1
+            token = int(self._watchdog_token)
+        except:
+            token = 0
+
+        def job():
+            try:
+                time.sleep(5)
+            except:
+                return
+
+            try:
+                if not self._active:
+                    return
+            except:
+                return
+
+            try:
+                if int(self._watchdog_token) != int(token):
+                    return
+            except:
+                return
+
+            try:
+                if not bool(_tg_proxy_enabled()):
+                    return
+            except:
+                return
+
+            state = None
+            try:
+                state = self._get_any_connection_state()
+            except:
+                state = None
+
+            bad = False
+            try:
+                bad = state == ConnectionsManager.ConnectionStateConnecting or state == ConnectionsManager.ConnectionStateConnectingToProxy
+            except:
+                bad = False
+            if not bad:
+                return
+
+            next_link = None
+            try:
+                for l in ordered_links or []:
+                    if str(l) == str(applied_link):
+                        continue
+                    next_link = l
+                    break
+            except:
+                next_link = None
+
+            if not next_link:
+                return
+
+            try:
+                run_on_ui_thread(lambda: self._apply_proxy_link(str(next_link)))
+            except:
+                try:
+                    self._apply_proxy_link(str(next_link))
+                except:
+                    pass
+
+        threading.Thread(target=job, daemon=True).start()
 
     def _select_best_provider_and_refresh(self, manual: bool = False):
         def job():
@@ -603,20 +725,58 @@ class ExitfyPlugin(BasePlugin):
                 providers = []
 
             if not providers:
-                run_on_ui_thread(lambda: self.refresh_proxy(manual=True))
+                self.refresh_proxy(manual=True)
                 return
 
             best_t = None
             best_rtt = None
+            results = {}
+            lock = threading.Lock()
+
+            def _worker(pt: int):
+                try:
+                    rtt = _measure_provider_latency(int(pt))
+                except:
+                    rtt = None
+                try:
+                    lock.acquire()
+                    results[int(pt)] = rtt
+                except:
+                    pass
+                finally:
+                    try:
+                        lock.release()
+                    except:
+                        pass
+
+            threads = []
             for t in providers:
                 try:
-                    rtt = _measure_provider_latency(int(t))
+                    th = threading.Thread(target=_worker, args=(int(t),), daemon=True)
+                    threads.append(th)
+                    th.start()
+                except:
+                    continue
+
+            deadline = time.time() + 6
+            for th in threads:
+                try:
+                    remain = float(deadline - time.time())
+                    if remain <= 0:
+                        break
+                    th.join(timeout=remain)
+                except:
+                    pass
+
+            for t in providers:
+                try:
+                    rtt = results.get(int(t))
                 except:
                     rtt = None
                 if rtt is None:
                     continue
-                if best_rtt is None or rtt < best_rtt:
-                    best_rtt = rtt
+                if best_rtt is None or float(rtt) < float(best_rtt):
+                    best_rtt = float(rtt)
                     best_t = int(t)
 
             if best_t is None:
@@ -624,6 +784,12 @@ class ExitfyPlugin(BasePlugin):
                     best_t = int(_get_selected_type())
                 except:
                     best_t = 0
+
+            prev_t = None
+            try:
+                prev_t = int(_get_selected_type())
+            except:
+                prev_t = None
 
             try:
                 _set_selected_type(int(best_t))
@@ -634,7 +800,13 @@ class ExitfyPlugin(BasePlugin):
             except:
                 pass
 
-            run_on_ui_thread(lambda: self.refresh_proxy(manual=bool(manual)))
+            try:
+                if prev_t is None or int(prev_t) != int(best_t):
+                    self._reload_settings_ui()
+            except:
+                pass
+
+            self.refresh_proxy(manual=bool(manual))
         threading.Thread(target=job, daemon=True).start()
 
     def _reload_settings_ui(self):
@@ -666,6 +838,16 @@ class ExitfyPlugin(BasePlugin):
             pass
         try:
             self.set_setting("tg_proxy_enabled", bool(v), reload_settings=False)
+        except:
+            pass
+        try:
+            self._reload_settings_ui()
+        except:
+            pass
+
+    def _on_auto_switch_changed(self, v: bool):
+        try:
+            self.set_setting("auto_switch", bool(v), reload_settings=False)
         except:
             pass
         try:
@@ -736,11 +918,15 @@ class ExitfyPlugin(BasePlugin):
 
     def _on_provider_changed(self, idx: int):
         try:
-            i = 0 if int(idx) == 0 else 1
+            i = int(idx)
         except:
             i = 0
         try:
-            _set_selected_type(i)
+            _set_selected_type(int(i))
+        except:
+            pass
+        try:
+            self.set_setting("provider", int(i), reload_settings=False)
         except:
             pass
         try:
@@ -748,7 +934,7 @@ class ExitfyPlugin(BasePlugin):
         except:
             pass
         try:
-            self.set_setting("provider", int(i), reload_settings=True)
+            self._reload_settings_ui()
         except:
             pass
 
@@ -786,7 +972,14 @@ class ExitfyPlugin(BasePlugin):
                     self._reload_settings_ui()
             except:
                 pass
-            self._select_best_provider_and_refresh(manual=False)
+            try:
+                auto_switch = bool(self.get_setting("auto_switch", True))
+            except:
+                auto_switch = True
+            if auto_switch:
+                self._select_best_provider_and_refresh(manual=False)
+            else:
+                self.refresh_proxy(manual=False)
 
     def _open_plugin_settings(self, context):
         try:
@@ -815,11 +1008,15 @@ class ExitfyPlugin(BasePlugin):
             except:
                 pass
         sponsor = SPONSOR_TEXT.get(t, "")
+        try:
+            auto_switch = bool(self.get_setting("auto_switch", True))
+        except:
+            auto_switch = True
         return [
-            Header(text="Настройки"),
+            Header(text=Z("settings_header")),
             Switch(
                 key="tg_proxy_enabled",
-                text="Включить плагин",
+                text=Z("enable_plugin"),
                 default=bool(tg_state),
                 subtext=None,
                 icon=proxy_icon,
@@ -827,16 +1024,24 @@ class ExitfyPlugin(BasePlugin):
             ),
             Selector(
                 key="provider",
-                text="Выбрать провайдера",
-                default=0 if t == 0 else 1,
-                items=["Shrimp", "Sworkle"],
+                text=Z("select_provider"),
+                default=int(t),
+                items=["Shrimp", "VPNET", "Sworkle"],
                 icon="msg_list",
                 on_change=self._on_provider_changed,
             ),
             Divider(text=sponsor),
-            Text(text="Обновить", icon="msg_download", accent=True, on_click=lambda v: self.refresh_proxy(manual=True)),
+            Switch(
+                key="auto_switch",
+                text=Z("auto_switch"),
+                default=bool(auto_switch),
+                subtext=None,
+                icon="media_flip",
+                on_change=self._on_auto_switch_changed,
+            ),
+            Text(text=Z("refresh"), icon="msg_download", accent=True, on_click=lambda v: self.refresh_proxy(manual=True)),
             Divider(),
-            Text(text="Открыть настройки Telegram", icon="msg_settings", on_click=lambda v: self._open_tg_proxy_screen()),
+            Text(text=Z("open_tg_settings"), icon="msg_settings", on_click=lambda v: self._open_tg_proxy_screen()),
         ]
 
     def refresh_proxy(self, manual: bool = False):
@@ -855,22 +1060,32 @@ class ExitfyPlugin(BasePlugin):
                 links = _fetch_links(t)
                 if not links:
                     return
-                link, _ = _pick_best_proxy_link(links)
-                if not link:
+
+                scored: List[Tuple[float, str]] = []
+                for l in links:
+                    try:
+                        dt = _proxy_link_latency(str(l))
+                    except:
+                        dt = None
+                    if dt is None:
+                        continue
+                    scored.append((float(dt), str(l)))
+                if not scored:
                     return
-                link = str(link).strip()
+                scored.sort(key=lambda x: x[0])
+                link = str(scored[0][1]).strip()
+                ordered_links = [str(x[1]) for x in scored]
 
                 prev = _get_last_applied_link()
                 if (not manual) and prev and prev == link:
                     return
 
-                info = _parse_proxy_link(link)
-                if not info:
-                    return
-
                 def apply_on_ui():
-                    _apply_proxy_info(info)
-                    _set_last_applied_link(link)
+                    self._apply_proxy_link(link)
+                    try:
+                        self._start_connect_watchdog(ordered_links, link)
+                    except:
+                        pass
 
                 run_on_ui_thread(apply_on_ui)
             except Exception:

@@ -1,0 +1,1388 @@
+__id__ = "web_file_manager"
+__name__ = "Web File Manager(Fix)"
+__description__ = ( """
+Веб-менеджер файлов
+    .fm - получить ссылку на интерфейс
+    .cc - очистить кеш и загрузить актуальный UI
+        Автор: @SaturnFake
+        Channel: https://t.me/Fantom_Plugins
+Fuck the copy paste
+""" )
+__author__ = "@SaturnFake"
+__version__ = "1.0.4-beta"
+__icon__ = "none"
+__min_version__ = "12.1.1"
+
+import os
+import threading
+import time
+import json
+import requests
+import socket
+import zipfile
+import tempfile
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
+from urllib.parse import urlparse, parse_qs
+
+from android_utils import log, run_on_ui_thread
+from base_plugin import BasePlugin, AppEvent, MenuItemData, MenuItemType, HookResult, HookStrategy
+from client_utils import get_last_fragment, send_message, run_on_queue
+from ui.alert import AlertDialogBuilder
+from ui.bulletin import BulletinHelper
+from ui.settings import Header, Input, Switch, Divider, Text
+from file_utils import ensure_dir_exists, list_dir
+
+try:
+    import socketserver as ss
+    import http.server as http_h
+    HTTPRequestHandler = http_h.BaseHTTPRequestHandler
+    HTTPServer = http_h.HTTPServer
+    SS_AVAILABLE = True
+except ImportError:
+    SS_AVAILABLE = False
+    log("WebFileManager: Сокет-сервер недоступен в этой среде")
+    ss = None
+    HTTPRequestHandler = object
+    HTTPServer = object
+
+class FileManager:
+    def __init__(self, plugin_instance):
+        self.plugin = plugin_instance
+        self.current_path = "/"
+        self.history_stack = []
+        self._lock = threading.Lock()
+        self.ROOT_PATHS = self._get_root_paths()
+
+    def _get_root_paths(self) -> Dict[str, str]:
+        try:
+            from file_utils import (
+                get_plugins_dir, get_cache_dir, get_files_dir,
+                get_images_dir, get_videos_dir, get_audios_dir, get_documents_dir
+            )
+            return {
+                "plugins": get_plugins_dir(),
+                "cache": get_cache_dir(),
+                "files": get_files_dir(),
+                "images": get_images_dir(),
+                "videos": get_videos_dir(),
+                "audios": get_audios_dir(),
+                "documents": get_documents_dir(),
+                "/": "/"
+            }
+        except Exception as e:
+            log(f"WebFileManager: Ошибка получения путей: {e}")
+            return {
+                "/": "/",
+                "plugins": "/data/data/com.exteragram.messenger/files/plugins",
+                "cache": "/data/data/com.exteragram.messenger/cache",
+                "files": "/data/data/com.exteragram.messenger/files"
+            }
+
+    def get_current_path(self) -> str:
+        with self._lock:
+            return self.current_path
+
+    def set_current_path(self, path: str):
+        with self._lock:
+            self.history_stack.append(self.current_path)
+            self.current_path = path
+
+    def go_back(self) -> str:
+        with self._lock:
+            if self.history_stack:
+                self.current_path = self.history_stack.pop()
+            return self.current_path
+
+    def reset_to_root(self):
+        with self._lock:
+            self.current_path = "/"
+            self.history_stack.clear()
+
+    def navigate_to(self, path: str) -> Tuple[bool, str]:
+        try:
+            path = os.path.normpath(path)
+            if path == "/" or path == ".":
+                self.set_current_path("/")
+                return True, ""
+            
+            if path.startswith("/"):
+                abs_path = path
+            else:
+                current = self.get_current_path()
+                if current == "/":
+                    abs_path = "/" + path
+                else:
+                    abs_path = os.path.join(current, path)
+            
+            abs_path = os.path.normpath(abs_path)
+            
+            if os.path.exists(abs_path) and os.path.isdir(abs_path):
+                self.set_current_path(abs_path)
+                return True, ""
+            else:
+                return False, "Папка не найдена"
+        except Exception as e:
+            return False, f"Ошибка навигации: {e}"
+
+    def get_directory_listing(self, path: Optional[str] = None) -> Dict:
+        if not path:
+            path = self.get_current_path()
+        try:
+            if not os.path.exists(path) or not os.path.isdir(path):
+                return {
+                    "success": False,
+                    "error": f"Папка не найдена: {path}",
+                    "path": path,
+                    "directories": [],
+                    "files": [],
+                    "total_items": 0,
+                    "dir_count": 0,
+                    "file_count": 0,
+                    "timestamp": int(time.time())
+                }
+            items = os.listdir(path)
+            file_list = []
+            dir_list = []
+            for item_name in items:
+                try:
+                    item_path = os.path.join(path, item_name)
+                    if os.path.isdir(item_path):
+                        try:
+                            sub_items = os.listdir(item_path)
+                            dir_count = len(sub_items)
+                        except (PermissionError, OSError):
+                            dir_count = 0
+                        stat_info = os.stat(item_path)
+                        dir_list.append({
+                            "name": item_name,
+                            "path": item_path,
+                            "type": "directory",
+                            "size": 0,
+                            "dir_count": dir_count,
+                            "modified": stat_info.st_mtime,
+                            "modified_formatted": datetime.fromtimestamp(stat_info.st_mtime).strftime('%d.%m.%Y %H:%M:%S')
+                        })
+                    else:
+                        stat_info = os.stat(item_path)
+                        size = stat_info.st_size
+                        file_list.append({
+                            "name": item_name,
+                            "path": item_path,
+                            "type": "file",
+                            "size": size,
+                            "size_formatted": self._format_size(size),
+                            "modified": stat_info.st_mtime,
+                            "modified_formatted": datetime.fromtimestamp(stat_info.st_mtime).strftime('%d.%m.%Y %H:%M:%S')
+                        })
+                except (OSError, PermissionError) as e:
+                    log(f"WebFileManager: Ошибка обработки элемента {item_name}: {e}")
+                    continue
+            dir_list.sort(key=lambda x: x['name'].lower())
+            file_list.sort(key=lambda x: x['name'].lower())
+            parent_path = os.path.dirname(path) if path != "/" else "/"
+            path_parts = []
+            if path != "/":
+                parts = path.strip("/").split("/")
+                current = "/"
+                for i, part in enumerate(parts):
+                    current = os.path.join(current, part) if current != "/" else "/" + part
+                    path_parts.append({
+                        "name": part,
+                        "path": current
+                    })
+            return {
+                "success": True,
+                "path": path,
+                "parent_path": parent_path,
+                "path_parts": path_parts,
+                "directories": dir_list,
+                "files": file_list,
+                "total_items": len(dir_list) + len(file_list),
+                "dir_count": len(dir_list),
+                "file_count": len(file_list),
+                "timestamp": int(time.time())
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "path": path,
+                "directories": [],
+                "files": [],
+                "total_items": 0,
+                "dir_count": 0,
+                "file_count": 0,
+                "timestamp": int(time.time())
+            }
+
+    def get_root_paths_info(self) -> List[Dict]:
+        root_info = []
+        for name, path in self.ROOT_PATHS.items():
+            try:
+                if os.path.exists(path) and os.path.isdir(path):
+                    stat = os.stat(path)
+                    try:
+                        items = os.listdir(path)
+                        dir_count = len([x for x in items if os.path.isdir(os.path.join(path, x))])
+                        file_count = len([x for x in items if os.path.isfile(os.path.join(path, x))])
+                        total_count = len(items)
+                    except (PermissionError, OSError):
+                        dir_count = file_count = total_count = 0
+                    root_info.append({
+                        "name": name,
+                        "path": path,
+                        "exists": True,
+                        "size": self._get_directory_size(path),
+                        "size_formatted": self._format_size(self._get_directory_size(path)),
+                        "dir_count": dir_count,
+                        "file_count": file_count,
+                        "total_count": total_count,
+                        "modified": stat.st_mtime,
+                        "modified_formatted": datetime.fromtimestamp(stat.st_mtime).strftime('%d.%m.%Y %H:%M:%S')
+                    })
+                else:
+                    root_info.append({
+                        "name": name,
+                        "path": path,
+                        "exists": False,
+                        "size": 0,
+                        "size_formatted": "0 B",
+                        "dir_count": 0,
+                        "file_count": 0,
+                        "total_count": 0,
+                        "modified": 0,
+                        "modified_formatted": "Не найден"
+                    })
+            except Exception as e:
+                root_info.append({
+                    "name": name,
+                    "path": path,
+                    "exists": False,
+                    "size": 0,
+                    "size_formatted": "Ошибка",
+                    "dir_count": 0,
+                    "file_count": 0,
+                    "total_count": 0,
+                    "modified": 0,
+                    "modified_formatted": f"Ошибка: {str(e)[:20]}"
+                })
+        return root_info
+
+    def get_root_paths_stats(self) -> Dict:
+        roots_info = self.get_root_paths_info()
+        total_dir_count = sum(root.get('dir_count', 0) for root in roots_info)
+        total_file_count = sum(root.get('file_count', 0) for root in roots_info)
+        total_items = total_dir_count + total_file_count
+        return {
+            'total_items': total_items,
+            'dir_count': total_dir_count,
+            'file_count': total_file_count
+        }
+
+    def _get_directory_size(self, path: str) -> int:
+        try:
+            total_size = 0
+            for dirpath, dirnames, filenames in os.walk(path):
+                for filename in filenames:
+                    filepath = os.path.join(dirpath, filename)
+                    try:
+                        total_size += os.path.getsize(filepath)
+                    except (OSError, IOError):
+                        continue
+            return total_size
+        except Exception:
+            return 0
+
+    def _format_size(self, size_bytes: int) -> str:
+        if size_bytes == 0:
+            return "0 B"
+        size_names = ["B", "KB", "MB", "GB", "TB"]
+        i = 0
+        while size_bytes >= 1024 and i < len(size_names) - 1:
+            size_bytes /= 1024.0
+            i += 1
+        return f"{size_bytes:.1f} {size_names[i]}"
+
+    def create_zip_archive(self, folder_path: str) -> Tuple[bool, str, Optional[str]]:
+        try:
+            if not os.path.exists(folder_path):
+                return False, "Папка не найдена", None
+            if not os.path.isdir(folder_path):
+                return False, "Это не папка", None
+            temp_fd, temp_path = tempfile.mkstemp(suffix='.zip', prefix='folder_')
+            os.close(temp_fd)
+            folder_name = os.path.basename(folder_path) or "folder"
+            zip_filename = f"{folder_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
+            try:
+                with zipfile.ZipFile(temp_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                    for root, dirs, files in os.walk(folder_path):
+                        for file in files:
+                            file_path = os.path.join(root, file)
+                            arcname = os.path.relpath(file_path, os.path.dirname(folder_path))
+                            zipf.write(file_path, arcname)
+                return True, f"Архив создан: {zip_filename}", temp_path
+            except Exception as e:
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
+                return False, f"Ошибка создания архива: {str(e)}", None
+        except Exception as e:
+            return False, f"Ошибка: {str(e)}", None
+
+    def read_file_content(self, file_path: str) -> Tuple[bool, str, Optional[str]]:
+        try:
+            if not os.path.exists(file_path):
+                return False, "Файл не найден", None
+            if not os.path.isfile(file_path):
+                return False, "Это не файл", None
+            file_size = os.path.getsize(file_path)
+            if file_size > 5 * 1024 * 1024:
+                return False, "Файл слишком большой для редактирования (макс. 5MB)", None
+            try:
+                for encoding in ['utf-8', 'cp1251', 'latin-1']:
+                    try:
+                        with open(file_path, 'r', encoding=encoding) as f:
+                            content = f.read()
+                        return True, f"Файл загружен ({self._format_size(file_size)})", content
+                    except UnicodeDecodeError:
+                        continue
+                return False, "Не удалось определить кодировку файла", None
+            except Exception as e:
+                return False, f"Ошибка чтения файла: {str(e)}", None
+        except Exception as e:
+            return False, f"Ошибка: {str(e)}", None
+
+    def save_file_content(self, file_path: str, content: str) -> Tuple[bool, str]:
+        try:
+            if not os.path.exists(file_path):
+                return False, "Файл не найден"
+            if not os.path.isfile(file_path):
+                return False, "Это не файл"
+            try:
+                backup_path = file_path + '.backup'
+                if os.path.exists(backup_path):
+                    os.remove(backup_path)
+                os.rename(file_path, backup_path)
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    f.write(content)
+                return True, "Файл сохранен успешно"
+            except Exception as e:
+                if os.path.exists(backup_path):
+                    os.rename(backup_path, file_path)
+                return False, f"Ошибка записи файла: {str(e)}"
+        except Exception as e:
+            return False, f"Ошибка: {str(e)}"
+
+    def rename_item(self, old_path: str, new_name: str) -> Tuple[bool, str]:
+        try:
+            if not os.path.exists(old_path):
+                return False, "Файл/папка не найден"
+            parent_dir = os.path.dirname(old_path)
+            new_path = os.path.join(parent_dir, new_name)
+            if os.path.exists(new_path) and new_path != old_path:
+                return False, "Файл/папка с таким именем уже существует"
+            os.rename(old_path, new_path)
+            return True, "Переименовано успешно"
+        except Exception as e:
+            return False, f"Ошибка переименования: {str(e)}"
+
+class WebFileManagerHandler(HTTPRequestHandler if SS_AVAILABLE else object):
+    def __init__(self, plugin_instance, *args, **kwargs):
+        self.plugin = plugin_instance
+        if SS_AVAILABLE:
+            super().__init__(*args, **kwargs)
+
+    def log_message(self, format, *args):
+        pass
+
+    def do_GET(self):
+        if not SS_AVAILABLE:
+            return
+        try:
+            parsed_path = urlparse(self.path)
+            path = parsed_path.path
+            if path == '/' or path == '/index.html':
+                self._serve_index()
+            elif path == '/api/roots':
+                self._serve_roots()
+            elif path == '/api/list':
+                self._serve_directory_listing(parsed_path.query)
+            elif path == '/api/download':
+                self._serve_file_download(parsed_path.query)
+            elif path == '/api/download-folder':
+                self._serve_folder_download(parsed_path.query)
+            elif path == '/api/read-file':
+                self._serve_file_read(parsed_path.query)
+            elif path == '/api/stats':
+                self._serve_stats()
+            elif path == '/api/breadcrumbs':
+                self._serve_breadcrumbs()
+            elif path == '/api/heartbeat':
+                self._serve_heartbeat()
+            else:
+                self._serve_404()
+        except Exception as e:
+            log(f"WebFileManager: Ошибка GET: {e}")
+            self._serve_error(str(e))
+
+    def do_POST(self):
+        if not SS_AVAILABLE:
+            return
+        try:
+            parsed_path = urlparse(self.path)
+            path = parsed_path.path
+            content_length = int(self.headers.get('Content-Length', 0))
+            post_data = self.rfile.read(content_length).decode('utf-8') if content_length > 0 else '{}'
+            try:
+                data = json.loads(post_data) if post_data else {}
+            except json.JSONDecodeError:
+                data = {}
+            if path == '/api/navigate':
+                self._handle_navigate_request(data)
+            elif path == '/api/upload':
+                self._handle_upload_request()
+            elif path == '/api/delete':
+                self._handle_delete_request(data)
+            elif path == '/api/create_folder':
+                self._handle_create_folder_request(data)
+            elif path == '/api/refresh':
+                self._handle_refresh_request(data)
+            elif path == '/api/go_home':
+                self._handle_go_home_request(data)
+            elif path == '/api/save-file':
+                self._handle_save_file_request(data)
+            elif path == '/api/rename':
+                self._handle_rename_request(data)
+            elif path == '/api/refresh-html':
+                self._handle_refresh_html_request()
+            else:
+                self._serve_404()
+        except Exception as e:
+            log(f"WebFileManager: Ошибка POST: {e}")
+            self._serve_error(str(e))
+
+    def do_OPTIONS(self):
+        if not SS_AVAILABLE:
+            return
+        self.send_response(200)
+        self._set_cors_headers()
+        self.end_headers()
+
+    def _serve_heartbeat(self):
+        self._send_json({
+            'status': 'alive',
+            'timestamp': int(time.time()),
+            'server_time': datetime.now().isoformat(),
+            'version': '1.0.3-Release'
+        })
+
+    def _serve_stats(self):
+        try:
+            current_path = self.plugin.file_manager.get_current_path()
+            listing = self.plugin.file_manager.get_directory_listing(current_path)
+            self._send_json({
+                'success': True,
+                'current_path': current_path,
+                'total_items': listing.get('total_items', 0),
+                'dir_count': listing.get('dir_count', 0),
+                'file_count': listing.get('file_count', 0),
+                'history_depth': len(self.plugin.file_manager.history_stack),
+                'timestamp': int(time.time())
+            })
+        except Exception as e:
+            self._send_json({
+                'success': False,
+                'error': str(e),
+                'timestamp': int(time.time())
+            })
+
+    def _serve_roots(self):
+        try:
+            roots_info = self.plugin.file_manager.get_root_paths_info()
+            root_stats = self.plugin.file_manager.get_root_paths_stats()
+            self._send_json({
+                'success': True,
+                'roots': roots_info,
+                'root_stats': root_stats,
+                'timestamp': int(time.time())
+            })
+        except Exception as e:
+            self._send_json({
+                'success': False,
+                'error': str(e),
+                'timestamp': int(time.time())
+            })
+
+    def _serve_breadcrumbs(self):
+        try:
+            current_path = self.plugin.file_manager.get_current_path()
+            if current_path == "/":
+                self._send_json({
+                    'success': True,
+                    'current_path': current_path,
+                    'breadcrumbs': [],
+                    'parent_path': "/",
+                    'timestamp': int(time.time())
+                })
+                return
+            listing = self.plugin.file_manager.get_directory_listing(current_path)
+            self._send_json({
+                'success': True,
+                'current_path': current_path,
+                'breadcrumbs': listing.get('path_parts', []),
+                'parent_path': listing.get('parent_path'),
+                'timestamp': int(time.time())
+            })
+        except Exception as e:
+            self._send_json({
+                'success': False,
+                'error': str(e),
+                'timestamp': int(time.time())
+            })
+
+    def _serve_directory_listing(self, query_string: str):
+        try:
+            params = parse_qs(query_string)
+            path = params.get('path', [None])[0]
+            listing = self.plugin.file_manager.get_directory_listing(path)
+            self._send_json(listing)
+        except Exception as e:
+            self._send_json({
+                'success': False,
+                'error': str(e),
+                'timestamp': int(time.time())
+            })
+
+    def _serve_file_download(self, query_string: str):
+        try:
+            params = parse_qs(query_string)
+            file_path = params.get('file', [None])[0]
+            if not file_path:
+                self._send_json({'success': False, 'error': 'Файл не указан', 'timestamp': int(time.time())})
+                return
+            if not os.path.exists(file_path):
+                self._send_json({'success': False, 'error': 'Файл не найден', 'timestamp': int(time.time())})
+                return
+            if os.path.isdir(file_path):
+                self._send_json({'success': False, 'error': 'Нельзя скачать папку', 'timestamp': int(time.time())})
+                return
+            try:
+                file_size = os.path.getsize(file_path)
+                file_name = os.path.basename(file_path)
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/octet-stream')
+                self.send_header('Content-Disposition', f'attachment; filename="{file_name}"')
+                self.send_header('Content-Length', str(file_size))
+                self._set_cors_headers()
+                self.end_headers()
+                with open(file_path, 'rb') as f:
+                    self.wfile.write(f.read())
+            except Exception as e:
+                self._send_json({'success': False, 'error': f'Ошибка чтения файла: {str(e)}', 'timestamp': int(time.time())})
+        except Exception as e:
+            self._serve_error(str(e))
+
+    def _serve_folder_download(self, query_string: str):
+        try:
+            params = parse_qs(query_string)
+            folder_path = params.get('folder', [None])[0]
+            if not folder_path:
+                self._send_json({'success': False, 'error': 'Папка не указана', 'timestamp': int(time.time())})
+                return
+            success, message, zip_path = self.plugin.file_manager.create_zip_archive(folder_path)
+            if not success:
+                self._send_json({'success': False, 'error': message, 'timestamp': int(time.time())})
+                return
+            try:
+                zip_name = os.path.basename(zip_path)
+                zip_size = os.path.getsize(zip_path)
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/zip')
+                self.send_header('Content-Disposition', f'attachment; filename="{zip_name}"')
+                self.send_header('Content-Length', str(zip_size))
+                self._set_cors_headers()
+                self.end_headers()
+                with open(zip_path, 'rb') as f:
+                    self.wfile.write(f.read())
+            except Exception as e:
+                self._send_json({'success': False, 'error': f'Ошибка отправки архива: {str(e)}', 'timestamp': int(time.time())})
+            finally:
+                if os.path.exists(zip_path):
+                    try:
+                        os.remove(zip_path)
+                    except:
+                        pass
+        except Exception as e:
+            self._serve_error(str(e))
+
+    def _serve_file_read(self, query_string: str):
+        try:
+            params = parse_qs(query_string)
+            file_path = params.get('file', [None])[0]
+            if not file_path:
+                self._send_json({'success': False, 'error': 'Файл не указан', 'timestamp': int(time.time())})
+                return
+            success, message, content = self.plugin.file_manager.read_file_content(file_path)
+            file_extension = os.path.splitext(file_path)[1].lower()
+            language = self._get_language_from_extension(file_extension)
+            self._send_json({
+                'success': success,
+                'message': message,
+                'content': content if success else None,
+                'file_path': file_path,
+                'language': language,
+                'timestamp': int(time.time())
+            })
+        except Exception as e:
+            self._send_json({'success': False, 'error': str(e), 'timestamp': int(time.time())})
+
+    def _get_language_from_extension(self, extension: str) -> str:
+        lang_map = {
+            '.py': 'python', '.js': 'javascript', '.ts': 'typescript', '.java': 'text/x-java',
+            '.xml': 'xml', '.html': 'htmlmixed', '.css': 'css', '.json': 'application/json',
+            '.md': 'text/x-markdown', '.txt': 'text/plain', '.log': 'text/plain',
+            '.sh': 'text/x-shellscript', '.sql': 'text/x-sql', '.php': 'text/x-php'
+        }
+        return lang_map.get(extension, 'text/plain')
+
+    def _handle_navigate_request(self, data: Dict):
+        try:
+            path = data.get('path')
+            action = data.get('action', 'navigate')
+            success = False
+            message = ""
+            if action == 'back':
+                new_path = self.plugin.file_manager.go_back()
+                success = True
+                message = ""
+            else:
+                success, message = self.plugin.file_manager.navigate_to(path)
+            current_path = self.plugin.file_manager.get_current_path()
+            listing = self.plugin.file_manager.get_directory_listing(current_path)
+            response_data = {
+                'success': success,
+                'message': message,
+                'current_path': current_path,
+                'listing': listing,
+                'timestamp': int(time.time())
+            }
+            if current_path == "/":
+                root_stats = self.plugin.file_manager.get_root_paths_stats()
+                response_data['root_stats'] = root_stats
+            self._send_json(response_data)
+        except Exception as e:
+            self._send_json({'success': False, 'error': str(e), 'timestamp': int(time.time())})
+
+    def _handle_go_home_request(self, data: Dict):
+        try:
+            self.plugin.file_manager.reset_to_root()
+            roots_info = self.plugin.file_manager.get_root_paths_info()
+            root_stats = self.plugin.file_manager.get_root_paths_stats()
+            self._send_json({
+                'success': True,
+                'message': 'Возврат в корневую папку',
+                'current_path': '/',
+                'roots': roots_info,
+                'root_stats': root_stats,
+                'timestamp': int(time.time())
+            })
+        except Exception as e:
+            self._send_json({'success': False, 'error': str(e), 'timestamp': int(time.time())})
+
+    def _handle_upload_request(self):
+        self._send_json({'success': False, 'error': 'Загрузка файлов пока не реализована', 'timestamp': int(time.time())})
+
+    def _handle_delete_request(self, data: Dict):
+        try:
+            file_path = data.get('path')
+            item_type = data.get('type')
+            if not file_path or not os.path.exists(file_path):
+                self._send_json({'success': False, 'error': 'Файл/папка не найден', 'timestamp': int(time.time())})
+                return
+            if item_type == 'directory':
+                if os.path.isdir(file_path):
+                    import shutil
+                    shutil.rmtree(file_path)
+                    message = 'Папка удалена'
+                else:
+                    self._send_json({'success': False, 'error': 'Это не папка', 'timestamp': int(time.time())})
+                    return
+            else:
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+                    message = 'Файл удален'
+                else:
+                    self._send_json({'success': False, 'error': 'Это не файл', 'timestamp': int(time.time())})
+                    return
+            current_path = self.plugin.file_manager.get_current_path()
+            if file_path == current_path:
+                self.plugin.file_manager.reset_to_root()
+                current_path = "/"
+            if current_path != "/":
+                listing = self.plugin.file_manager.get_directory_listing(current_path)
+            else:
+                roots_info = self.plugin.file_manager.get_root_paths_info()
+                root_stats = self.plugin.file_manager.get_root_paths_stats()
+                listing = {'success': True, 'roots': roots_info, 'root_stats': root_stats}
+            self._send_json({
+                'success': True,
+                'message': message,
+                'current_path': current_path,
+                'listing': listing,
+                'timestamp': int(time.time())
+            })
+        except Exception as e:
+            self._send_json({'success': False, 'error': str(e), 'timestamp': int(time.time())})
+
+    def _handle_create_folder_request(self, data: Dict):
+        try:
+            parent_path = data.get('parent_path')
+            folder_name = data.get('name')
+            if not parent_path or not folder_name:
+                self._send_json({'success': False, 'error': 'Не указаны параметры', 'timestamp': int(time.time())})
+                return
+            new_folder_path = os.path.join(parent_path, folder_name)
+            if os.path.exists(new_folder_path):
+                self._send_json({'success': False, 'error': 'Папка с таким именем уже существует', 'timestamp': int(time.time())})
+                return
+            os.makedirs(new_folder_path)
+            self._send_json({'success': True, 'message': f'Папка создана', 'timestamp': int(time.time())})
+        except Exception as e:
+            self._send_json({'success': False, 'error': str(e), 'timestamp': int(time.time())})
+
+    def _handle_save_file_request(self, data: Dict):
+        try:
+            file_path = data.get('file_path')
+            content = data.get('content')
+            if not file_path or content is None:
+                self._send_json({'success': False, 'error': 'Не указаны параметры', 'timestamp': int(time.time())})
+                return
+            success, message = self.plugin.file_manager.save_file_content(file_path, content)
+            self._send_json({'success': success, 'message': message, 'timestamp': int(time.time())})
+        except Exception as e:
+            self._send_json({'success': False, 'error': str(e), 'timestamp': int(time.time())})
+
+    def _handle_rename_request(self, data: Dict):
+        try:
+            old_path = data.get('old_path')
+            new_name = data.get('new_name')
+            if not old_path or not new_name:
+                self._send_json({'success': False, 'error': 'Не указаны параметры', 'timestamp': int(time.time())})
+                return
+            success, message = self.plugin.file_manager.rename_item(old_path, new_name)
+            current_path = self.plugin.file_manager.get_current_path()
+            if current_path != "/":
+                listing = self.plugin.file_manager.get_directory_listing(current_path)
+            else:
+                roots_info = self.plugin.file_manager.get_root_paths_info()
+                root_stats = self.plugin.file_manager.get_root_paths_stats()
+                listing = {'success': True, 'roots': roots_info, 'root_stats': root_stats}
+            self._send_json({
+                'success': success,
+                'message': message,
+                'listing': listing,
+                'timestamp': int(time.time())
+            })
+        except Exception as e:
+            self._send_json({'success': False, 'error': str(e), 'timestamp': int(time.time())})
+
+    def _handle_refresh_request(self, data: Dict):
+        try:
+            path = data.get('path')
+            if not path or path == self.plugin.file_manager.get_current_path():
+                current_path = self.plugin.file_manager.get_current_path()
+                if current_path == "/":
+                    roots_info = self.plugin.file_manager.get_root_paths_info()
+                    root_stats = self.plugin.file_manager.get_root_paths_stats()
+                    listing = {'success': True, 'roots': roots_info, 'root_stats': root_stats}
+                else:
+                    listing = self.plugin.file_manager.get_directory_listing(current_path)
+            else:
+                listing = self.plugin.file_manager.get_directory_listing(path)
+            self._send_json({'success': True, 'listing': listing, 'timestamp': int(time.time())})
+        except Exception as e:
+            self._send_json({'success': False, 'error': str(e), 'timestamp': int(time.time())})
+
+    def _handle_refresh_html_request(self):
+        try:
+            run_on_queue(self.plugin._force_refresh_html)
+            self._send_json({'success': True, 'message': 'Запрос на обновление HTML отправлен', 'timestamp': int(time.time())})
+        except Exception as e:
+            self._send_json({'success': False, 'error': str(e), 'timestamp': int(time.time())})
+
+    def _serve_index(self):
+        html = self.plugin.cached_html
+        if html is None:
+            self.plugin._download_html_sync()
+            html = self.plugin.cached_html
+            
+            if html is None:
+                html = """<!DOCTYPE html>
+<html lang="ru"><head><meta charset="UTF-8"><title>Ошибка загрузки</title>
+<style>body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',system-ui,sans-serif;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center;}</style></head>
+<body><div><h2>Ошибка загрузки интерфейса</h2><p>Проверьте URL в настройках и интернет-соединение.</p></div></body></html>"""
+        
+        self._send_response(200, html.encode('utf-8'), 'text/html')
+
+    def _set_cors_headers(self):
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.send_header('Access-Control-Max-Age', '86400')
+
+    def _send_response(self, code: int, content: bytes, content_type: str = 'text/plain'):
+        if not SS_AVAILABLE: return
+        try:
+            self.send_response(code)
+            self.send_header('Content-Type', content_type)
+            self._set_cors_headers()
+            self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            self.end_headers()
+            self.wfile.write(content)
+        except Exception as e:
+            log(f"WebFileManager: Ошибка отправки: {e}")
+
+    def _send_json(self, data: Dict):
+        try:
+            json_data = json.dumps(data, ensure_ascii=False, separators=(',', ':'))
+            self._send_response(200, json_data.encode('utf-8'), 'application/json')
+        except Exception as e:
+            error_data = {"error": "Internal server error", "timestamp": int(time.time())}
+            json_data = json.dumps(error_data)
+            self._send_response(500, json_data.encode('utf-8'), 'application/json')
+
+    def _serve_error(self, error: str):
+        self._send_response(500, json.dumps({"error": error, "timestamp": int(time.time())}).encode('utf-8'), 'application/json')
+
+    def _serve_404(self):
+        self._send_response(404, json.dumps({
+            "error": "Endpoint not found",
+            "timestamp": int(time.time())
+        }).encode('utf-8'), 'application/json')
+
+class WebFileManagerPlugin(BasePlugin):
+    def __init__(self):
+        super().__init__()
+        self.web_server = None
+        self.web_thread = None
+        self.current_port = None
+        self.file_manager = None
+        self._server_lock = threading.Lock()
+        self.context = None
+        self.cached_html: Optional[str] = None
+        
+        self.progress_dialog = None
+        self._cancel_requested = False
+        
+        self.locales = {}
+        self.default_lang = "en"
+        
+        self.settings = {
+            "plugin_enabled": True,
+            "notifications_enabled": True,
+            "port": 8090,
+            "html_url": "https://pastebin.com/raw/txNsRPXD",
+            "lang_url": "https://pastebin.com/raw/gkm0bZYf"
+        }
+
+    def on_plugin_load(self):
+        try:
+            log("WebFileManager: Загрузка плагина v1.0.3-Release...")
+            
+            self.settings["plugin_enabled"] = self.get_setting("plugin_enabled", True)
+            self.settings["notifications_enabled"] = self.get_setting("notifications_enabled", True)
+            self.settings["port"] = int(self.get_setting("port", 8090))
+            self.settings["html_url"] = self.get_setting("html_url", "https://pastebin.com/raw/txNsRPXD")
+            self.settings["lang_url"] = self.get_setting("lang_url", "https://pastebin.com/raw/gkm0bZYf")
+
+            try:
+                fragment = get_last_fragment()
+                if fragment:
+                    self.context = fragment.getParentActivity()
+            except Exception:
+                pass
+
+            self.file_manager = FileManager(self)
+
+            self.add_on_send_message_hook()
+            self._setup_menu()
+
+            if self.settings["plugin_enabled"]:
+                run_on_queue(lambda: self._start_web_server(with_progress=False))
+            else:
+                log("WebFileManager: Плагин выключен в настройках")
+
+            log("WebFileManager: Плагин загружен successfully")
+        except Exception as e:
+            log(f"WebFileManager: Ошибка загрузки: {e}")
+
+    def on_plugin_unload(self):
+        try:
+            self._stop_web_server()
+            log("WebFileManager: Плагин выгружен")
+        except Exception as e:
+            log(f"WebFileManager: Ошибка выгрузки: {e}")
+
+    def _get_local_lang(self) -> str:
+        try:
+            from org.telegram.messenger import LocaleController
+            lang = LocaleController.getInstance().getCurrentLocale().getLanguage()
+            if lang in ["ru", "en", "es", "pt", "it", "de", "fr", "uk", "id", "tr", "ja", "ko"]:
+                return lang
+        except:
+            pass
+        return self.default_lang
+
+    def _t(self, key: str, default: str = None) -> str:
+        lang = self._get_local_lang()
+        
+        if lang in self.locales and key in self.locales[lang]:
+            return self.locales[lang][key]
+        
+        if lang != "en" and "en" in self.locales and key in self.locales["en"]:
+            return self.locales["en"][key]
+        
+        return default if default is not None else key
+
+    def _download_translations_sync(self):
+        try:
+            headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36'}
+            resp = requests.get(self.settings["lang_url"], headers=headers, timeout=5)
+            
+            if resp.status_code == 200:
+                data = resp.json()
+                if isinstance(data, dict):
+                    self.locales = data.get("locales", {})
+                    return True
+        except Exception as e:
+            log(f"WebFileManager: Ошибка загрузки переводов: {e}")
+        return False
+
+    def create_settings(self):
+        if not self.locales:
+            self._download_translations_sync()
+
+        s_header = self._t("settings_header", "Настройки")
+        s_en = self._t("switch_enabled", "Включить плагин")
+        s_en_sub = self._t("switch_enabled_sub", "Запуск сервера и обработка команд")
+        s_not = self._t("switch_notifications", "Уведомления")
+        s_not_sub = self._t("switch_notifications_sub", "BulletinHelper при запуске и обновлении")
+        s_port = self._t("settings_port", "Порт сервера")
+        s_port_sub = self._t("settings_port_sub", "Рекомендуется 8010-8090")
+        s_html_h = self._t("settings_html_header", "Веб-интерфейс")
+        s_html_url = self._t("settings_html_url", "URL UI")
+        s_html_url_sub = self._t("settings_html_url_sub", "URL UI")
+        s_trans_h = self._t("settings_trans_header", "Локализация")
+        s_trans_url = self._t("settings_trans_url", "URL переводов")
+        s_trans_url_sub = self._t("settings_trans_url_sub", "URL Lang")
+        s_cache = self._t("settings_cache", "Очистить кеш")
+        s_cache_sub = self._t("settings_cache_sub", "Удалить скачанный интерфейс")
+        s_info = self._t("settings_info", "Обновить")
+        
+        s_html_btn = self._t("settings_info", "Обновить интерфейс")
+
+        return [
+            Header(text=s_header),
+            Switch(
+                key="plugin_enabled",
+                text=s_en,
+                default=self.settings["plugin_enabled"],
+                subtext=s_en_sub,
+                icon="msg2_devices",
+                on_change=lambda v: self._toggle_plugin(v)
+            ),
+            Input(
+                key="port",
+                text=s_port,
+                default=str(self.settings["port"]),
+                subtext=s_port_sub,
+                icon="files_storage_solar",
+                on_change=lambda v: self._on_port_change(v)
+            ),
+            
+            Divider(),
+            
+            Switch(
+                key="notifications_enabled",
+                text=s_not,
+                default=self.settings["notifications_enabled"],
+                subtext=s_not_sub,
+                icon="input_notify_on",
+                on_change=lambda v: self._on_notifications_toggle(v)
+            ),
+            
+            Divider(),
+            
+            Header(text=s_html_h),
+            Input(
+                key="html_url",
+                text=s_html_url,
+                default=self.settings["html_url"],
+                subtext=s_html_url_sub,
+                icon="msg2_link2",
+                on_change=lambda v: self._on_url_change(v)
+            ),
+            Text(
+                text=s_html_btn,
+                icon="media_download",
+                on_click=lambda v: self._force_refresh_html()
+            ),
+            
+            Divider(),
+            
+            Header(text=s_trans_h),
+            Input(
+                key="lang_url",
+                text=s_trans_url,
+                default=self.settings["lang_url"],
+                subtext=s_trans_url_sub,
+                icon="msg2_link2",
+                on_change=lambda v: self._on_lang_url_change(v)
+            ),
+            
+            Text(
+                text=s_info,
+                icon="media_download",
+                on_click=lambda v: self._update_translations()
+            ),
+            
+            Divider(),
+            
+            Text(
+                text=s_cache,
+                icon="msg_delete",
+                on_click=lambda v: self._on_clear_cache_click(v)
+            )
+        ]
+
+    def _toggle_plugin(self, value: bool):
+        self.settings["plugin_enabled"] = value
+        self.set_setting("plugin_enabled", value)
+        
+        if value:
+            run_on_queue(lambda: self._start_web_server(with_progress=True))
+        else:
+            run_on_queue(self._stop_web_server)
+
+    def _on_notifications_toggle(self, value: bool):
+        self.settings["notifications_enabled"] = value
+        self.set_setting("notifications_enabled", value)
+
+    def _on_port_change(self, value: str):
+        try:
+            self.settings["port"] = int(value)
+            self.set_setting("port", value)
+            if self.settings["plugin_enabled"]:
+                self._restart_server_if_running()
+        except ValueError:
+            pass
+
+    def _on_url_change(self, value: str):
+        self.settings["html_url"] = value
+        self.set_setting("html_url", value)
+        self.cached_html = None
+        if self.settings["plugin_enabled"]:
+            run_on_queue(self._download_html_with_progress)
+
+    def _on_lang_url_change(self, value: str):
+        self.settings["lang_url"] = value
+        self.set_setting("lang_url", value)
+        run_on_queue(self._update_translations)
+
+    def _update_translations(self):
+        if self.settings["notifications_enabled"]:
+            run_on_ui_thread(lambda: self._show_loading_alert(self._t("ui_updating", "Обновление...")))
+        success = self._download_translations_sync()
+        self._dismiss_dialog()
+        if success and self.settings["notifications_enabled"]:
+            self._show_success(self._t("msg_trans_updated", "Переводы обновлены"))
+        elif self.settings["notifications_enabled"]:
+            self._show_error(self._t("msg_trans_failed", "Ошибка"))
+
+    def _on_clear_cache_click(self, view):
+        self.cached_html = None
+        self.set_setting("html_url", self.settings["html_url"])
+        
+        def show_note():
+            if not self.settings["notifications_enabled"]:
+                return
+            fragment = get_last_fragment()
+            if fragment:
+                msg = self._t("msg_cache_cleared", "Кеш очищен")
+                BulletinHelper.show_info(msg, fragment)
+        run_on_ui_thread(show_note)
+
+    def _show_loading_alert(self, message: str):
+        self._cancel_requested = False
+        
+        current_fragment = get_last_fragment()
+        if not current_fragment:
+            return
+            
+        current_activity = current_fragment.getParentActivity()
+        if not current_activity:
+            return
+
+        builder = AlertDialogBuilder(current_activity, AlertDialogBuilder.ALERT_TYPE_LOADING)
+        builder.set_title("Web File Manager")
+        builder.set_message(message)
+        builder.set_negative_button("Cancel", self._on_progress_cancel)
+        
+        self.progress_dialog = builder
+        builder.show()
+
+    def _update_progress(self, percent: int, message: str = None):
+        def update():
+            if self.progress_dialog:
+                try:
+                    if hasattr(self.progress_dialog, 'set_progress'):
+                        self.progress_dialog.set_progress(percent)
+                    if message and hasattr(self.progress_dialog, 'set_message'):
+                        self.progress_dialog.set_message(message)
+                except Exception:
+                    pass
+        run_on_ui_thread(update)
+
+    def _dismiss_dialog(self):
+        def dismiss():
+            if self.progress_dialog:
+                try:
+                    if hasattr(self.progress_dialog, 'dismiss'):
+                        self.progress_dialog.dismiss()
+                    elif hasattr(self.progress_dialog, 'get_dialog'):
+                        dlg = self.progress_dialog.get_dialog()
+                        if dlg and hasattr(dlg, 'dismiss'):
+                            dlg.dismiss()
+                except Exception:
+                    pass
+                finally:
+                    self.progress_dialog = None
+        run_on_ui_thread(dismiss)
+
+    def _on_progress_cancel(self, builder, which):
+        self._cancel_requested = True
+        self._dismiss_dialog()
+
+    def _start_web_server(self, with_progress: bool = True):
+        if not SS_AVAILABLE:
+            if self.settings["notifications_enabled"]:
+                self._show_error(self._t("ui_error", "Ошибка"))
+            return
+
+        with self._server_lock:
+            if self.web_server:
+                return
+
+        def create_handler(*args, **kwargs):
+            return WebFileManagerHandler(self, *args, **kwargs)
+
+        port = self.settings["port"]
+        
+        if with_progress and self.settings["notifications_enabled"]:
+            run_on_ui_thread(lambda: self._show_loading_alert(self._t("ui_launching", "Запуск сервера...")))
+        
+        try:
+            if with_progress:
+                self._update_progress(20, "Checking port...")
+            
+            if not self._check_port_available('localhost', port):
+                self._dismiss_dialog()
+                if self.settings["notifications_enabled"]:
+                    self._show_error(f"{self._t('ui_error', 'Ошибка')}: {port} занят")
+                return
+
+            if self.cached_html is None:
+                if with_progress:
+                    self._update_progress(60, self._t("ui_loading", "Загрузка интерфейса..."))
+                self._download_html_sync()
+            
+            if self._cancel_requested:
+                self._dismiss_dialog()
+                return
+
+            if with_progress:
+                self._update_progress(90, "Initializing...")
+
+            self.web_server = HTTPServer(('localhost', port), create_handler)
+            self.web_server.allow_reuse_address = True
+            
+            self.web_thread = threading.Thread(target=self._serve_forever_wrapper, daemon=True)
+            self.web_thread.start()
+            
+            self.current_port = port
+            
+            if with_progress:
+                self._update_progress(100, self._t("ui_success", "Успешно!"))
+                time.sleep(0.5)
+                self._dismiss_dialog()
+            
+            if self.settings["notifications_enabled"]:
+                self._show_success(self._t("msg_server_url", "Web File Manager: {url}").replace("{url}", f"http://127.0.0.1:{port}"))
+            
+        except Exception as e:
+            if with_progress:
+                self._dismiss_dialog()
+            if self.settings["notifications_enabled"]:
+                self._show_error(f"{self._t('ui_error', 'Ошибка')}: {e}")
+            self.web_server = None
+            self.current_port = None
+
+    def _stop_web_server(self):
+        if not self.web_server:
+            return
+
+        try:
+            self.web_server.shutdown()
+            self.web_server.server_close()
+        except:
+            pass
+        
+        if self.web_thread and self.web_thread.is_alive():
+            try:
+                self.web_thread.join(timeout=1)
+            except:
+                pass
+        
+        self.web_server = None
+        self.web_thread = None
+        self.current_port = None
+        log("WebFileManager: Server stopped")
+
+    def _restart_server_if_running(self):
+        if self.web_server:
+            self._stop_web_server()
+            time.sleep(0.5)
+            run_on_queue(lambda: self._start_web_server(with_progress=True))
+
+    def _serve_forever_wrapper(self):
+        try:
+            if self.web_server:
+                self.web_server.serve_forever()
+        except Exception:
+            pass
+
+    def _check_port_available(self, host: str, port: int) -> bool:
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                sock.settimeout(1)
+                result = sock.connect_ex((host, port))
+                return result != 0
+        except:
+            return True
+
+    def _download_html_sync(self):
+        try:
+            resp = requests.get(self.settings["html_url"], timeout=30)
+            if resp.status_code == 200:
+                self.cached_html = resp.text
+                log("WebFileManager: HTML interface downloaded")
+            else:
+                log(f"WebFileManager: Error downloading HTML, HTTP {resp.status_code}")
+                self.cached_html = None
+        except Exception as e:
+            log(f"WebFileManager: Exception loading HTML: {e}")
+            self.cached_html = None
+
+    def _download_html_with_progress(self):
+        def _work():
+            if self.settings["notifications_enabled"]:
+                run_on_ui_thread(lambda: self._show_loading_alert(self._t("ui_loading", "Загрузка интерфейса...")))
+            self._update_progress(50)
+            time.sleep(0.2)
+            self._download_html_sync()
+            self._dismiss_dialog()
+            if self.cached_html and self.settings["notifications_enabled"]:
+                self._show_success(self._t("ui_success", "Успешно!"))
+        run_on_queue(_work)
+
+    def _force_refresh_html(self):
+        if self.settings["notifications_enabled"]:
+            run_on_ui_thread(lambda: self._show_loading_alert(self._t("ui_updating", "Обновление...")))
+        self._update_progress(50)
+        time.sleep(0.2)
+        self._download_html_sync()
+        self._dismiss_dialog()
+        if self.cached_html and self.settings["notifications_enabled"]:
+            self._show_success(self._t("ui_success", "Успешно!"))
+
+    def on_send_message_hook(self, account: int, params: Any) -> HookResult:
+        try:
+            if hasattr(params, 'message') and isinstance(params.message, str):
+                message = params.message.strip()
+
+                if message.lower() == '.fm' or message.lower() == '. fm':
+                    server_url = self._get_server_url()
+                    if server_url:
+                        response_message = self._t("msg_server_url", "Web File Manager: {url}").replace("{url}", server_url)
+                    else:
+                        response_message = self._t("msg_server_off", "Сервер выключен")
+                    self._send_message_to_chat(params.peer, response_message)
+                    return HookResult(strategy=HookStrategy.CANCEL)
+                
+                elif message.lower() == '.cc' or message.lower() == '. cc':
+                    run_on_queue(self._force_refresh_html)
+                    return HookResult(strategy=HookStrategy.Cancel)
+
+        except Exception as e:
+            log(f"WebFileManager: Error processing command: {e}")
+
+        return HookResult()
+
+    def _get_server_url(self) -> Optional[str]:
+        if self.current_port:
+            return f"http://127.0.0.1:{self.current_port}"
+        return None
+
+    def _setup_menu(self):
+        try:
+            self.add_menu_item(
+                MenuItemData(
+                    menu_type=MenuItemType.CHAT_ACTION_MENU,
+                    text=self._t("switch_enabled", "Open Web File Manager"),
+                    on_click=self._handle_file_manager_click,
+                    icon="files_folder",
+                    priority=100
+                )
+            )
+        except Exception as e:
+            log(f"WebFileManager: Error setting up menu: {e}")
+
+    def _handle_file_manager_click(self, context: Dict[str, Any]):
+        try:
+            server_url = self._get_server_url()
+            if server_url:
+                self._show_success(f"Web File Manager:\n{server_url}")
+            else:
+                self._show_error(self._t("msg_server_off", "Сервер выключен. Включите плагин в настройках."))
+        except Exception as e:
+            self._show_error(f"Error: {e}")
+
+    def _send_message_to_chat(self, peer_id: int, message: str):
+        try:
+            message_params = {
+                "peer": peer_id,
+                "message": message
+            }
+            send_message(message_params)
+        except Exception as e:
+            log(f"WebFileManager: Error sending message: {e}")
+
+    def _show_success(self, message: str):
+        try:
+            if not self.settings["notifications_enabled"]:
+                return
+            fragment = get_last_fragment()
+            if fragment:
+                BulletinHelper.show_success(message, fragment)
+        except Exception:
+            pass
+
+    def _show_error(self, message: str):
+        try:
+            if not self.settings["notifications_enabled"]:
+                return
+            fragment = get_last_fragment()
+            if fragment:
+                BulletinHelper.show_error(f"{message}", fragment)
+        except Exception:
+            pass
