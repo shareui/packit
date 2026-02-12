@@ -1081,13 +1081,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/plugin_creator.plugin",
-      "description": "Unknown",
+      "description": "A plugin for quickly creating plugins and sending them to chat.",
       "about": [
-        "Unknown",
-        "Неизвестный"
+        "A plugin for quickly creating plugins and sending them to chat.",
+        "Плагин для быстрого создания плагинов и их отправки в чат."
       ],
       "hash": "7b5e0986149c36e594898e7f4ce69a8631ef8a0ffaa173c66f0978ae8deb3ddb",
-      "tag": "Unsotred"
+      "tag": "Customization"
     },
     {
       "id": "always-tabs-forums",
