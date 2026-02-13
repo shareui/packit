@@ -38,7 +38,7 @@ Deeplink URLs with the prefix `tg://packit` allow you to quickly perform actions
 | `tg://packit?install` | Open installation menu | --- |
 | `tg://packit?install&repo=REPO` | Install plugins from specified repository | `REPO` |
 | `tg://packit?install&repo=REPO&plugin=PLUGIN` | Install a specific plugin | `REPO`, `PLUGIN` |
-| `tg://packit?install&repo=REPO&plugin=PLUGIN&mode=MODE` | Install plugin in specified mode. <br> `mode=share` — share plugin link; `mode=private` — private installation. | `REPO`, `PLUGIN`, `MODE` |
+| `tg://packit?install&repo=REPO&plugin=PLUGIN&mode=MODE` | Install plugin in specified mode. <br> `mode=share` — share plugin link; | `REPO`, `PLUGIN`, `MODE` |
 
 ### Update
 | Deeplink | Description | Variables |
