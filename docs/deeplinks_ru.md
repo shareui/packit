@@ -1,4 +1,4 @@
-# Deeplink RU | [Deeplink EN](https://github.com/shareui/packit/edit/main/docs/deeplinks_en.md)
+# Deeplink RU | [Deeplink EN](https://github.com/shareui/packit/blob/main/docs/deeplinks_en.md)
 
 Deeplink-ссылки с префиксом `tg://packit` позволяют быстро выполнять действия внутри экосистемы Packit: открывать меню, управлять репозиториями, устанавливать и обновлять плагины. Здесь вся информация про них
 
