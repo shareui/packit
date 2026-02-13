@@ -1,4 +1,4 @@
-# [Deeplink RU](https://github.com/shareui/packit/blob/main/docs/deeplinks_ru.md) | Deeplink EN
+# Deeplink
 
 Deeplink URLs with the prefix `tg://packit` allow you to quickly perform actions within the Packit ecosystem: open menus, manage repositories, install and update plugins. Here is all the information about them.
 
