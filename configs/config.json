@@ -1584,13 +1584,13 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/templates.plugin",
-      "description": "Unknown",
+      "description": "Plugin for quickly sending a template.",
       "about": [
-        "Unknown",
-        "Неизвестный"
+        "Plugin for quickly sending a template.",
+        "Плагин для быстрой отправки шаблона."
       ],
       "hash": "03e7ec96cdd1b356a5b2ad96905bc404d1822079d2c2c7e87469d3143dc126e9",
-      "tag": "Unsotred"
+      "tag": "Utility"
     },
     {
       "id": "text_animation",
@@ -1656,10 +1656,10 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/translatica.plugin",
-      "description": "Unknown",
+      "description": "Translator",
       "about": [
-        "Unknown",
-        "Неизвестный"
+        "Translator",
+        "Переводчик"
       ],
       "hash": "dff1a11bb06623261b0b58636b7a29e154437665b26f08246a6044077a411371",
       "tag": "Unsotred"
@@ -1674,10 +1674,10 @@
       "suspicious": "false",
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/translatorplus.plugin",
-      "description": "Ultra-fast multi-provider translation for Telegram with in-message support",
+      "description": "Ultra-fast multi-provider translation for Telegram.",
       "about": [
-        "Ultra-fast multi-provider translation for Telegram with in-message support",
-        "Сверхбыстрый мультипровайдерский перевод для Telegram с поддержкой в ​​сообщениях"
+        "Ultra-fast multi-provider translation for Telegram.",
+        "Сверхбыстрый мультипровайдерский перевод для Telegram."
       ],
       "hash": "2d5d7e6fb5caf3025a70e31be05633615f0d336d61ab0f6860f773d281cec240",
       "tag": "Utility"
@@ -2058,24 +2058,6 @@
       ],
       "hash": "36e882eeab9c170df73c189f27048ac5a205f68be7046804977c6664826deaea",
       "tag": "AI"
-    },
-    {
-      "id": "google_search",
-      "name": "Google Search",
-      "author": "семятеч",
-      "version": "1.0",
-      "state": "release",
-      "icon": "googleemojikaif/0",
-      "suspicious": "false",
-      "dependencies": [],
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/GoogleSearch.plugin",
-      "description": "Search Google.",
-      "about": [
-        "Search Google.",
-        "Найдите в Google."
-      ],
-      "hash": "9770a505e9bdc67609b1ccbe71ba153e7de3a89de4102331a4274e8dbc66ee42",
-      "tag": "Utility"
     },
     {
       "id": "hashTagsFix",
@@ -4841,9 +4823,9 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/ExteraRSS.plugin",
       "about": [
-        "RSS + Telegram в одной ленте."
+        "RSS + Telegram."
       ],
-      "description": "RSS + Telegram в одной ленте.",
+      "description": "RSS + Telegram",
       "hash": "91a143116a477cdf33a1cb769713d65b1f1c100203d2d0f11e3e19f1746ac2a3"
     },
     {
@@ -4857,10 +4839,10 @@
       "dependencies": [],
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/multilink.plugin",
       "about": [
-        "Adds a customizable link to your profile. / Добавляет настраиваемую ссылку в профиль.",
-        "Добавляет настраиваемую ссылку в ваш профиль. / Добавляет настраиваемую ссылку в профиль."
+        "Adds a customizable link to your profile.",
+        "Добавляет настраиваемую ссылку в ваш профиль."
       ],
-      "description": "Adds a customizable link to your profile. / Добавляет настраиваемую ссылку в профиль.",
+      "description": "Adds a customizable link to your profile.",
       "hash": "38c0a5de5258f37ef3ba7061e3248e8b8c720e14f1272845d76edbd0a54058b1"
     },
     {
