@@ -50,7 +50,7 @@ Deeplink URLs with the prefix `tg://packit` allow you to quickly perform actions
 | Deeplink | Description |
 |----------|-------------|
 | `tg://packit?forum` | Community forum |
-| `tg://packit?problems` | Report a problem |
+| `tg://packit?problems` | Opens a list of possible problems |
 | `tg://packit?pkill` | Close the app |
 
 ---
