@@ -30,7 +30,7 @@ Deeplink URLs with the prefix `tg://packit` allow you to quickly perform actions
 |----------|-------------|-----------|
 | `tg://packit?repo` | Show repositories list | --- |
 | `tg://packit?repo=all` | Show all available repositories | --- |
-| `tg://packit?repo=add&name=NAME&link=URL&icon=URL` | Add a new repository (requires `name`, `link`, `icon` parameters) | `NAME`, `LINK`, `ICON` |
+| `tg://packit?repo=add&name=NAME&link=URL&icon=ICON` | Add a new repository (requires `name`, `link`, `icon` parameters) | `NAME`, `LINK`, `ICON` |
 
 ### Plugin installation
 | Deeplink | Description | Variables |
