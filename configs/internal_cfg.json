@@ -2,5 +2,8 @@
   "permissions": {
     "everyone": [400216230, 2037728749, 7639876439]
   },
+  "official_repo": [
+    "https://raw.githubusercontent.com/shareui/packit/main/configs/config.json"
+  ],
   "badges": []
 }
