@@ -5,5 +5,36 @@
   "trusted_repo": [
     "https://raw.githubusercontent.com/shareui/packit/main/configs/config.json"
   ],
-  "badges": []
+  "badges": [
+      {
+          "id": "vestr_user",
+          "user_id": 2037728749,
+          "emoji_id": 5208665577555512622,
+          "text_template": "**Vestr** is the official creator of **Packit** and **Meta Plugins**."
+      },
+      {
+          "id": "vestr_channel",
+           "chat_id": 2693931764,
+          "emoji_id": 5208665577555512622,
+          "text_template": "**Meta Plugins** official **Vestr** channel."
+      },
+       {
+           "id": "fuchs_user",
+           "user_id": 400216230,
+           "emoji_id": 5208665577555512622,
+           "text_template": "**Fuchs** is a member of the **Telegram development team**."
+       },
+      {
+          "id": "fuchs_channel",
+          "chat_id": 3139326633,
+          "emoji_id": 5208665577555512622,
+           "text_template": "**0xF** official **Fuchs** channel."
+      },
+       {
+          "id": "packitground_group",
+           "chat_id": 3663388991,
+           "emoji_id": 5208665577555512622,
+           "text_template": "**PackitGround** is the official group of **Packit**."
+       }
+  ]
 }
