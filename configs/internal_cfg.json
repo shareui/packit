@@ -24,15 +24,15 @@
           "id": "fuchs_user",
           "user_id": 400216230,
           "emoji_id": 5208665577555512622,
-          "text_ru": "**Fuchs** – член **команды разработчиков Telegram**.",
-          "text_en": "**Fuchs** is a member of the **Telegram development team**."
+          "text_ru": "**Fuchs** – член команды разработчиков **Telegram**.",
+          "text_en": "**Fuchs** is a member of the **Telegram** development team."
        },
       {
           "id": "fuchs_channel",
           "chat_id": 3139326633,
-          "emoji_id": 5208665577555512622,
-          "text_ru": "**0xF** — официальный канал **Fuchs**.",
-          "text_en": "**0xF** official **Fuchs** channel."
+          "emoji_id": 5812237632310091106,
+          "text_ru": "**0xF** является официальным ресурсом **Fuchs**.",
+          "text_en": "**0xF** is the official resource of **Fuchs**."
       },
        {
           "id": "packitground_group",
