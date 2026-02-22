@@ -1,0 +1,14 @@
+{
+  "repometa": {
+    "rm_name": "Official",
+    "rm_maintainer": "@shareui",
+    "rm_url": "https://github.com/shareui/packit",
+    "rm_mid": "400216230",
+    "rm_rid": "shareui_official"
+  },
+  "repomap": {
+    "plugins": "https://raw.githubusercontent.com/shareui/packit/main/configs/config.json",
+    "icons": "",
+    "configs": ""
+  }
+}
