@@ -1,73 +1,221 @@
-# Deeplink
+# PackIt Deeplinks
 
-Deeplink URLs with the prefix `tg://packit` allow you to quickly perform actions within the Packit ecosystem: open menus, manage repositories, install and update plugins. Here is all the information about them.
+**[RU](#ru) | [EN](#en)**
 
-## Link format
-
-`tg://packit?<command>&<parameter1>=<value1>&<parameter2>=<value2>...`
-
-- **command** — main action.
-- **parameters** — additional details.
+Все диплинки начинаются с `tg://packit`.  
+All deeplinks start with `tg://packit`.
 
 ---
 
-## Available commands
+<a name="ru"></a>
+# 🇷🇺 Русский
 
-### Menu and navigation
-| Deeplink | Description |
-|----------|-------------|
-| `tg://packit?settings` | Open settings |
-| `tg://packit?deeplink` | Deeplink info |
-| `tg://packit?other` | Other functions |
-| `tg://packit?contributors` | Contributors list |
-| `tg://packit?docs` | Documentation |
-| `tg://packit?repo` | Repositories menu |
-| `tg://packit?install` | Plugin installation / repository selection menu |
-| `tg://packit?update` | Update / repository selection menu |
+## Содержание
 
-### Repositories
-| Deeplink | Description | Variables |
-|----------|-------------|-----------|
-| `tg://packit?repo` | Show repositories list | --- |
-| `tg://packit?repo=all` | Show all available repositories | --- |
-| `tg://packit?repo=add&name=NAME&link=URL&icon=ICON` | Add a new repository (requires `name`, `link`, `icon` parameters) | `NAME`, `LINK`, `ICON` |
-
-### Plugin installation
-| Deeplink | Description | Variables |
-|----------|-------------|-----------|
-| `tg://packit?install` | Open installation menu | --- |
-| `tg://packit?install&repo=REPO` | Install plugins from specified repository | `REPO` |
-| `tg://packit?install&repo=REPO&plugin=PLUGIN` | Install a specific plugin | `REPO`, `PLUGIN` |
-| `tg://packit?install&repo=REPO&plugin=PLUGIN&mode=MODE` | Install plugin in specified mode. <br> `mode=share` — share plugin link; | `REPO`, `PLUGIN`, `MODE` |
-
-### Update
-| Deeplink | Description | Variables |
-|----------|-------------|-----------|
-| `tg://packit?update` | Update plugin information in ALL repositories | --- |
-| `tg://packit?update&repo=REPO` | Update plugin information in REPO repository | `REPO` |
-
-### Other
-| Deeplink | Description |
-|----------|-------------|
-| `tg://packit?forum` | Community forum |
-| `tg://packit?problems` | Opens a list of possible problems |
-| `tg://packit?pkill` | Close the app |
+- [Основные](#ru-основные)
+- [Установка](#ru-установка)
+- [Репозитории](#ru-репозитории)
+- [Утилиты](#ru-утилиты)
 
 ---
 
-## Parameters
+<a name="ru-основные"></a>
+## Основные
 
-Example parameter values used in links.
+### Проверка работы
+```
+tg://packit
+```
+Показывает уведомление что PackIt работает.
 
+### Настройки PackIt
+```
+tg://packit?settings
+```
+Открывает страницу настроек PackIt.
+
+---
+
+<a name="ru-установка"></a>
+## Установка
+
+### Открыть менеджер плагинов
+```
+tg://packit?install
+```
+
+### Открыть плагины репозитория
+```
+tg://packit?install&repo=<rm_id>
+```
+| Параметр | Описание |
+|----------|----------|
+| `rm_id` | ID репозитория (должен быть добавлен в PackIt) |
+
+### Установить конкретный плагин
+```
+tg://packit?install&repo=<rm_id>&plugin=<plugin_id>
+```
+| Параметр | Описание |
+|----------|----------|
+| `rm_id` | ID репозитория |
+| `plugin_id` | ID плагина внутри репозитория |
+
+Скачивает плагин и открывает нативный диалог установки.
+
+---
+
+<a name="ru-репозитории"></a>
+## Репозитории
+
+### Добавить репозиторий
+```
+tg://packit?repo=add&name=<n>&link=<url>&icon=<icon>
+```
+| Параметр | Обязательный | Описание |
+|----------|:---:|----------|
+| `name` | ✅ | Название репозитория |
+| `link` | ✅ | URL до `repomap.json` репозитория |
+| `icon` | ❌ | Иконка (например `msg_folders`) |
+
+Показывает диалог подтверждения с информацией о репозитории перед добавлением. Максимум 10 репозиториев.
+
+### Обновить кэш репозиториев
+```
+tg://packit?update
+```
+Обновляет кэш всех добавленных репозиториев и синхронизирует их метаданные.
+
+---
+
+<a name="ru-утилиты"></a>
+## Утилиты
+
+### Форум PackIt
+```
+tg://packit?forum
+```
+Открывает Telegram-канал [PackItGround](https://t.me/packitGround).
+
+### Известные проблемы
+```
+tg://packit?problems
+```
+Открывает тему с известными проблемами в форуме.
+
+### Перезапустить приложение
+```
+tg://packit?pkill
+```
+Принудительно завершает процесс приложения (перезапуск).
+
+---
+
+Надеюсь, это поможет вам разобраться с внутренними ссылками Packit :)
+
+<a name="en"></a>
+# 🇬🇧 English
+
+## Table of Contents
+
+- [General](#en-general)
+- [Installation](#en-installation)
+- [Repositories](#en-repositories)
+- [Utilities](#en-utilities)
+
+---
+
+<a name="en-general"></a>
+## General
+
+### Check status
+```
+tg://packit
+```
+Shows a notification confirming PackIt is working.
+
+### PackIt settings
+```
+tg://packit?settings
+```
+Opens the PackIt settings page.
+
+---
+
+<a name="en-installation"></a>
+## Installation
+
+### Open plugin manager
+```
+tg://packit?install
+```
+
+### Open repository plugins
+```
+tg://packit?install&repo=<rm_id>
+```
 | Parameter | Description |
 |-----------|-------------|
-| `REPO`    | Repository name |
-| `PLUGIN`  | Plugin ID |
-| `MODE`    | Installation mode (`share`) |
-| `NAME`    | Repository name |
-| `LINK`    | Repository link (URL) |
-| `ICON`    | Repository icon (pack/id) |
+| `rm_id` | Repository ID (must be added to PackIt) |
+
+### Install a specific plugin
+```
+tg://packit?install&repo=<rm_id>&plugin=<plugin_id>
+```
+| Parameter | Description |
+|-----------|-------------|
+| `rm_id` | Repository ID |
+| `plugin_id` | Plugin ID within the repository |
+
+Downloads the plugin and opens the native install dialog.
+
+---
+
+<a name="en-repositories"></a>
+## Repositories
+
+### Add a repository
+```
+tg://packit?repo=add&name=<n>&link=<url>&icon=<icon>
+```
+| Parameter | Required | Description |
+|-----------|:---:|-------------|
+| `name` | ✅ | Repository name |
+| `link` | ✅ | URL to the repository `repomap.json` |
+| `icon` | ❌ | Icon name (e.g. `msg_folders`) |
+
+Shows a confirmation dialog with repository info before adding. Max 10 repositories.
+
+### Update repository cache
+```
+tg://packit?update
+```
+Updates the cache of all added repositories and syncs their metadata.
+
+---
+
+<a name="en-utilities"></a>
+## Utilities
+
+### PackIt forum
+```
+tg://packit?forum
+```
+Opens the [PackItGround](https://t.me/packitGround) Telegram channel.
+
+### Known issues
+```
+tg://packit?problems
+```
+Opens the known issues thread in the forum.
+
+### Restart the app
+```
+tg://packit?pkill
+```
+Force-kills the app process (restart).
 
 ---
 
 Hope this helps you understand Deeplinks for Packit :)
+
