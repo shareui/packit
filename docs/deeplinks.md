@@ -86,6 +86,16 @@ tg://packit?update
 ```
 Обновляет кэш всех добавленных репозиториев и синхронизирует их метаданные.
 
+### Обновить кэш конкретного репозитория
+```
+tg://packit?update&repo=<rm_id>
+```
+| Параметр | Описание |
+|----------|----------|
+| `rm_id` | ID репозитория (должен быть добавлен в PackIt) |
+
+Обновляет кэш только одного указанного репозитория. Показывает уведомление об успехе или ошибке.
+
 ---
 
 <a name="ru-утилиты"></a>
@@ -192,6 +202,16 @@ tg://packit?update
 ```
 Updates the cache of all added repositories and syncs their metadata.
 
+### Update a specific repository cache
+```
+tg://packit?update&repo=<rm_id>
+```
+| Parameter | Description |
+|-----------|-------------|
+| `rm_id` | Repository ID (must be added to PackIt) |
+
+Updates the cache of only the specified repository. Shows a success or error notification.
+
 ---
 
 <a name="en-utilities"></a>
@@ -218,4 +238,5 @@ Force-kills the app process (restart).
 ---
 
 Hope this helps you understand Deeplinks for Packit :)
+
 
