@@ -7,7 +7,7 @@
     "rm_rid": "shareui_official"
   },
   "repomap": {
-    "plugins": "https://raw.githubusercontent.com/shareui/packit/main/configs/config.json",
+    "plugins": "https://raw.githubusercontent.com/shareui/packit/main/configs/plugins.json",
     "icons": "",
     "configs": ""
   }
