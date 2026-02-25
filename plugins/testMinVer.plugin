@@ -1,0 +1,5 @@
+__name__ = "Min Version Test"
+__author__ = "eblan"
+__version__ = "1.4.8.8"
+__min_version__ = "14.8.8"
+__id__ = "testzalupa"

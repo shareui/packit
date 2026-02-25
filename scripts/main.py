@@ -1,1435 +1,707 @@
+#!/usr/bin/env python3
+
 import os
+import sys
+
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+if _SCRIPT_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPT_DIR)
+
 import json
-import hashlib
-import re
+from typing import Optional
+
 import yaml
-import time
-from datetime import datetime
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
-def normalizePath(inputPath: str) -> str:
-    return str(Path(inputPath).resolve())
+import configManager
+import logWriter
+import pluginReader
+import scriptCfg
+import translator
+from versionUtils import compareVersions
 
-def isCyrillic(text: str) -> bool:
-    letters = [c for c in text if c.isalpha()]
-    if not letters:
-        return False
-    cyrillicCount = sum(1 for c in letters if '\u0400' <= c <= '\u04FF')
-    return cyrillicCount / len(letters) > 0.8
+PLUGIN_EXTENSIONS = {".plugin", ".elyx", ".eaf"}
+IGNORED_FILES = {".DS_Store", "Thumbs.db", "desktop.ini"}
 
-def translateText(text: str) -> Optional[str]:
+LOG_FILENAME = "latest.log"
+FORPOST_FILENAME = "forpost.txt"
+
+# colors
+C_RESET = "\033[0m"
+C_BOLD = "\033[1m"
+C_RED = "\033[31m"
+C_GREEN = "\033[32m"
+C_YELLOW = "\033[33m"
+C_BLUE = "\033[34m"
+C_MAGENTA = "\033[35m"
+C_CYAN = "\033[36m"
+C_GRAY = "\033[90m"
+
+
+def _print(msg: str = "") -> None:
+    print(msg)
+
+
+def _ask(prompt: str, default: str = "") -> str:
     try:
-        from googletrans import Translator
-        translator = Translator()
-        result = translator.translate(text, src="en", dest="ru")
-        return result.text
-    except ImportError:
-        print(f"{Colors.YELLOW}googletrans not installed, skipping translation{Colors.RESET}")
-        print(f"{Colors.DIM}install: pip install googletrans==4.0.0-rc1{Colors.RESET}")
-        return None
-    except Exception as e:
-        print(f"{Colors.RED}translation error: {e}{Colors.RESET}")
-        return None
-
-class Colors:
-    RESET = '\033[0m'
-    RED = '\033[91m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    BLUE = '\033[94m'
-    CYAN = '\033[96m'
-    BOLD = '\033[1m'
-    DIM = '\033[2m'
-
-def readPluginIdFromFile(filePath: str) -> Optional[str]:
-    try:
-        with open(filePath, 'r', encoding='utf-8') as f:
-            content = f.read(1000)
-            match = re.search(r'__id__\s*=\s*["\']([^"\']+)["\']', content)
-            if match:
-                return match.group(1)
-    except Exception:
-        pass
-    return None
-
-def findPluginByFilename(repoConfig: Dict, filename: str) -> Optional[Tuple[int, str]]:
-    for i, plugin in enumerate(repoConfig["plugins"]):
-        link = plugin.get("link", "")
-        if link:
-            linkFilename = link.split("/")[-1]
-            if linkFilename == filename:
-                return (i, plugin["id"])
-    return None
-
-def calculateSha256(filePath: str) -> str:
-    sha256Hash = hashlib.sha256()
-    with open(filePath, "rb") as f:
-        for byteBlock in iter(lambda: f.read(4096), b""):
-            sha256Hash.update(byteBlock)
-    return sha256Hash.hexdigest()
-
-def parseVersion(versionString: str, stateKeywords: str) -> Tuple[str, str]:
-    versionString = versionString.strip()
-
-    keywordsList = [kw.strip() for kw in stateKeywords.split(',')]
-
-    stateMap = {
-        'alpha': 'alpha',
-        'beta': 'beta',
-        'dev': 'dev',
-        'rc': 'rc',
-        'release': 'release',
-        'rel': 'release',
-        'stable': 'release'
-    }
-
-    foundState = 'release'
-    cleanVersion = versionString
-
-    lowerVersion = versionString.lower()
-    for keyword in keywordsList:
-        keyword = keyword.lower()
-        if keyword in lowerVersion:
-            foundState = stateMap.get(keyword, keyword)
-            cleanVersion = re.sub(rf'\b{re.escape(keyword)}\b', '', versionString, flags=re.IGNORECASE)
-            break
-
-    cleanVersion = re.sub(r'[^\d.]', '', cleanVersion).strip('.')
-
-    if not cleanVersion:
-        cleanVersion = '0.0.0'
-
-    return cleanVersion, foundState
-
-def compareVersions(version1: str, version2: str) -> int:
-    v1Parts = [int(x) for x in version1.split('.')]
-    v2Parts = [int(x) for x in version2.split('.')]
-
-    maxLen = max(len(v1Parts), len(v2Parts))
-    v1Parts.extend([0] * (maxLen - len(v1Parts)))
-    v2Parts.extend([0] * (maxLen - len(v2Parts)))
-
-    for i in range(maxLen):
-        if v1Parts[i] > v2Parts[i]:
-            return 1
-        elif v1Parts[i] < v2Parts[i]:
-            return -1
-
-    return 0
-
-def resolveConflicts(oldPlugin: Dict, newPlugin: Dict, filename: str) -> Dict:
-    excludeKeys = {"version", "state", "hash"}
-    resolvedPlugin = newPlugin.copy()
-
-    conflicts = []
-    for key in newPlugin.keys():
-        if key in excludeKeys:
-            continue
-
-        if key in oldPlugin:
-            oldValue = oldPlugin[key]
-            newValue = newPlugin[key]
-
-            if oldValue != newValue:
-                conflicts.append((key, oldValue, newValue))
-
-    if not conflicts:
-        return resolvedPlugin
-
-    print(f"\n{Colors.RED}{Colors.BOLD}conflicts found in {filename}:{Colors.RESET}")
-    print()
-
-    for key, oldValue, newValue in conflicts:
-        print(f"{Colors.YELLOW}conflict in field: {Colors.BOLD}{key}{Colors.RESET}")
-        print(f"  {Colors.DIM}old:{Colors.RESET} {oldValue}")
-        print(f"  {Colors.DIM}new:{Colors.RESET} {newValue}")
-        print(f"{Colors.GREEN}1{Colors.RESET}. apply old")
-        print(f"{Colors.GREEN}2{Colors.RESET}. apply new")
-        print(f"{Colors.GREEN}3{Colors.RESET}. enter a value")
-
-        while True:
-            choice = input(f"{Colors.CYAN}choose option: {Colors.RESET}").strip()
-            if choice == "1":
-                resolvedPlugin[key] = oldValue
-                print(f"{Colors.GREEN}keeping old value for {key}{Colors.RESET}")
-                break
-            elif choice == "2":
-                resolvedPlugin[key] = newValue
-                print(f"{Colors.GREEN}applying new value for {key}{Colors.RESET}")
-                break
-            elif choice == "3":
-                customValue = input(f"enter custom value for {key}: ").strip()
-                resolvedPlugin[key] = customValue
-                print(f"{Colors.GREEN}applied custom value for {key}{Colors.RESET}")
-                break
-            else:
-                print(f"{Colors.RED}invalid option, choose 1, 2 or 3{Colors.RESET}")
-
-        print()
-
-    return resolvedPlugin
-
-def createBackup(configPath: str, backupDir: str, enabled: bool):
-    if not enabled:
-        return
-
-    if not os.path.exists(configPath):
-        return
-
-    os.makedirs(backupDir, exist_ok=True)
-
-    now = datetime.now()
-    timestamp = now.strftime("%H-%M-%S")
-    datestamp = now.strftime("%d-%m-%Y")
-    backupFilename = f"backup-{timestamp}-{datestamp}.json"
-    backupPath = os.path.join(backupDir, backupFilename)
-
-    with open(configPath, 'r', encoding='utf-8') as src:
-        with open(backupPath, 'w', encoding='utf-8') as dst:
-            dst.write(src.read())
-
-    print(f"{Colors.BLUE}backup created: {backupFilename}{Colors.RESET}")
-
-def loadConfig(configFile: str = "cfg.yml") -> Dict:
-    if os.path.exists(configFile):
-        with open(configFile, 'r', encoding='utf-8') as f:
-            config = yaml.safe_load(f)
-
-        requiredKeys = {
-            "addAbout": ("add about? (y/n): ", bool),
-            "addDescription": ("add description? (y/n): ", bool),
-            "addHash": ("add hash? (y/n): ", bool),
-            "writeLastLog": ("write last log? (y/n): ", bool),
-            "createForPost": ("create for post? (y/n): ", bool),
-            "createBackups": ("create backups? (y/n): ", bool),
-            "allowDowngrade": ("allow version downgrade? (y/n): ", bool),
-            "manualInputDescriptions": ("manually input descriptions? (y/n): ", bool),
-            "manualInputAbout": ("manually input about (EN/RU)? (y/n): ", bool),
-            "appendToLogs": ("append to logs instead of overwriting? (y/n): ", bool),
-            "configPath": ("path to repository config? (default: config.json): ", str),
-            "workingDir": ("path to dir working plugins? (default: workingdir): ", str),
-            "backupDir": ("path to backup directory? (default: backups): ", str),
-            "stateKeywords": ("state keywords (comma separated, default: alpha,beta,dev,rc,release,rel,stable): ", str),
-            "rawDirUrl": ("raw directory url? (default: https://raw.githubusercontent.com/user/repo/refs/heads/main/plugins): ", str)
-        }
-
-        configUpdated = False
-
-        for key, (prompt, valueType) in requiredKeys.items():
-            if key not in config:
-                print(f"missing config key: {key}")
-
-                if valueType == bool:
-                    config[key] = input(prompt).lower() == 'y'
-                else:
-                    if key == "configPath":
-                        while True:
-                            value = input(prompt).strip()
-                            if not value:
-                                value = "config.json"
-
-                            normalizedPath = normalizePath(value)
-
-                            if os.path.exists(normalizedPath):
-                                config[key] = normalizedPath
-                                break
-                            else:
-                                print(f"file '{normalizedPath}' not found")
-                                create = input("create it? (y/n): ").lower()
-                                if create == 'y':
-                                    try:
-                                        dirPath = os.path.dirname(normalizedPath)
-                                        if dirPath:
-                                            os.makedirs(dirPath, exist_ok=True)
-                                        with open(normalizedPath, 'w', encoding='utf-8') as f:
-                                            json.dump({"plugins": []}, f, indent=2, ensure_ascii=False)
-                                        print(f"created {normalizedPath}")
-                                        config[key] = normalizedPath
-                                        break
-                                    except Exception as e:
-                                        print(f"failed to create file: {e}")
-                                else:
-                                    print("enter valid path")
-                    elif key in ["workingDir", "backupDir"]:
-                        defaultValue = "workingdir" if key == "workingDir" else "backups"
-                        while True:
-                            value = input(prompt).strip()
-                            if not value:
-                                value = defaultValue
-
-                            normalizedPath = normalizePath(value)
-
-                            if os.path.exists(normalizedPath) and os.path.isdir(normalizedPath):
-                                config[key] = normalizedPath
-                                break
-                            else:
-                                print(f"directory '{normalizedPath}' not found")
-                                create = input("create it? (y/n): ").lower()
-                                if create == 'y':
-                                    try:
-                                        os.makedirs(normalizedPath, exist_ok=True)
-                                        print(f"created {normalizedPath}/")
-                                        config[key] = normalizedPath
-                                        break
-                                    except Exception as e:
-                                        print(f"failed to create directory: {e}")
-                                else:
-                                    print("enter valid path")
-                    else:
-                        value = input(prompt).strip()
-                        if not value:
-                            if "state keywords" in prompt:
-                                value = "alpha,beta,dev,rc,release,rel,stable"
-                            elif "raw directory url" in prompt:
-                                value = "https://raw.githubusercontent.com/user/repo/refs/heads/main/plugins"
-                        config[key] = value
-
-                configUpdated = True
-
-        if configUpdated:
-            with open(configFile, 'w', encoding='utf-8') as f:
-                yaml.dump(config, f, allow_unicode=True, default_flow_style=False)
-            print(f"configuration updated in {configFile}")
-            print()
-
-        return config
-
-    return None
-
-def createConfig(configFile: str = "cfg.yml") -> Dict:
-    print("first run configuration")
-    print()
-
-    addAbout = input("add about? (y/n): ").lower() == 'y'
-    addDescription = input("add description? (y/n): ").lower() == 'y'
-    addHash = input("add hash? (y/n): ").lower() == 'y'
-    writeLastLog = input("write last log? (y/n): ").lower() == 'y'
-    createForPost = input("create for post? (y/n): ").lower() == 'y'
-    createBackups = input("create backups? (y/n): ").lower() == 'y'
-    allowDowngrade = input("allow version downgrade? (y/n): ").lower() == 'y'
-    manualInputDescriptions = input("manually input descriptions? (y/n): ").lower() == 'y'
-    manualInputAbout = input("manually input about (EN/RU)? (y/n): ").lower() == 'y'
-    appendToLogs = input("append to logs instead of overwriting? (y/n): ").lower() == 'y'
-
-    defaultConfigPath = "config.json"
-    while True:
-        configPath = input(f"path to repository config? (default: {defaultConfigPath}): ").strip()
-        if not configPath:
-            configPath = defaultConfigPath
-
-        normalizedPath = normalizePath(configPath)
-
-        if os.path.exists(normalizedPath):
-            configPath = normalizedPath
-            break
-        else:
-            print(f"file '{normalizedPath}' not found")
-            create = input("create it? (y/n): ").lower()
-            if create == 'y':
-                try:
-                    dirPath = os.path.dirname(normalizedPath)
-                    if dirPath:
-                        os.makedirs(dirPath, exist_ok=True)
-                    with open(normalizedPath, 'w', encoding='utf-8') as f:
-                        json.dump({"plugins": []}, f, indent=2, ensure_ascii=False)
-                    print(f"created {normalizedPath}")
-                    configPath = normalizedPath
-                    break
-                except Exception as e:
-                    print(f"failed to create file: {e}")
-            else:
-                print("enter valid path")
-
-    defaultWorkingDir = "workingdir"
-    while True:
-        workingDir = input(f"path to dir working plugins? (default: {defaultWorkingDir}): ").strip()
-        if not workingDir:
-            workingDir = defaultWorkingDir
-
-        normalizedPath = normalizePath(workingDir)
-
-        if os.path.exists(normalizedPath) and os.path.isdir(normalizedPath):
-            workingDir = normalizedPath
-            break
-        else:
-            print(f"directory '{normalizedPath}' not found")
-            create = input("create it? (y/n): ").lower()
-            if create == 'y':
-                try:
-                    os.makedirs(normalizedPath, exist_ok=True)
-                    print(f"created {normalizedPath}/")
-                    workingDir = normalizedPath
-                    break
-                except Exception as e:
-                    print(f"failed to create directory: {e}")
-            else:
-                print("enter valid path")
-
-    defaultBackupDir = "backups"
-    while True:
-        backupDir = input(f"path to backup directory? (default: {defaultBackupDir}): ").strip()
-        if not backupDir:
-            backupDir = defaultBackupDir
-
-        normalizedPath = normalizePath(backupDir)
-
-        if os.path.exists(normalizedPath) and os.path.isdir(normalizedPath):
-            backupDir = normalizedPath
-            break
-        else:
-            print(f"directory '{normalizedPath}' not found")
-            create = input("create it? (y/n): ").lower()
-            if create == 'y':
-                try:
-                    os.makedirs(normalizedPath, exist_ok=True)
-                    print(f"created {normalizedPath}/")
-                    backupDir = normalizedPath
-                    break
-                except Exception as e:
-                    print(f"failed to create directory: {e}")
-            else:
-                print("enter valid path")
-
-    defaultStateKeywords = "alpha,beta,dev,rc,release,rel,stable"
-    stateKeywords = input(f"state keywords (comma separated, default: {defaultStateKeywords}): ").strip()
-    if not stateKeywords:
-        stateKeywords = defaultStateKeywords
-
-    defaultRawDirUrl = "https://raw.githubusercontent.com/user/repo/refs/heads/main/plugins"
-    rawDirUrl = input(f"raw directory url? (default: {defaultRawDirUrl}): ").strip()
-    if not rawDirUrl:
-        rawDirUrl = defaultRawDirUrl
-
-    config = {
-        "addAbout": addAbout,
-        "addDescription": addDescription,
-        "addHash": addHash,
-        "writeLastLog": writeLastLog,
-        "createForPost": createForPost,
-        "createBackups": createBackups,
-        "allowDowngrade": allowDowngrade,
-        "manualInputDescriptions": manualInputDescriptions,
-        "manualInputAbout": manualInputAbout,
-        "appendToLogs": appendToLogs,
-        "configPath": configPath,
-        "workingDir": workingDir,
-        "backupDir": backupDir,
-        "stateKeywords": stateKeywords,
-        "rawDirUrl": rawDirUrl
-    }
-
-    with open(configFile, 'w', encoding='utf-8') as f:
-        yaml.dump(config, f, allow_unicode=True, default_flow_style=False)
-
-    print()
-    print(f"configuration saved to {configFile}")
-    print()
-
-    return config
-
-def extractMetadata(filePath: str, filename: str) -> Dict[str, any]:
-    metadata = {
-        "id": "Unknown",
-        "name": "Unknown",
-        "author": "Unknown",
-        "description": "Unknown",
-        "version": "Unknown",
-        "icon": "Unknown",
-        "dependencies": []
-    }
-
-    missingFields = []
-
-    try:
-        with open(filePath, 'r', encoding='utf-8') as f:
-            content = f.read()
-
-        patterns = {
-            "id": r'__id__\s*=\s*["\']([^"\']*)["\']',
-            "name": r'__name__\s*=\s*["\']([^"\']*)["\']',
-            "description": r'__description__\s*=\s*["\']([^"\']+?)["\']',
-            "author": r'__author__\s*=\s*["\']([^"\']*)["\']',
-            "version": r'__version__\s*=\s*["\']([^"\']*)["\']',
-            "icon": r'__icon__\s*=\s*["\']([^"\']*)["\']',
-        }
-
-        for key, pattern in patterns.items():
-            match = re.search(pattern, content, re.DOTALL)
-            if match:
-                value = match.group(1)
-                if not value or not value.strip():
-                    missingFields.append(key)
-                    continue
-                if value and '\n' in value and key != "description":
-                    value = ' '.join(line.strip() for line in value.split('\n') if line.strip())
-                metadata[key] = value
-            else:
-                missingFields.append(key)
-
-        depMatch = re.search(r'__dependencies__\s*=\s*\[([^\]]*)\]', content)
-        if depMatch:
-            depsStr = depMatch.group(1)
-            deps = re.findall(r'["\']([^"\']+)["\']', depsStr)
-            metadata["dependencies"] = deps
-
-        if missingFields:
-            missingStr = ', '.join(missingFields)
-            print(f"{Colors.YELLOW}{filename}{Colors.RESET} missing {Colors.RED}{missingStr}{Colors.RESET} {Colors.DIM}(set to Unknown){Colors.RESET}")
-
-    except Exception as e:
-        print(f"{Colors.RED}{filename} failed {e}{Colors.RESET}")
+        value = input(prompt).strip()
+        return value if value else default
+    except (EOFError, KeyboardInterrupt):
         raise
 
-    return metadata
 
-def createPluginEntry(filePath: str, filename: str, config: Dict) -> Dict[str, any]:
-    metadata = extractMetadata(filePath, filename)
+def _confirm(prompt: str, default: bool = False) -> bool:
+    suffix = " [Y/n]: " if default else " [y/N]: "
+    raw = _ask(prompt + suffix).lower()
+    if not raw:
+        return default
+    return raw.startswith("y")
 
-    stateKeywords = config.get("stateKeywords", "alpha,beta,dev,rc,release,rel,stable")
-    versionNumber, versionState = parseVersion(metadata["version"], stateKeywords)
 
-    rawDirUrl = config.get("rawDirUrl", "https://raw.githubusercontent.com/user/repo/refs/heads/main/plugins")
+def _requireCfg(cfg: dict) -> bool:
+    for key in ["config_path", "working_dir"]:
+        if not cfg.get(key):
+            _print(f"{C_RED}[error]{C_RESET} cfg '{key}' is not set. Run Settings first.")
+            return False
+    return True
 
-    pluginEntry = {
-        "id": metadata["id"],
-        "name": metadata["name"],
-        "author": metadata["author"],
-        "version": versionNumber,
-        "state": versionState,
-        "icon": metadata["icon"],
-        "suspicious": "false",
-        "dependencies": metadata["dependencies"],
-        "link": f"{rawDirUrl}/{filename}"
-    }
 
-    if config.get("manualInputAbout", False):
-        print(f"\n{Colors.CYAN}Enter about for plugin {filename}:{Colors.RESET}")
-        aboutEn = input("Enter description on English: ").strip()
-        while not aboutEn:
-            print(f"{Colors.RED}English description is required{Colors.RESET}")
-            aboutEn = input("Enter description on English: ").strip()
+def _scanWorkingDir(workingDir: str) -> list:
+    results = []
+    if not os.path.isdir(workingDir):
+        return results
+    for fname in os.listdir(workingDir):
+        if fname.startswith(".") or fname in IGNORED_FILES:
+            continue
+        _, ext = os.path.splitext(fname)
+        fullPath = os.path.join(workingDir, fname)
+        if os.path.isfile(fullPath) and ext.lower() in PLUGIN_EXTENSIONS:
+            results.append(fullPath)
+        elif os.path.isdir(fullPath) and _isUnpackedElyx(fullPath):
+            results.append(fullPath)
+    return results
 
-        aboutRu = input("Enter description on Russian (or type 'skip'): ").strip()
 
-        if aboutRu.lower() == 'skip':
-            pluginEntry["about"] = [aboutEn]
+def _isUnpackedElyx(dirPath: str) -> bool:
+    for name in ["refmap.yml", "refmap.yaml", "refmap.json", "refmap.py"]:
+        if os.path.isfile(os.path.join(dirPath, name)):
+            return True
+    return False
+
+
+def _readAllMeta(paths: list, stateKeywords: list) -> tuple:
+    successes = []
+    failures = []
+    for path in paths:
+        if os.path.isdir(path):
+            result = pluginReader.readPluginFromDir(path, stateKeywords)
         else:
-            pluginEntry["about"] = [aboutEn, aboutRu]
-    elif config.get("addAbout", True):
-        # auto-translate description to russian if available
-        description = metadata.get("description", "")
-        
-        if description and description != "Unknown":
-            # check if description is already in cyrillic (russian)
-            if isCyrillic(description):
-                # description is russian, use as-is for both
-                pluginEntry["about"] = [description, description]
-            else:
-                # description is english, translate to russian
-                translatedDesc = translateText(description)
-                
-                if translatedDesc and translatedDesc != description:
-                    # about[0] = english, about[1] = russian
-                    pluginEntry["about"] = [description, translatedDesc]
-                    time.sleep(0.5)  # delay to avoid rate limiting
-                else:
-                    # translation failed or unavailable
-                    pluginEntry["about"] = [description]
+            result = pluginReader.readPlugin(path, stateKeywords)
+        if result.error:
+            failures.append((path, result.error))
         else:
-            # no description, fallback to plugin name
-            pluginEntry["about"] = metadata["name"]
+            successes.append(result)
+    return successes, failures
 
-    if config.get("manualInputDescriptions", False):
-        print(f"\n{Colors.CYAN}current description for {filename}:{Colors.RESET}")
-        print(f"{Colors.DIM}{metadata['description']}{Colors.RESET}")
-        print()
-        override = input("override description? (y/n): ").strip().lower()
-        if override == 'y':
-            customDesc = input("enter new description: ").strip()
-            if customDesc:
-                pluginEntry["description"] = customDesc
-            else:
-                pluginEntry["description"] = metadata["description"]
-        else:
-            pluginEntry["description"] = metadata["description"]
-    elif config.get("addDescription", True):
-        pluginEntry["description"] = metadata["description"]
 
-    if config.get("addHash", True):
-        pluginEntry["hash"] = calculateSha256(filePath)
+def _buildEntry(meta, cfg: dict, about) -> dict:
+    fileName = os.path.basename(meta.filePath)
+    entry = configManager.buildEntry(meta, cfg["raw_dir_url"], fileName, cfg)
+    if cfg.get("add_about") and about is not None:
+        entry["about"] = about
+        entry = configManager._sortFields(entry)
+    return entry
 
-    return pluginEntry
 
-def buildHashMap(plugins: List[Dict]) -> Dict[str, int]:
-    hashMap = {}
-    for i, plugin in enumerate(plugins):
-        if "hash" in plugin:
-            hashMap[plugin["hash"]] = i
-    return hashMap
+def _buildAbout(meta, cfg: dict):
+    if not cfg.get("add_about"):
+        return None
+    if meta.description:
+        return translator.buildAbout(meta.description)
+    return None
 
-def buildIdMap(plugins: List[Dict]) -> Dict[str, int]:
-    idMap = {}
-    for i, plugin in enumerate(plugins):
-        if "id" in plugin:
-            idMap[plugin["id"]] = i
-    return idMap
 
-def normalizeLoadedConfig(repoConfig: Dict):
-    for plugin in repoConfig.get("plugins", []):
-        if "description" in plugin and isinstance(plugin["description"], str):
-            desc = plugin["description"]
-            if '\\n' in desc:
-                plugin["description"] = desc.replace('\\n', '\n')
-
-def writeLatestLog(newPlugins: List[Dict], updatedPlugins: List[Dict], deletedPlugins: List[Dict], totalCount: int, appendMode: bool = False):
-    latestLogPath = "latest.log"
+def opScanApply(cfg: dict) -> None:
+    configPath = cfg["config_path"]
+    workingDir = cfg["working_dir"]
 
     try:
-        mode = 'a' if appendMode else 'w'
-        with open(latestLogPath, mode, encoding='utf-8') as f:
-            if appendMode:
-                f.write("\n" + "="*50 + "\n")
-            
-            f.write(f"latest update: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
-            f.write(f"total plugins: {totalCount}\n")
-            f.write(f"added: {len(newPlugins)}\n")
-            f.write(f"updated: {len(updatedPlugins)}\n")
-            f.write(f"deleted: {len(deletedPlugins)}\n\n")
-
-            if newPlugins:
-                f.write("new plugins:\n")
-                for plugin in newPlugins:
-                    f.write(f"  - {plugin['name']} (id: {plugin['id']}, version: {plugin['version']})\n")
-                f.write("\n")
-
-            if updatedPlugins:
-                f.write("updated plugins:\n")
-                for plugin in updatedPlugins:
-                    f.write(f"  - {plugin['name']} (id: {plugin['id']}, version: {plugin['version']})\n")
-                f.write("\n")
-
-            if deletedPlugins:
-                f.write("deleted plugins:\n")
-                for plugin in deletedPlugins:
-                    f.write(f"  - {plugin['name']} (id: {plugin['id']}, version: {plugin['version']})\n")
-
-        action = "appended to" if appendMode else "written"
-        print(f"{Colors.BLUE}log {action}: {latestLogPath}{Colors.RESET}")
-    except Exception as e:
-        print(f"{Colors.RED}log write failed {e}{Colors.RESET}")
-
-def writeForPost(newPlugins: List[Dict], updatedPlugins: List[Dict], deletedPlugins: List[Dict], totalCount: int, appendMode: bool = False):
-    forPostPath = "forpost.txt"
-
-    try:
-        mode = 'a' if appendMode else 'w'
-        with open(forPostPath, mode, encoding='utf-8') as f:
-            if appendMode:
-                f.write("\n" + "="*50 + "\n")
-            
-            if newPlugins:
-                f.write(f"Added {len(newPlugins)} plugins\n\n")
-                for plugin in newPlugins:
-                    f.write(f"{plugin['name']} by {plugin['author']}\n")
-                f.write("\n")
-
-            if updatedPlugins:
-                f.write(f"Updated {len(updatedPlugins)} plugins\n\n")
-                for plugin in updatedPlugins:
-                    f.write(f"{plugin['name']} by {plugin['author']}\n")
-                f.write("\n")
-
-            if deletedPlugins:
-                f.write(f"Removed {len(deletedPlugins)} plugins\n\n")
-                for plugin in deletedPlugins:
-                    f.write(f"{plugin['name']} by {plugin['author']}\n")
-                f.write("\n")
-
-            f.write(f"Total plugins: {totalCount}")
-
-        action = "appended to" if appendMode else "written"
-        print(f"{Colors.BLUE}post file {action}: {forPostPath}{Colors.RESET}")
-    except Exception as e:
-        print(f"{Colors.RED}post file write failed {e}{Colors.RESET}")
-
-def updateConfigJson(config: Dict):
-    configPath = config["configPath"]
-    workingDir = config["workingDir"]
-    backupDir = config["backupDir"]
-    createBackupsEnabled = config.get("createBackups", True)
-
-    if not os.path.exists(configPath):
-        print(f"config file '{configPath}' not found")
+        data = configManager.loadConfig(configPath)
+    except (ValueError, FileNotFoundError) as e:
+        _print(f"{C_RED}[error]{C_RESET} cannot load config: {e}")
         return
 
-    with open(configPath, 'r', encoding='utf-8') as f:
-        repoConfig = json.load(f)
-    normalizeLoadedConfig(repoConfig)
-
-    normalizeLoadedConfig(repoConfig)
-
-    if not os.path.exists(workingDir):
-        print(f"directory '{workingDir}/' not found")
+    paths = _scanWorkingDir(workingDir)
+    if not paths:
+        _print(f"{C_GRAY}[info]{C_RESET} no plugin files found in working directory")
         return
 
-    hashMap = buildHashMap(repoConfig.get("plugins", []))
-    idMap = buildIdMap(repoConfig.get("plugins", []))
+    _print(f"{C_CYAN}[scan]{C_RESET} found {C_BOLD}{len(paths)}{C_RESET} file(s)")
+    successes, failures = _readAllMeta(paths, cfg.get("state_keywords", []))
 
-    newPlugins = []
-    updatedPlugins = []
-    filesProcessed = 0
+    if failures:
+        _print(f"\n{C_YELLOW}[warn]{C_RESET} {len(failures)} file(s) had errors:")
+        for path, err in failures:
+            _print(f"  {C_GRAY}{os.path.basename(path)}{C_RESET}: {err}")
 
-    for filename in os.listdir(workingDir):
-        filePath = os.path.join(workingDir, filename)
+    if not successes:
+        _print(f"{C_GRAY}[info]{C_RESET} nothing to process")
+        return
 
-        if not os.path.isfile(filePath):
+    plugins = data["plugins"]
+    added = []
+    updated = []
+    skipped = 0
+
+    for result in successes:
+        meta = result.meta
+        idx, existing = configManager.findPlugin(plugins, meta.id)
+
+        if existing is None:
+            about = _buildAbout(meta, cfg)
+            entry = _buildEntry(meta, cfg, about)
+            plugins.append(entry)
+            added.append({"name": meta.name, "id": meta.id, "version": meta.version,
+                          "state": meta.state, "author": meta.author})
+            _print(f"  {C_GREEN}[+]{C_RESET} {meta.name} {C_GRAY}({meta.id}){C_RESET} v{C_CYAN}{meta.version}{C_RESET}")
             continue
 
-        try:
-            fileHash = calculateSha256(filePath)
+        if cfg.get("add_hash") and existing.get("hash") == meta.fileHash:
+            skipped += 1
+            continue
 
-            if fileHash in hashMap:
-                print(f"{Colors.DIM}{filename} skipped (hash already exists){Colors.RESET}")
+        cmp = compareVersions(meta.version, existing.get("version", "0"))
+        prevVersion = existing.get("version", "?")
+
+        if cmp < 0:
+            if not cfg.get("allow_downgrade"):
+                _print(f"  {C_YELLOW}[warn]{C_RESET} downgrade detected: {meta.name} {C_GRAY}{prevVersion} -> {meta.version}{C_RESET}")
+                if not _confirm("    Proceed with downgrade?", default=False):
+                    skipped += 1
+                    continue
+            else:
+                _print(f"  {C_YELLOW}[warn]{C_RESET} downgrade: {meta.name} {C_GRAY}{prevVersion} -> {meta.version}{C_RESET}")
+        elif cmp == 0:
+            if not _confirm(f"  {meta.name}: same version ({meta.version}), different hash. Update?", default=True):
+                skipped += 1
                 continue
 
-            pluginEntry = createPluginEntry(filePath, filename, config)
-            pluginId = pluginEntry["id"]
+        about = _buildAbout(meta, cfg)
+        entry = _buildEntry(meta, cfg, about)
+        plugins[idx] = entry
+        updated.append({"name": meta.name, "id": meta.id, "version": meta.version,
+                        "state": meta.state, "author": meta.author, "prevVersion": prevVersion})
+        _print(f"  {C_BLUE}[->]{C_RESET} {meta.name} {C_GRAY}({meta.id}){C_RESET} v{C_GRAY}{prevVersion}{C_RESET} -> v{C_CYAN}{meta.version}{C_RESET}")
 
-            if pluginId in idMap:
-                pluginIndex = idMap[pluginId]
-                oldPlugin = repoConfig["plugins"][pluginIndex]
-                oldVersion = oldPlugin.get("version", "0.0.0")
-                newVersion = pluginEntry["version"]
-                oldHash = oldPlugin.get("hash", "no hash")
-
-                versionComparison = compareVersions(newVersion, oldVersion)
-
-                if versionComparison < 0:
-                    allowDowngrade = config.get("allowDowngrade", False)
-
-                    if not allowDowngrade:
-                        print(f"{Colors.RED}{Colors.BOLD}{filename} WARNING: downgrade detected!{Colors.RESET}")
-                        print(f"  {Colors.YELLOW}current: {oldVersion}, new: {newVersion}{Colors.RESET}")
-                        confirm = input(f"  {Colors.CYAN}continue anyway? (y/n): {Colors.RESET}").lower()
-                        if confirm != 'y':
-                            print(f"{Colors.DIM}{filename} skipped{Colors.RESET}")
-                            continue
-                    else:
-                        print(f"{Colors.YELLOW}{filename} downgrade: {oldVersion} -> {newVersion}{Colors.RESET}")
-
-                resolvedPlugin = resolveConflicts(oldPlugin, pluginEntry, filename)
-
-                repoConfig["plugins"][pluginIndex] = resolvedPlugin
-                updatedPlugins.append(resolvedPlugin)
-                filesProcessed += 1
-                print(f"{Colors.GREEN}{filename} updated{Colors.RESET} (id: {Colors.CYAN}{pluginId}{Colors.RESET}, old hash: {oldHash[:8]}..., new hash: {fileHash[:8]}...)")
-            else:
-                newPlugins.append(pluginEntry)
-                filesProcessed += 1
-                print(f"{Colors.GREEN}{filename} added as new plugin{Colors.RESET} (id: {Colors.CYAN}{pluginId}{Colors.RESET})")
-
-        except Exception as e:
-            print(f"{Colors.RED}{filename} failed {e}{Colors.RESET}")
-
-    if newPlugins:
-        repoConfig["plugins"].extend(newPlugins)
-
-    if newPlugins or updatedPlugins:
-        createBackup(configPath, backupDir, createBackupsEnabled)
-
-        with open(configPath, 'w', encoding='utf-8') as f:
-            json.dump(repoConfig, f, indent=2, ensure_ascii=False)
-
-        print()
-        print(f"{Colors.BOLD}processed {filesProcessed} plugin(s){Colors.RESET}")
-        print(f"{Colors.GREEN}added: {len(newPlugins)}{Colors.RESET}, {Colors.BLUE}updated: {len(updatedPlugins)}{Colors.RESET}")
-
-        if config.get("writeLastLog", False):
-            appendMode = config.get("appendToLogs", False)
-            writeLatestLog(newPlugins, updatedPlugins, [], len(repoConfig["plugins"]), appendMode)
-
-        if config.get("createForPost", False):
-            appendMode = config.get("appendToLogs", False)
-            writeForPost(newPlugins, updatedPlugins, [], len(repoConfig["plugins"]), appendMode)
-    else:
-        print("no new or updated plugins")
-
-def changeFile(config: Dict):
-    configPath = config["configPath"]
-    workingDir = config["workingDir"]
-    backupDir = config["backupDir"]
-    createBackupsEnabled = config.get("createBackups", True)
-
-    if not os.path.exists(configPath):
-        print(f"config file '{configPath}' not found")
-        return
-
-    with open(configPath, 'r', encoding='utf-8') as f:
-        repoConfig = json.load(f)
-    normalizeLoadedConfig(repoConfig)
-
-    filename = input("enter file name: ").strip()
-    filePath = os.path.join(workingDir, filename)
-
-    if not os.path.exists(filePath):
-        print(f"{filename} not found in {workingDir}/")
-        return
-
-    pluginId = readPluginIdFromFile(filePath)
-    pluginIndex = None
-
-    if pluginId:
-        for i, plugin in enumerate(repoConfig["plugins"]):
-            if plugin["id"] == pluginId:
-                pluginIndex = i
-                break
-
-    if pluginIndex is None:
-        print(f"{Colors.YELLOW}cannot extract plugin id from file, searching by filename...{Colors.RESET}")
-        result = findPluginByFilename(repoConfig, filename)
-        if result:
-            pluginIndex, pluginId = result
-            print(f"{Colors.GREEN}found plugin by filename: {pluginId}{Colors.RESET}")
-
-    if pluginIndex is None:
-        print(f"{Colors.RED}plugin not found (neither by id nor by filename){Colors.RESET}")
+    if not added and not updated:
+        _print(f"{C_GRAY}[info]{C_RESET} nothing changed ({skipped} skipped)")
         return
 
     try:
-        createBackup(configPath, backupDir, createBackupsEnabled)
-
-        newPluginEntry = createPluginEntry(filePath, filename, config)
-        repoConfig["plugins"][pluginIndex] = newPluginEntry
-
-        with open(configPath, 'w', encoding='utf-8') as f:
-            json.dump(repoConfig, f, indent=2, ensure_ascii=False)
-
-        print(f"{Colors.GREEN}{pluginId} updated with {filename}{Colors.RESET}")
-
-    except Exception as e:
-        print(f"{Colors.RED}{filename} failed {e}{Colors.RESET}")
-
-def deleteFiles(config: Dict):
-    configPath = config["configPath"]
-    workingDir = config["workingDir"]
-    backupDir = config["backupDir"]
-    createBackupsEnabled = config.get("createBackups", True)
-
-    if not os.path.exists(configPath):
-        print(f"config file '{configPath}' not found")
+        configManager.saveConfig(configPath, data)
+    except OSError as e:
+        _print(f"{C_RED}[error]{C_RESET} failed to save config: {e}")
         return
 
-    with open(configPath, 'r', encoding='utf-8') as f:
-        repoConfig = json.load(f)
-    normalizeLoadedConfig(repoConfig)
+    total = len(plugins)
+    _print(f"\n{C_GREEN}[done]{C_RESET} added: {C_GREEN}{len(added)}{C_RESET}, updated: {C_BLUE}{len(updated)}{C_RESET}, skipped: {C_GRAY}{skipped}{C_RESET}, total: {C_BOLD}{total}{C_RESET}")
 
-    filename = input("enter filename: ").strip()
-    filePath = os.path.join(workingDir, filename)
+    if cfg.get("write_log"):
+        logPath = os.path.join(_SCRIPT_DIR, LOG_FILENAME)
+        logWriter.writeLog(logPath, added, updated, [], total, cfg.get("append_to_log", False))
+        _print(f"{C_MAGENTA}[log]{C_RESET} {logPath}")
 
-    if not os.path.exists(filePath):
-        print(f"{filename} not found in {workingDir}/")
+    if cfg.get("create_forpost"):
+        forpostPath = os.path.join(_SCRIPT_DIR, FORPOST_FILENAME)
+        logWriter.writeForPost(forpostPath, added, updated, [], total)
+        _print(f"{C_MAGENTA}[forpost]{C_RESET} {forpostPath}")
+
+
+def opDirStatus(cfg: dict) -> None:
+    configPath = cfg["config_path"]
+    workingDir = cfg["working_dir"]
+
+    try:
+        data = configManager.loadConfig(configPath)
+    except (ValueError, FileNotFoundError) as e:
+        _print(f"{C_RED}[error]{C_RESET} cannot load config: {e}")
         return
 
-    pluginId = readPluginIdFromFile(filePath)
-    pluginIndex = None
+    paths = _scanWorkingDir(workingDir)
+    _print(f"{C_CYAN}[scan]{C_RESET} found {C_BOLD}{len(paths)}{C_RESET} file(s) in working directory")
+    successes, failures = _readAllMeta(paths, cfg.get("state_keywords", []))
 
-    if pluginId:
-        for i, plugin in enumerate(repoConfig["plugins"]):
-            if plugin["id"] == pluginId:
-                pluginIndex = i
-                break
+    plugins = data["plugins"]
+    seenIds = set()
+    toAdd = []
+    toUpdate = []
+    toDowngrade = []
+    unchanged = []
 
-    if pluginIndex is None:
-        print(f"{Colors.YELLOW}cannot extract plugin id from file, searching by filename...{Colors.RESET}")
-        result = findPluginByFilename(repoConfig, filename)
-        if result:
-            pluginIndex, pluginId = result
-            print(f"{Colors.GREEN}found plugin by filename: {pluginId}{Colors.RESET}")
-
-    if pluginIndex is None:
-        print(f"{Colors.RED}plugin not found (neither by id nor by filename){Colors.RESET}")
-        return
-
-    createBackup(configPath, backupDir, createBackupsEnabled)
-
-    deletedPlugin = repoConfig["plugins"].pop(pluginIndex)
-
-    with open(configPath, 'w', encoding='utf-8') as f:
-        json.dump(repoConfig, f, indent=2, ensure_ascii=False)
-
-    print(f"{Colors.RED}{pluginId} deleted from config{Colors.RESET}")
-
-    if os.path.exists(filePath):
-        os.remove(filePath)
-        print(f"{filename} deleted from repository")
-
-    if config.get("writeLastLog", False):
-        appendMode = config.get("appendToLogs", False)
-        writeLatestLog([], [], [deletedPlugin], len(repoConfig["plugins"]), appendMode)
-
-    if config.get("createForPost", False):
-        appendMode = config.get("appendToLogs", False)
-        writeForPost([], [], [deletedPlugin], len(repoConfig["plugins"]), appendMode)
-
-def clearMissingPlugins(config: Dict):
-    configPath = config["configPath"]
-    workingDir = config["workingDir"]
-    backupDir = config["backupDir"]
-    createBackupsEnabled = config.get("createBackups", True)
-
-    if not os.path.exists(configPath):
-        print(f"config file '{configPath}' not found")
-        return
-
-    if not os.path.exists(workingDir):
-        print(f"directory '{workingDir}/' not found")
-        return
-
-    with open(configPath, 'r', encoding='utf-8') as f:
-        repoConfig = json.load(f)
-    normalizeLoadedConfig(repoConfig)
-
-    existingFiles = set()
-    for filename in os.listdir(workingDir):
-        filePath = os.path.join(workingDir, filename)
-        if os.path.isfile(filePath):
-            existingFiles.add(filename)
-
-    pluginsToKeep = []
-    deletedPlugins = []
-    removedCount = 0
-
-    for plugin in repoConfig["plugins"]:
-        link = plugin.get("link", "")
-        filename = link.split("/")[-1] if link else ""
-
-        if filename in existingFiles:
-            pluginsToKeep.append(plugin)
-        else:
-            print(f"removed {plugin['id']} (file not found: {filename})")
-            deletedPlugins.append(plugin)
-            removedCount += 1
-
-    if removedCount > 0:
-        createBackup(configPath, backupDir, createBackupsEnabled)
-
-        repoConfig["plugins"] = pluginsToKeep
-
-        with open(configPath, 'w', encoding='utf-8') as f:
-            json.dump(repoConfig, f, indent=2, ensure_ascii=False)
-
-        print()
-        print(f"removed {removedCount} missing plugin(s)")
-        print(f"remaining plugins: {len(pluginsToKeep)}")
-
-        if config.get("writeLastLog", False):
-            appendMode = config.get("appendToLogs", False)
-            writeLatestLog([], [], deletedPlugins, len(pluginsToKeep), appendMode)
-
-        if config.get("createForPost", False):
-            appendMode = config.get("appendToLogs", False)
-            writeForPost([], [], deletedPlugins, len(pluginsToKeep), appendMode)
-    else:
-        print("all plugins have corresponding files")
-
-def dirStatus(config: Dict):
-    configPath = config["configPath"]
-    workingDir = config["workingDir"]
-
-    if not os.path.exists(configPath):
-        print(f"config file '{configPath}' not found")
-        return
-
-    if not os.path.exists(workingDir):
-        print(f"directory '{workingDir}/' not found")
-        return
-
-    with open(configPath, 'r', encoding='utf-8') as f:
-        repoConfig = json.load(f)
-    normalizeLoadedConfig(repoConfig)
-
-    hashMap = buildHashMap(repoConfig.get("plugins", []))
-    idMap = buildIdMap(repoConfig.get("plugins", []))
-
-    existingFiles = set()
-    for plugin in repoConfig["plugins"]:
-        link = plugin.get("link", "")
-        filename = link.split("/")[-1] if link else ""
-        if filename:
-            existingFiles.add(filename)
-
-    willBeAdded = 0
-    willBeUpdated = 0
-    willBeRemoved = 0
-
-    filesInDir = set()
-    for filename in os.listdir(workingDir):
-        filePath = os.path.join(workingDir, filename)
-
-        if not os.path.isfile(filePath):
+    for result in successes:
+        meta = result.meta
+        seenIds.add(meta.id)
+        idx, existing = configManager.findPlugin(plugins, meta.id)
+        if existing is None:
+            toAdd.append(meta)
             continue
+        if cfg.get("add_hash") and existing.get("hash") == meta.fileHash:
+            unchanged.append(meta)
+            continue
+        cmp = compareVersions(meta.version, existing.get("version", "0"))
+        if cmp > 0:
+            toUpdate.append((meta, existing.get("version", "?")))
+        elif cmp < 0:
+            toDowngrade.append((meta, existing.get("version", "?")))
+        else:
+            unchanged.append(meta)
 
-        filesInDir.add(filename)
+    missingIds = [p["id"] for p in plugins if p["id"] not in seenIds]
 
-        try:
-            fileHash = calculateSha256(filePath)
+    _print(f"\n{C_BOLD}=== Directory Status ==={C_RESET}")
+    if toAdd:
+        _print(f"\n{C_GREEN}New plugins ({len(toAdd)}):{C_RESET}")
+        for m in toAdd:
+            _print(f"  {C_GREEN}[+]{C_RESET} {m.name} {C_GRAY}({m.id}){C_RESET} v{C_CYAN}{m.version}{C_RESET}")
+    if toUpdate:
+        _print(f"\n{C_BLUE}Updates ({len(toUpdate)}):{C_RESET}")
+        for m, oldv in toUpdate:
+            _print(f"  {C_BLUE}[->]{C_RESET} {m.name} {C_GRAY}({m.id}){C_RESET} v{C_GRAY}{oldv}{C_RESET} -> v{C_CYAN}{m.version}{C_RESET}")
+    if toDowngrade:
+        _print(f"\n{C_YELLOW}Downgrades ({len(toDowngrade)}):{C_RESET}")
+        for m, oldv in toDowngrade:
+            _print(f"  {C_YELLOW}[<-]{C_RESET} {m.name} {C_GRAY}({m.id}){C_RESET} v{C_GRAY}{oldv}{C_RESET} -> v{C_CYAN}{m.version}{C_RESET}")
+    if unchanged:
+        _print(f"\n{C_GRAY}Unchanged ({len(unchanged)}):{C_RESET}")
+        for m in unchanged:
+            _print(f"  {C_GRAY}[=]{C_RESET} {m.name} {C_GRAY}({m.id}){C_RESET} v{C_CYAN}{m.version}{C_RESET}")
+    if missingIds:
+        _print(f"\n{C_RED}Missing files (in config but not in dir) ({len(missingIds)}):{C_RESET}")
+        for pid in missingIds:
+            entry = next((p for p in plugins if p["id"] == pid), None)
+            if entry:
+                _print(f"  {C_RED}[-]{C_RESET} {entry.get('name', '?')} {C_GRAY}({pid}){C_RESET}")
+    if failures:
+        _print(f"\n{C_YELLOW}Errors ({len(failures)}):{C_RESET}")
+        for path, err in failures:
+            _print(f"  {C_GRAY}{os.path.basename(path)}{C_RESET}: {err}")
 
-            if fileHash in hashMap:
-                continue
 
-            metadata = extractMetadata(filePath, filename)
-            pluginId = metadata.get("id", "Unknown")
+def opChangePlugin(cfg: dict) -> None:
+    configPath = cfg["config_path"]
+    workingDir = cfg["working_dir"]
 
-            if pluginId in idMap:
-                willBeUpdated += 1
+    try:
+        data = configManager.loadConfig(configPath)
+    except (ValueError, FileNotFoundError) as e:
+        _print(f"{C_RED}[error]{C_RESET} {e}")
+        return
+
+    fname = _ask("Plugin file name: ")
+    if not fname:
+        return
+
+    fullPath = os.path.join(workingDir, fname)
+    if not os.path.exists(fullPath):
+        _print(f"{C_RED}[error]{C_RESET} file not found: {fullPath}")
+        return
+
+    if os.path.isdir(fullPath):
+        result = pluginReader.readPluginFromDir(fullPath, cfg.get("state_keywords", []))
+    else:
+        result = pluginReader.readPlugin(fullPath, cfg.get("state_keywords", []))
+
+    if result.error:
+        _print(f"{C_RED}[error]{C_RESET} {result.error}")
+        return
+
+    meta = result.meta
+    plugins = data["plugins"]
+    idx, existing = configManager.findPlugin(plugins, meta.id)
+
+    if existing is None:
+        _print(f"{C_RED}[error]{C_RESET} plugin {meta.id} not found in config")
+        return
+
+    about = _buildAbout(meta, cfg)
+    entry = _buildEntry(meta, cfg, about)
+    plugins[idx] = entry
+
+    try:
+        configManager.saveConfig(configPath, data)
+    except OSError as e:
+        _print(f"{C_RED}[error]{C_RESET} {e}")
+        return
+
+    _print(f"{C_GREEN}[done]{C_RESET} updated {meta.name} to v{C_CYAN}{meta.version}{C_RESET}")
+
+
+def opDeletePlugin(cfg: dict) -> None:
+    configPath = cfg["config_path"]
+
+    try:
+        data = configManager.loadConfig(configPath)
+    except (ValueError, FileNotFoundError) as e:
+        _print(f"{C_RED}[error]{C_RESET} {e}")
+        return
+
+    pid = _ask("Plugin ID to delete: ")
+    if not pid:
+        return
+
+    plugins = data["plugins"]
+    idx, existing = configManager.findPlugin(plugins, pid)
+    if existing is None:
+        _print(f"{C_RED}[error]{C_RESET} plugin {pid} not found")
+        return
+
+    if not _confirm(f"Delete {existing.get('name', '?')} ({pid})?"):
+        return
+
+    del plugins[idx]
+    configManager.saveConfig(configPath, data)
+    _print(f"{C_GREEN}[done]{C_RESET} deleted {existing.get('name', '?')}")
+
+
+def opClearMissing(cfg: dict) -> None:
+    configPath = cfg["config_path"]
+    workingDir = cfg["working_dir"]
+
+    try:
+        data = configManager.loadConfig(configPath)
+    except (ValueError, FileNotFoundError) as e:
+        _print(f"{C_RED}[error]{C_RESET} {e}")
+        return
+
+    paths = _scanWorkingDir(workingDir)
+    successes, _ = _readAllMeta(paths, cfg.get("state_keywords", []))
+
+    seenIds = {r.meta.id for r in successes}
+    plugins = data["plugins"]
+    missing = [p for p in plugins if p["id"] not in seenIds]
+
+    if not missing:
+        _print(f"{C_GRAY}[info]{C_RESET} no missing plugins")
+        return
+
+    _print(f"{C_YELLOW}Missing plugins ({len(missing)}):{C_RESET}")
+    for p in missing:
+        _print(f"  {p.get('name', '?')} {C_GRAY}({p['id']}){C_RESET}")
+
+    if not _confirm("Remove all missing?"):
+        return
+
+    data["plugins"] = [p for p in plugins if p["id"] in seenIds]
+    configManager.saveConfig(configPath, data)
+    _print(f"{C_GREEN}[done]{C_RESET} removed {len(missing)} plugin(s)")
+
+
+def opEditPlugin(cfg: dict) -> None:
+    configPath = cfg["config_path"]
+
+    try:
+        data = configManager.loadConfig(configPath)
+    except (ValueError, FileNotFoundError) as e:
+        _print(f"{C_RED}[error]{C_RESET} {e}")
+        return
+
+    pid = _ask("Plugin ID: ")
+    if not pid:
+        return
+
+    plugins = data["plugins"]
+    idx, existing = configManager.findPlugin(plugins, pid)
+    if existing is None:
+        _print(f"{C_RED}[error]{C_RESET} plugin {pid} not found")
+        return
+
+    _print(f"\n{C_BOLD}Current fields:{C_RESET}")
+    for key, val in existing.items():
+        _print(f"  {C_CYAN}{key}{C_RESET}: {val}")
+
+    _print(f"\n{C_GRAY}Enter new values (blank to keep current):{C_RESET}")
+
+    fields = ["name", "author", "version", "state", "icon", "min_version", "suspicious", "link"]
+    for key in fields:
+        if key not in existing:
+            continue
+        current = existing[key]
+        newVal = _ask(f"  {key} [{current}]: ")
+        if newVal:
+            existing[key] = newVal
+
+    configManager.saveConfig(configPath, data)
+    _print(f"\n{C_GREEN}[done]{C_RESET} updated {existing['name']}")
+
+
+def opSortPlugins(cfg: dict) -> None:
+    configPath = cfg["config_path"]
+
+    try:
+        data = configManager.loadConfig(configPath)
+    except (ValueError, FileNotFoundError) as e:
+        _print(f"{C_RED}[error]{C_RESET} {e}")
+        return
+
+    by = _ask("Sort by (name/id/version) [name]: ", "name")
+    data["plugins"] = configManager.sortPlugins(data["plugins"], by)
+    configManager.saveConfig(configPath, data)
+    _print(f"{C_GREEN}[done]{C_RESET} sorted by '{by}'")
+
+
+def opResetKey(cfg: dict) -> None:
+    configPath = cfg["config_path"]
+
+    try:
+        data = configManager.loadConfig(configPath)
+    except (ValueError, FileNotFoundError) as e:
+        _print(f"{C_RED}[error]{C_RESET} {e}")
+        return
+
+    key = _ask("Field name to remove: ")
+    if not key:
+        return
+
+    try:
+        count = configManager.resetKey(data["plugins"], key)
+    except ValueError as e:
+        _print(f"{C_RED}[error]{C_RESET} {e}")
+        return
+
+    if count == 0:
+        _print(f"{C_GRAY}[info]{C_RESET} field '{key}' not found in any plugin")
+        return
+
+    configManager.saveConfig(configPath, data)
+    _print(f"{C_GREEN}[done]{C_RESET} removed '{key}' from {count} plugin(s)")
+
+
+def opUnpackElyx(cfg: dict) -> None:
+    workingDir = cfg.get("working_dir", "")
+    srcPath = _ask("Path to .elyx file: ")
+    if not srcPath:
+        return
+
+    destDir = _ask(f"Destination directory [{workingDir}]: ", workingDir)
+    if not destDir:
+        return
+
+    success, msg = pluginReader.unpackElyx(srcPath, destDir)
+    if success:
+        _print(f"{C_GREEN}[done]{C_RESET} unpacked to: {msg}")
+    else:
+        _print(f"{C_RED}[error]{C_RESET} {msg}")
+
+
+def opPackElyx(cfg: dict) -> None:
+    workingDir = cfg.get("working_dir", "")
+    srcDir = _ask("Directory to pack: ")
+    if not srcDir:
+        return
+
+    baseName = os.path.basename(srcDir.rstrip("/"))
+    destPath = _ask(f"Output .elyx path [{baseName}.elyx]: ", f"{baseName}.elyx")
+    if not destPath.endswith(".elyx"):
+        destPath += ".elyx"
+
+    success, msg = pluginReader.packElyx(srcDir, destPath)
+    if success:
+        _print(f"{C_GREEN}[done]{C_RESET} packed to: {msg}")
+    else:
+        _print(f"{C_RED}[error]{C_RESET} {msg}")
+
+
+def opClearLogs() -> None:
+    for fname in [LOG_FILENAME, FORPOST_FILENAME]:
+        path = os.path.join(_SCRIPT_DIR, fname)
+        if os.path.isfile(path):
+            os.remove(path)
+            _print(f"{C_RED}[-]{C_RESET} deleted {fname}")
+        else:
+            _print(f"{C_GRAY}[skip]{C_RESET} {fname} not found")
+
+
+def opReset(cfg: dict) -> None:
+    configPath = cfg["config_path"]
+    workingDir = cfg["working_dir"]
+
+    if not _confirm("This will regenerate the entire config from files. Continue?"):
+        return
+
+    try:
+        data = configManager.loadConfig(configPath)
+    except (ValueError, FileNotFoundError) as e:
+        _print(f"{C_RED}[error]{C_RESET} {e}")
+        return
+
+    paths = _scanWorkingDir(workingDir)
+    successes, failures = _readAllMeta(paths, cfg.get("state_keywords", []))
+
+    if failures:
+        _print(f"{C_YELLOW}[warn]{C_RESET} {len(failures)} file(s) had errors (will be skipped):")
+        for path, err in failures:
+            _print(f"  {C_GRAY}{os.path.basename(path)}{C_RESET}: {err}")
+
+    data["plugins"] = []
+    for result in successes:
+        meta = result.meta
+        about = _buildAbout(meta, cfg)
+        entry = _buildEntry(meta, cfg, about)
+        data["plugins"].append(entry)
+        _print(f"  {C_GREEN}[+]{C_RESET} {meta.name} {C_GRAY}({meta.id}){C_RESET} v{C_CYAN}{meta.version}{C_RESET}")
+
+    configManager.saveConfig(configPath, data)
+    _print(f"\n{C_GREEN}[done]{C_RESET} regenerated config with {C_BOLD}{len(data['plugins'])}{C_RESET} plugins")
+
+
+def opSettings(cfg: dict, scriptDir: str) -> dict:
+    _print(f"\n{C_BOLD}Settings{C_RESET} {C_GRAY}(press Enter to keep current value):{C_RESET}\n")
+
+    fields = [
+        ("config_path", "Path to plugins.json"),
+        ("working_dir", "Working directory (plugin files)"),
+        ("raw_dir_url", "Raw download URL base"),
+    ]
+    for key, label in fields:
+        current = cfg.get(key, "")
+        raw = _ask(f"  {C_CYAN}{label}{C_RESET} [{C_GRAY}{current}{C_RESET}]: ")
+        if raw:
+            if key in ("config_path", "working_dir"):
+                cfg[key] = scriptCfg.resolveRelPath(raw, scriptDir)
             else:
-                willBeAdded += 1
-        except Exception:
-            continue
+                cfg[key] = raw
 
-    for filename in existingFiles:
-        if filename not in filesInDir:
-            willBeRemoved += 1
+    boolFields = [
+        ("add_hash", "Add hash"),
+        ("add_min_version", "Add min_version"),
+        ("add_about", "Add about (translation)"),
+        ("add_description", "Add description"),
+        ("write_log", "Write latest.log"),
+        ("create_forpost", "Write forpost.txt"),
+        ("append_to_log", "Append to log"),
+        ("allow_downgrade", "Allow downgrade without confirmation"),
+    ]
+    for key, label in boolFields:
+        current = cfg.get(key, False)
+        currentStr = "Y" if current else "N"
+        raw = _ask(f"  {C_CYAN}{label}{C_RESET} [{C_GRAY}{currentStr}{C_RESET}]: ").lower()
+        if raw in ("y", "yes", "true", "1"):
+            cfg[key] = True
+        elif raw in ("n", "no", "false", "0"):
+            cfg[key] = False
 
-    print()
-    print("if you start adding now")
-    print(f"will be added: {willBeAdded}")
-    print(f"will be updated: {willBeUpdated}")
-    print(f"will be removed: {willBeRemoved}")
+    scriptCfg.saveCfg(scriptDir, cfg)
+    _print(f"\n{C_GREEN}[done]{C_RESET} settings saved")
+    return cfg
 
-def editPluginValue(config: Dict):
-    configPath = config["configPath"]
-    backupDir = config["backupDir"]
-    createBackupsEnabled = config.get("createBackups", True)
 
-    if not os.path.exists(configPath):
-        print(f"config file '{configPath}' not found")
-        return
+def opFirstRun(scriptDir: str) -> dict:
+    _print(f"{C_BOLD}=== First run setup ==={C_RESET}\n")
+    cfg = scriptCfg.DEFAULTS.copy()
 
-    with open(configPath, 'r', encoding='utf-8') as f:
-        repoConfig = json.load(f)
-    normalizeLoadedConfig(repoConfig)
+    _print(f"{C_GRAY}Enter absolute or relative paths (relative to scripts/ directory).{C_RESET}")
+    configRaw = _ask(f"  {C_CYAN}Path to plugins.json{C_RESET}: ")
+    cfg["config_path"] = scriptCfg.resolveRelPath(configRaw, scriptDir) if configRaw else ""
 
-    pluginId = input("enter plugin id: ").strip()
+    workingRaw = _ask(f"  {C_CYAN}Working directory (plugin files){C_RESET}: ")
+    cfg["working_dir"] = scriptCfg.resolveRelPath(workingRaw, scriptDir) if workingRaw else ""
 
-    pluginIndex = None
-    for i, plugin in enumerate(repoConfig["plugins"]):
-        if plugin["id"] == pluginId:
-            pluginIndex = i
-            break
+    urlRaw = _ask(f"  {C_CYAN}Raw download URL base{C_RESET} [{C_GRAY}{cfg['raw_dir_url']}{C_RESET}]: ")
+    if urlRaw:
+        cfg["raw_dir_url"] = urlRaw
 
-    if pluginIndex is None:
-        print(f"plugin with id '{pluginId}' not found")
-        return
+    scriptCfg.saveCfg(scriptDir, cfg)
+    gitResult = scriptCfg.createGitignore(scriptDir)
+    _print(f"{C_MAGENTA}[gitignore]{C_RESET} script_cfg.yml: {gitResult}")
+    _print(f"\n{C_GREEN}[done]{C_RESET} configuration saved\n")
+    return cfg
 
-    currentPlugin = repoConfig["plugins"][pluginIndex]
 
-    print()
-    print(f"current values for {pluginId}:")
-    for key, value in currentPlugin.items():
-        print(f"  {key}: {value}")
-    print()
+MENU = f"""
+{C_BOLD}{C_CYAN}PackIt Repo Manager{C_RESET}
+{C_GRAY}==================={C_RESET}
+ {C_BOLD} 1.{C_RESET} {C_GREEN}Scan & Apply{C_RESET}
+ {C_BOLD} 2.{C_RESET} {C_CYAN}Dir Status{C_RESET}
+ {C_BOLD} 3.{C_RESET} Change Plugin
+ {C_BOLD} 4.{C_RESET} {C_RED}Delete Plugin{C_RESET}
+ {C_BOLD} 5.{C_RESET} {C_YELLOW}Clear Missing{C_RESET}
+ {C_BOLD} 6.{C_RESET} Edit Plugin
+ {C_BOLD} 7.{C_RESET} Sort Plugins
+ {C_BOLD} 8.{C_RESET} Reset Key
+ {C_BOLD} 9.{C_RESET} {C_MAGENTA}Unpack Elyx{C_RESET}
+ {C_BOLD}10.{C_RESET} {C_MAGENTA}Pack Elyx{C_RESET}
+ {C_BOLD}11.{C_RESET} {C_RED}Clear Logs{C_RESET}
+ {C_BOLD}12.{C_RESET} {C_YELLOW}Reset (regen){C_RESET}
+ {C_BOLD}13.{C_RESET} {C_BLUE}Settings{C_RESET}
+ {C_BOLD} 0.{C_RESET} Exit
+"""
 
-    fieldName = input("enter field name to edit: ").strip()
 
-    if fieldName not in currentPlugin:
-        print(f"field '{fieldName}' not found")
-        return
+def main() -> None:
+    scriptDir = _SCRIPT_DIR
 
-    print(f"current value: {currentPlugin[fieldName]}")
-    newValue = input("enter new value: ").strip()
+    try:
+        import yaml
+    except ImportError:
+        print(f"{C_RED}[error]{C_RESET} pyyaml is required: pip install pyyaml")
+        sys.exit(1)
 
-    createBackup(configPath, backupDir, createBackupsEnabled)
-
-    repoConfig["plugins"][pluginIndex][fieldName] = newValue
-
-    with open(configPath, 'w', encoding='utf-8') as f:
-        json.dump(repoConfig, f, indent=2, ensure_ascii=False)
-
-    print(f"field '{fieldName}' updated for {pluginId}")
-
-def addItemToJson(config: Dict):
-    configPath = config["configPath"]
-    backupDir = config["backupDir"]
-    createBackupsEnabled = config.get("createBackups", True)
-
-    if not os.path.exists(configPath):
-        print(f"config file '{configPath}' not found")
-        return
-
-    with open(configPath, 'r', encoding='utf-8') as f:
-        repoConfig = json.load(f)
-    normalizeLoadedConfig(repoConfig)
-
-    pluginId = input("enter plugin id: ").strip()
-
-    pluginIndex = None
-    for i, plugin in enumerate(repoConfig["plugins"]):
-        if plugin["id"] == pluginId:
-            pluginIndex = i
-            break
-
-    if pluginIndex is None:
-        print(f"plugin with id '{pluginId}' not found")
-        return
-
-    currentPlugin = repoConfig["plugins"][pluginIndex]
-
-    print()
-    print(f"current fields for {pluginId}:")
-    for key in currentPlugin.keys():
-        print(f"  {key}")
-    print()
-
-    fieldName = input("enter new field name: ").strip()
-
-    if fieldName in currentPlugin:
-        print(f"field '{fieldName}' already exists")
-        return
-
-    print("select data type:")
-    print("1. string")
-    print("2. number")
-    print("3. boolean")
-    print("4. array")
-    print("5. object")
-
-    dataType = input("choose type (1-5): ").strip()
-
-    if dataType == "1":
-        value = input("enter string value: ").strip()
-    elif dataType == "2":
-        valueInput = input("enter number value: ").strip()
-        try:
-            value = int(valueInput) if '.' not in valueInput else float(valueInput)
-        except ValueError:
-            print("invalid number format")
-            return
-    elif dataType == "3":
-        value = input("enter boolean value (y/n): ").lower() == 'y'
-    elif dataType == "4":
-        arrayInput = input("enter array values (comma separated): ").strip()
-        value = [item.strip() for item in arrayInput.split(',')] if arrayInput else []
-    elif dataType == "5":
-        print("enter object as JSON:")
-        objectInput = input().strip()
-        try:
-            value = json.loads(objectInput)
-        except json.JSONDecodeError:
-            print("invalid JSON format")
-            return
+    if not scriptCfg.cfgExists(scriptDir):
+        cfg = opFirstRun(scriptDir)
     else:
-        print("invalid option")
-        return
-
-    createBackup(configPath, backupDir, createBackupsEnabled)
-
-    repoConfig["plugins"][pluginIndex][fieldName] = value
-
-    with open(configPath, 'w', encoding='utf-8') as f:
-        json.dump(repoConfig, f, indent=2, ensure_ascii=False)
-
-    print(f"field '{fieldName}' added to {pluginId} with value: {value}")
-
-def editConfigValues(config: Dict):
-    configFile = "cfg.yml"
-
-    if not os.path.exists(configFile):
-        print(f"config file '{configFile}' not found")
-        return
-
-    with open(configFile, 'r', encoding='utf-8') as f:
-        currentConfig = yaml.safe_load(f)
-
-    print()
-    print("current config values:")
-    for key, value in currentConfig.items():
-        print(f"  {key}: {value}")
-    print()
-
-    fieldsToEdit = input("enter field names to edit (comma separated): ").strip()
-
-    if not fieldsToEdit:
-        print("no fields specified")
-        return
-
-    fieldsList = [field.strip() for field in fieldsToEdit.split(',')]
-
-    for fieldName in fieldsList:
-        if fieldName not in currentConfig:
-            print(f"field '{fieldName}' not found, skipping")
-            continue
-
-        currentValue = currentConfig[fieldName]
-        print(f"{fieldName} (current: {currentValue})")
-
-        if isinstance(currentValue, bool):
-            newValue = input("new value (y/n): ").lower() == 'y'
-            currentConfig[fieldName] = newValue
-        else:
-            newValue = input("new value: ").strip()
-            if newValue:
-                # normalize paths for path-related fields
-                if fieldName in ["configPath", "workingDir", "backupDir"]:
-                    newValue = normalizePath(newValue)
-                currentConfig[fieldName] = newValue
-
-        print(f"{fieldName} updated")
-        print()
-
-    with open(configFile, 'w', encoding='utf-8') as f:
-        yaml.dump(currentConfig, f, allow_unicode=True, default_flow_style=False)
-
-    print(f"configuration updated in {configFile}")
-
-    for key, value in currentConfig.items():
-        config[key] = value
-
-def resetAllPlugins(config: Dict):
-    configPath = config["configPath"]
-    workingDir = config["workingDir"]
-    backupDir = config["backupDir"]
-    createBackupsEnabled = config.get("createBackups", True)
-
-    if not os.path.exists(configPath):
-        print(f"{Colors.RED}config file '{configPath}' not found{Colors.RESET}")
-        return
-
-    if not os.path.exists(workingDir):
-        print(f"{Colors.RED}directory '{workingDir}/' not found{Colors.RESET}")
-        return
-
-    with open(configPath, 'r', encoding='utf-8') as f:
-        repoConfig = json.load(f)
-    normalizeLoadedConfig(repoConfig)
-
-    repometa = repoConfig.get("repometa", {})
-
-    print(f"{Colors.YELLOW}{Colors.BOLD}WARNING: this will overwrite entire config.json{Colors.RESET}")
-    print(f"{Colors.YELLOW}all plugins will be rechecked and rewritten{Colors.RESET}")
-    confirm = input(f"{Colors.CYAN}continue? (y/n): {Colors.RESET}").lower()
-
-    if confirm != 'y':
-        print(f"{Colors.DIM}reset cancelled{Colors.RESET}")
-        return
-
-    createBackup(configPath, backupDir, createBackupsEnabled)
-
-    newPlugins = []
-    filesProcessed = 0
-
-    for filename in os.listdir(workingDir):
-        filePath = os.path.join(workingDir, filename)
-
-        if not os.path.isfile(filePath):
-            continue
-
         try:
-            pluginEntry = createPluginEntry(filePath, filename, config)
-            newPlugins.append(pluginEntry)
-            filesProcessed += 1
-            print(f"{Colors.GREEN}{filename} processed{Colors.RESET} (id: {Colors.CYAN}{pluginEntry['id']}{Colors.RESET})")
-        except Exception as e:
-            print(f"{Colors.RED}{filename} failed {e}{Colors.RESET}")
-
-    repoConfig = {
-        "repometa": repometa,
-        "plugins": newPlugins
-    }
-
-    with open(configPath, 'w', encoding='utf-8') as f:
-        json.dump(repoConfig, f, indent=2, ensure_ascii=False)
-
-    print()
-    print(f"{Colors.BOLD}reset complete{Colors.RESET}")
-    print(f"{Colors.GREEN}total plugins: {len(newPlugins)}{Colors.RESET}")
-    print(f"{Colors.BLUE}files processed: {filesProcessed}{Colors.RESET}")
-
-    if config.get("writeLastLog", False):
-        appendMode = config.get("appendToLogs", False)
-        writeLatestLog(newPlugins, [], [], len(newPlugins), appendMode)
-
-    if config.get("createForPost", False):
-        appendMode = config.get("appendToLogs", False)
-        writeForPost(newPlugins, [], [], len(newPlugins), appendMode)
-
-def createGitignore():
-    gitignorePath = ".gitignore"
-    entries = ["cfg.yml", "forpost.txt", "latest.log", "backups/"]
-
-    existingContent = ""
-    if os.path.exists(gitignorePath):
-        with open(gitignorePath, 'r', encoding='utf-8') as f:
-            existingContent = f.read()
-
-    entriesToAdd = []
-    for entry in entries:
-        if entry not in existingContent:
-            entriesToAdd.append(entry)
-
-    if not entriesToAdd:
-        print("all entries already in .gitignore")
-        return
-
-    if os.path.exists(gitignorePath):
-        with open(gitignorePath, 'a', encoding='utf-8') as f:
-            if not existingContent.endswith('\n'):
-                f.write('\n')
-            for entry in entriesToAdd:
-                f.write(f"{entry}\n")
-
-        print(f"added to .gitignore: {', '.join(entriesToAdd)}")
-    else:
-        with open(gitignorePath, 'w', encoding='utf-8') as f:
-            for entry in entriesToAdd:
-                f.write(f"{entry}\n")
-
-        print(f".gitignore created with: {', '.join(entriesToAdd)}")
-
-def clearLogs():
-    latestLogPath = "latest.log"
-    forPostPath = "forpost.txt"
-    
-    filesCleared = []
-    
-    if os.path.exists(latestLogPath):
-        try:
-            os.remove(latestLogPath)
-            filesCleared.append(latestLogPath)
-        except Exception as e:
-            print(f"{Colors.RED}failed to clear {latestLogPath}: {e}{Colors.RESET}")
-    
-    if os.path.exists(forPostPath):
-        try:
-            os.remove(forPostPath)
-            filesCleared.append(forPostPath)
-        except Exception as e:
-            print(f"{Colors.RED}failed to clear {forPostPath}: {e}{Colors.RESET}")
-    
-    if filesCleared:
-        print(f"{Colors.GREEN}cleared: {', '.join(filesCleared)}{Colors.RESET}")
-    else:
-        print(f"{Colors.YELLOW}no log files found to clear{Colors.RESET}")
-
-def resetPluginKey(config: Dict):
-    configPath = config["configPath"]
-    backupDir = config["backupDir"]
-    createBackupsEnabled = config.get("createBackups", True)
-
-    if not os.path.exists(configPath):
-        print(f"{Colors.RED}config file '{configPath}' not found{Colors.RESET}")
-        return
-
-    with open(configPath, 'r', encoding='utf-8') as f:
-        repoConfig = json.load(f)
-    normalizeLoadedConfig(repoConfig)
-
-    plugins = repoConfig.get("plugins", [])
-    if not plugins:
-        print(f"{Colors.YELLOW}no plugins in config{Colors.RESET}")
-        return
-
-    # show example plugin structure
-    print(f"\n{Colors.CYAN}example plugin keys:{Colors.RESET}")
-    firstPlugin = plugins[0]
-    for key in firstPlugin.keys():
-        print(f"  - {key}")
-    print()
-
-    keyName = input("enter key name to reset for all plugins: ").strip()
-    if not keyName:
-        print("no key specified")
-        return
-
-    # count how many plugins have this key
-    pluginsWithKey = sum(1 for p in plugins if keyName in p)
-    
-    if pluginsWithKey == 0:
-        print(f"{Colors.YELLOW}key '{keyName}' not found in any plugin{Colors.RESET}")
-        return
-
-    print(f"{Colors.YELLOW}{Colors.BOLD}WARNING: this will remove '{keyName}' from {pluginsWithKey} plugins{Colors.RESET}")
-    confirm = input(f"{Colors.CYAN}continue? (y/n): {Colors.RESET}").lower()
-
-    if confirm != 'y':
-        print(f"{Colors.DIM}operation cancelled{Colors.RESET}")
-        return
-
-    createBackup(configPath, backupDir, createBackupsEnabled)
-
-    # remove key from all plugins
-    removedCount = 0
-    for plugin in plugins:
-        if keyName in plugin:
-            del plugin[keyName]
-            removedCount += 1
-
-    with open(configPath, 'w', encoding='utf-8') as f:
-        json.dump(repoConfig, f, indent=2, ensure_ascii=False)
-
-    print()
-    print(f"{Colors.GREEN}removed '{keyName}' from {removedCount} plugins{Colors.RESET}")
-
-def showMenu(config: Dict):
-    print()
-    print(f"{Colors.BOLD}{Colors.CYAN}    menu    {Colors.RESET}")
-    print(f"{Colors.GREEN}1{Colors.RESET}. add files")
-    print(f"{Colors.GREEN}2{Colors.RESET}. change file")
-    print(f"{Colors.GREEN}3{Colors.RESET}. delete files")
-    print(f"{Colors.GREEN}4{Colors.RESET}. clear missing plugins")
-    print(f"{Colors.GREEN}5{Colors.RESET}. dir status")
-    print(f"{Colors.GREEN}6{Colors.RESET}. edit plugin value")
-    print(f"{Colors.GREEN}7{Colors.RESET}. add item to json")
-    print(f"{Colors.GREEN}8{Colors.RESET}. edit config values")
-    print(f"{Colors.GREEN}9{Colors.RESET}. rewrite script cfg")
-    print(f"{Colors.GREEN}10{Colors.RESET}. create .gitignore for cfg.yml")
-    print(f"{Colors.YELLOW}11{Colors.RESET}. clear logs/forpost")
-    print(f"{Colors.YELLOW}12{Colors.RESET}. reset plugin key")
-    print(f"{Colors.YELLOW}13{Colors.RESET}. reset (recheck all files)")
-    print(f"{Colors.RED}14{Colors.RESET}. exit")
-    
-    print()
-    choice = input(f"{Colors.CYAN}choose option: {Colors.RESET}").strip()
-    return choice
-
-if __name__ == "__main__":
-    config = loadConfig()
-
-    if config is None:
-        config = createConfig()
+            cfg = scriptCfg.loadCfg(scriptDir)
+        except ValueError as e:
+            print(f"{C_RED}[error]{C_RESET} cannot load script_cfg.yml: {e}")
+            sys.exit(1)
 
     while True:
-        choice = showMenu(config)
+        _print(MENU)
+        choice = _ask(f"{C_BOLD}Choice:{C_RESET} ")
+        _print()
 
-        if choice == "1":
-            updateConfigJson(config)
-        elif choice == "2":
-            changeFile(config)
-        elif choice == "3":
-            deleteFiles(config)
-        elif choice == "4":
-            clearMissingPlugins(config)
-        elif choice == "5":
-            dirStatus(config)
-        elif choice == "6":
-            editPluginValue(config)
-        elif choice == "7":
-            addItemToJson(config)
-        elif choice == "8":
-            editConfigValues(config)
-        elif choice == "9":
-            config = createConfig()
-        elif choice == "10":
-            createGitignore()
-        elif choice == "11":
-            clearLogs()
-        elif choice == "12":
-            resetPluginKey(config)
-        elif choice == "13":
-            resetAllPlugins(config)
-        elif choice == "14":
-            print("exit")
-            break
-        else:
-            print("invalid option")
+        try:
+            if choice == "0":
+                break
+            elif choice == "1":
+                if _requireCfg(cfg):
+                    opScanApply(cfg)
+            elif choice == "2":
+                if _requireCfg(cfg):
+                    opDirStatus(cfg)
+            elif choice == "3":
+                if _requireCfg(cfg):
+                    opChangePlugin(cfg)
+            elif choice == "4":
+                if _requireCfg(cfg):
+                    opDeletePlugin(cfg)
+            elif choice == "5":
+                if _requireCfg(cfg):
+                    opClearMissing(cfg)
+            elif choice == "6":
+                if _requireCfg(cfg):
+                    opEditPlugin(cfg)
+            elif choice == "7":
+                if _requireCfg(cfg):
+                    opSortPlugins(cfg)
+            elif choice == "8":
+                if _requireCfg(cfg):
+                    opResetKey(cfg)
+            elif choice == "9":
+                opUnpackElyx(cfg)
+            elif choice == "10":
+                opPackElyx(cfg)
+            elif choice == "11":
+                opClearLogs()
+            elif choice == "12":
+                if _requireCfg(cfg):
+                    opReset(cfg)
+            elif choice == "13":
+                cfg = opSettings(cfg, scriptDir)
+            else:
+                _print(f"{C_RED}[error]{C_RESET} unknown option")
+        except KeyboardInterrupt:
+            _print(f"\n{C_YELLOW}[interrupted]{C_RESET}")
+
+
+if __name__ == "__main__":
+    main()
