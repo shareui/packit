@@ -10,6 +10,7 @@
       "icon": "",
       "min_version": "14.8.8",
       "suspicious": "false",
+      "description": "Unknown",
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/testMinVer.plugin",
       "hash": "ab11b4cc622247b0dba7dfd658b4bae5ec63e3c15800b746aa7c7299d565c998"
     },
@@ -52,7 +53,7 @@
       "author": "@CactusPlugins",
       "version": "1.4.2",
       "state": "release",
-      "icon": "assets/icon.png",
+      "icon": "",
       "min_version": "11.13.0",
       "suspicious": "false",
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/devsettingiconsLAST.elyx",
