@@ -9,7 +9,7 @@
       "icon": "",
       "min_version": "14.8.8",
       "suspicious": "false",
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/testMinVer.plugin",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/testzalupa.plugin",
       "hash": "ab11b4cc622247b0dba7dfd658b4bae5ec63e3c15800b746aa7c7299d565c998"
     },
     {
@@ -21,7 +21,7 @@
       "icon": "luvztroyIcons/14",
       "min_version": "12.2.10",
       "suspicious": "false",
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/QuantaHut.plugin",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/quantahut.plugin",
       "description": "Library for Quanta plugins",
       "hash": "013d3bbc59895161469c48713c2819920e71966d16d213966ea014e12468aba6"
     },
@@ -34,7 +34,7 @@
       "icon": "luvztroyIcons/13",
       "min_version": "12.2.10",
       "suspicious": "false",
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/UiTweaks.plugin",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/ui_tweaks.plugin",
       "description": "Well sometimes you just need to tweak things... (requires [QuantaHut](https://t.me/QuantaPlugins/228))",
       "hash": "96d1c2c65c6609154c3838c2efd994626250a13668f67d0a11fc7367ef1509a1",
       "deps": [
@@ -50,7 +50,7 @@
       "icon": "assets/icon.png",
       "min_version": "11.13.0",
       "suspicious": "false",
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/devsettingiconsLAST.elyx",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/devsettingicons.elyx",
       "description": "[For Devs] All icons/animations/colors for plugin settings/bulletins and more with filters!",
       "hash": "1064517361a10bb0cb23cd8d5b0371f56849617ce8d29f06baf38c52e566f356",
       "deps": [
