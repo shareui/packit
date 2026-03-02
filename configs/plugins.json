@@ -47,7 +47,7 @@
       "author": "@CactusPlugins",
       "version": "1.4.2",
       "state": "release",
-      "icon": "assets/icon.png",
+      "icon": "",
       "min_version": "11.13.0",
       "suspicious": "false",
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/devsettingicons.elyx",
