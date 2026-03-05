@@ -2,17 +2,11 @@
   "signatures": [
     [
       "exec(",
-      "Critical",
-      {
-        "whitelist": []
-      }
+      "Critical"
     ],
     [
       "eval(",
-      "Critical",
-      {
-        "whitelist": []
-      }
+      "Critical"
     ],
     [
       "compile(",
@@ -108,13 +102,7 @@
     ],
     [
       "os.kill(",
-      "Critical",
-      {
-        "whitelist": [
-          "os.getpid()",
-          "Process.myPid()"
-        ]
-      }
+      "Critical"
     ],
     [
       "os.killpg(",
@@ -190,28 +178,15 @@
     ],
     [
       "getDeclaredMethod(",
-      "High",
-      {
-        "whitelist": [
-          "getSafeLastFragment",
-          "fillItems",
-          "onItemClick",
-          "getSafeLastFragment"
-        ]
-      }
+      "Low"
     ],
     [
       "getDeclaredField(",
-      "High"
+      "Low"
     ],
     [
       "Method.invoke(",
-      "High",
-      {
-        "whitelist": [
-          "None,"
-        ]
-      }
+      "High"
     ],
     [
       "Field.set(",
@@ -219,15 +194,15 @@
     ],
     [
       "DexClassLoader(",
-      "Medium"
+      "Critical"
     ],
     [
       "dalvik.system.DexClassLoader",
-      "Medium"
+      "Critical"
     ],
     [
       "dalvik.system.DexFile",
-      "Medium"
+      "High"
     ],
     [
       "Runtime.getRuntime().exec(",
@@ -243,25 +218,11 @@
     ],
     [
       "hook_all_methods(",
-      "High",
-      {
-        "whitelist": [
-          "isDeveloper",
-          "getBadge",
-          "canChangeBadge"
-        ]
-      }
+      "Medium"
     ],
     [
       "hook_method(",
-      "High",
-      {
-        "whitelist": [
-          "fillItems",
-          "getSafeLastFragment",
-          "onItemClick"
-        ]
-      }
+      "Low"
     ],
     [
       "SmsManager",
@@ -381,14 +342,7 @@
     ],
     [
       "ConnectionsManager",
-      "High",
-      {
-        "whitelist": [
-          "getInstance",
-          "getCurrentTime",
-          "getConnectionState"
-        ]
-      }
+      "High"
     ],
     [
       "TL_account_deleteAccount",
@@ -840,15 +794,7 @@
     ],
     [
       "t.co",
-      "Medium",
-      {
-        "whitelist": [
-          "githubusercontent.com",
-          "t.com",
-          "start.com",
-          "contact.com"
-        ]
-      }
+      "Medium"
     ],
     [
       "goo.gl",
@@ -1044,14 +990,14 @@
     ],
     [
       "files/plugins/ElyxPlugins/",
-      "High"
+      "Medium"
     ],
     [
       "files/plugins/cache/",
       "Medium"
     ],
     [
-      "files/plugins/libs/",
+      "files/plugins",
       "Medium"
     ],
     [
@@ -1068,10 +1014,6 @@
     ],
     [
       "files/rasterized/wallpaper/",
-      "Low"
-    ],
-    [
-      "files/focus_mode_cache/",
       "Low"
     ],
     [
