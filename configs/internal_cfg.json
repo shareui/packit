@@ -5,9 +5,6 @@
   "trusted_repo": [
     "https://raw.githubusercontent.com/shareui/packit/main/configs/config.json"
   ],
-  "signatures": [
-    "placeholder"
-  ],
   "blacklist": {
     "repos": [],
     "plugins": []
