@@ -1,4 +1,8 @@
 {
+  "tags_summary": {
+    "Featured": 3,
+    "Elyx": 1
+  },
   "plugins": [
     {
       "id": "ui_tweaks",
