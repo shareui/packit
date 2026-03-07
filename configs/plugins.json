@@ -1,6 +1,7 @@
 {
   "tags_summary": {
     "Featured": 3,
+    "Library": 1,
     "Elyx": 1
   },
   "plugins": [
@@ -44,6 +45,11 @@
           "Featured",
           "key_avatar_backgroundInProfileBlue",
           "https://t.me/packitGround/13/988"
+        ],
+        [
+          "Library",
+          "key_avatar_backgroundViolet",
+          "https://t.me/packitGround/13/1053"
         ]
       ]
     },
