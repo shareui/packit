@@ -77,9 +77,6 @@
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/devsettingicons.elyx",
       "description": "[For Devs] All icons/animations/colors for plugin settings/bulletins and more with filters!",
       "hash": "1064517361a10bb0cb23cd8d5b0371f56849617ce8d29f06baf38c52e566f356",
-      "deps": [
-        "elyxcore"
-      ],
       "tags": [
         [
           "Elyx",
