@@ -8,7 +8,7 @@
   },
   "repomap": {
     "plugins": "https://raw.githubusercontent.com/shareui/packit/main/configs/plugins.json",
-    "icons": "",
+    "icons": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/configs/icons.json",
     "configs": ""
   }
 }
