@@ -1,1 +1,68 @@
-
+{
+  "icons": [
+    {
+      "id": "40af1cd4-a1f8-4e49-8c98-404034707588",
+      "name": "DottedPack",
+      "author": "@yzewe",
+      "version": "1.0",
+      "icon_count": 145,
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/DottedPack.icons"
+    },
+    {
+      "id": "2aea3e82-3e8d-46ab-9e6b-8b2e1fb80ca8",
+      "name": "Liquid Glass Pack",
+      "author": "@n1ksly",
+      "version": "1.0",
+      "icon_count": 1000,
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/LiquidGlassPack.icons"
+    },
+    {
+      "id": "materialdesign3-by-mihailkotovski",
+      "name": "Material Design 3",
+      "author": "@mihailkotovski",
+      "version": "3.0.0",
+      "icon_count": 100,
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/MD3.icons"
+    },
+    {
+      "id": "fe5fc9d5-c76f-44a7-a152-bbddae5bfb75",
+      "name": "Material Symbols",
+      "author": "@nlvxm",
+      "version": "1.5",
+      "icon_count": 853,
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/MaterialSymbols.icons"
+    },
+    {
+      "id": "449c98ae-bcae-4fde-8d5a-a55f587a9bd6",
+      "name": "PhosphorPack",
+      "author": "@yzewe",
+      "version": "1.2",
+      "icon_count": 254,
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/PhosphorPack.icons"
+    },
+    {
+      "id": "f5840dfa-104b-4a82-9a98-bae96a45ddf1",
+      "name": "Pixel icons",
+      "author": "@geaselt1",
+      "version": "1.4",
+      "icon_count": 947,
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/Pixelicons.icons"
+    },
+    {
+      "id": "e3207e38-a16b-4e6b-a4bf-af1b8b4d33cc",
+      "name": "PuffyPack",
+      "author": "@yzewe",
+      "version": "1.1",
+      "icon_count": 261,
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/PuffyPack.icons"
+    },
+    {
+      "id": "db927f52-272b-4df3-abdd-99385e0050af",
+      "name": "UPixel",
+      "author": "@Mr_Fruktik",
+      "version": "1.5",
+      "icon_count": 532,
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/UPixel.icons"
+    }
+  ]
+}
