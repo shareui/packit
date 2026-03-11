@@ -6,7 +6,19 @@
       "author": "@yzewe",
       "version": "1.0",
       "icon_count": 145,
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/DottedPack.icons"
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/DottedPack.icons",
+      "preview": [
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/DottedPack/1000785404.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/DottedPack/1000785233.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/DottedPack/1000692035.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/DottedPack/1000785476.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/DottedPack/1000785257.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/DottedPack/1000785253.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/DottedPack/1000785250.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/DottedPack/1000785236.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/DottedPack/1000785230.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/DottedPack/1000785468.png"
+      ]
     },
     {
       "id": "2aea3e82-3e8d-46ab-9e6b-8b2e1fb80ca8",
@@ -14,7 +26,19 @@
       "author": "@n1ksly",
       "version": "1.0",
       "icon_count": 1000,
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/LiquidGlassPack.icons"
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/LiquidGlassPack.icons",
+      "preview": [
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/LiquidGlassPack/1000026228.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/LiquidGlassPack/1000026289.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/LiquidGlassPack/1000026033.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/LiquidGlassPack/1000017151.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/LiquidGlassPack/1000026086.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/LiquidGlassPack/1000026042.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/LiquidGlassPack/1000017108.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/LiquidGlassPack/1000017107.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/LiquidGlassPack/1000017155.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/LiquidGlassPack/1000017237.svg"
+      ]
     },
     {
       "id": "materialdesign3-by-mihailkotovski",
@@ -22,7 +46,19 @@
       "author": "@mihailkotovski",
       "version": "3.0.0",
       "icon_count": 100,
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/MD3.icons"
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/MD3.icons",
+      "preview": [
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/MD3/msg_photoeditor.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/MD3/input_bot1.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/MD3/input_video_pressed.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/MD3/msg_folders_private.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/MD3/msg_markunread.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/MD3/msg_groups_ny.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/MD3/msg_switch.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/MD3/msg_calendar2.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/MD3/msg_home.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/MD3/msg_leave.svg"
+      ]
     },
     {
       "id": "fe5fc9d5-c76f-44a7-a152-bbddae5bfb75",
@@ -30,7 +66,19 @@
       "author": "@nlvxm",
       "version": "1.5",
       "icon_count": 853,
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/MaterialSymbols.icons"
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/MaterialSymbols.icons",
+      "preview": [
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/MaterialSymbols/8273.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/MaterialSymbols/1000197829.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/MaterialSymbols/1000197506.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/MaterialSymbols/11361.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/MaterialSymbols/1000197809.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/MaterialSymbols/1000197271.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/MaterialSymbols/1000197444.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/MaterialSymbols/8314.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/MaterialSymbols/6135.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/MaterialSymbols/1000197438.svg"
+      ]
     },
     {
       "id": "449c98ae-bcae-4fde-8d5a-a55f587a9bd6",
@@ -38,7 +86,19 @@
       "author": "@yzewe",
       "version": "1.2",
       "icon_count": 254,
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/PhosphorPack.icons"
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/PhosphorPack.icons",
+      "preview": [
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/PhosphorPack/1000690529.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/PhosphorPack/1000690683.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/PhosphorPack/1000690561.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/PhosphorPack/1000690500.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/PhosphorPack/1000690497.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/PhosphorPack/1000690581.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/PhosphorPack/1000690498.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/PhosphorPack/1000690572.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/PhosphorPack/1000690710.svg",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/PhosphorPack/1000690564.svg"
+      ]
     },
     {
       "id": "f5840dfa-104b-4a82-9a98-bae96a45ddf1",
@@ -46,7 +106,19 @@
       "author": "@geaselt1",
       "version": "1.4",
       "icon_count": 947,
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/Pixelicons.icons"
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/Pixelicons.icons",
+      "preview": [
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/Pixelicons/1000722800.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/Pixelicons/1000721621.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/Pixelicons/1000720559.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/Pixelicons/1000721548.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/Pixelicons/1000722052.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/Pixelicons/1000720466.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/Pixelicons/1000722554.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/Pixelicons/1000720647.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/Pixelicons/1000722492.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/Pixelicons/1000721778.png"
+      ]
     },
     {
       "id": "e3207e38-a16b-4e6b-a4bf-af1b8b4d33cc",
@@ -54,7 +126,19 @@
       "author": "@yzewe",
       "version": "1.1",
       "icon_count": 261,
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/PuffyPack.icons"
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/PuffyPack.icons",
+      "preview": [
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/PuffyPack/1000691036.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/PuffyPack/1000690991.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/PuffyPack/1000690956.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/PuffyPack/1000690950.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/PuffyPack/1000691001.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/PuffyPack/1000691018.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/PuffyPack/1000690959.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/PuffyPack/1000691003.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/PuffyPack/1000690965.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/PuffyPack/1000691041.png"
+      ]
     },
     {
       "id": "db927f52-272b-4df3-abdd-99385e0050af",
@@ -62,7 +146,19 @@
       "author": "@Mr_Fruktik",
       "version": "1.5",
       "icon_count": 532,
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/UPixel.icons"
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/UPixel.icons",
+      "preview": [
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/UPixel/1000055279.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/UPixel/1000055447.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/UPixel/1000055515.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/UPixel/1000055347.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/UPixel/1000055193.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/UPixel/1000055360.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/UPixel/1000055338.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/UPixel/1000055234.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/UPixel/1000055579.png",
+        "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/UPixel/1000055268.png"
+      ]
     }
   ]
 }
