@@ -63,6 +63,17 @@ tg://packit?install&repo=<rm_id>&plugin=<plugin_id>
 
 Скачивает плагин и открывает нативный диалог установки.
 
+### Установить иконку
+```
+tg://packit?install&repo=<rm_id>&icon=<icon_id>
+```
+| Параметр | Описание |
+|----------|----------|
+| `rm_id` | ID репозитория |
+| `icon_id` | ID иконки внутри репозитория |
+
+Скачивает иконку и открывает нативный диалог установки.
+
 ---
 
 <a name="ru-репозитории"></a>
@@ -178,6 +189,17 @@ tg://packit?install&repo=<rm_id>&plugin=<plugin_id>
 | `plugin_id` | Plugin ID within the repository |
 
 Downloads the plugin and opens the native install dialog.
+
+### Install an icon
+```
+tg://packit?install&repo=<rm_id>&icon=<icon_id>
+```
+| Parameter | Description |
+|-----------|-------------|
+| `rm_id` | Repository ID |
+| `icon_id` | Icon ID within the repository |
+
+Downloads the icon and opens the native install dialog.
 
 ---
 
