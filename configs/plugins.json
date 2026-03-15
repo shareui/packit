@@ -2,7 +2,9 @@
   "tags_summary": {
     "Featured": 3,
     "Library": 1,
-    "Elyx": 1
+    "Elyx": 1,
+    "DevTools": 1,
+    "Customization": 1
   },
   "plugins": [
     {
@@ -67,6 +69,11 @@
           "Featured",
           "key_avatar_backgroundInProfileBlue",
           "https://t.me/packitGround/13/988"
+        ],
+        [
+          "DevTools",
+          "key_chat_inDownCall",
+          ""
         ]
       ]
     },
@@ -91,8 +98,14 @@
           "Featured",
           "key_avatar_backgroundInProfileBlue",
           "https://t.me/packitGround/13/988"
+        ],
+        [
+          "Customization",
+          "key_avatar_background2Cyan",
+          ""
         ]
-      ]
+      ],
+      "readme": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/readmes/readme_ui_tweaks.md"
     }
   ]
 }
