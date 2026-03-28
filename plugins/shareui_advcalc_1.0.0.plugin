@@ -1,0 +1,115 @@
+import ast
+import operator
+import math
+from base_plugin import BasePlugin, HookResult, HookStrategy, MenuItemData, MenuItemType
+from ui.settings import Header, Switch, Divider
+from ui.bulletin import BulletinHelper
+from client_utils import get_last_fragment
+from android_utils import run_on_ui_thread, log
+from com.exteragram.messenger.plugins import PluginsController
+from com.exteragram.messenger.plugins.ui import PluginSettingsActivity
+
+__id__ = "shareui_advcalc"
+__name__ = "Advanced calculator"
+__description__ = "Продвинутый калькулятор с поддержкой +/-/:/* а так же поддержкой сложных математических функций по типу log, cos, sin, e и так далее... .calc [выражение]"
+__author__ = "@shrdevv"
+__version__ = "1.0.0"
+__min_version__ = "11.12.0"
+__icon__ = "plugin232/1"
+
+ALLOWED_NAMES = {k: v for k, v in math.__dict__.items() if not k.startswith("__")}
+SAFE_EVAL_GLOBALS = {"__builtins__": None}
+SAFE_EVAL_GLOBALS.update(ALLOWED_NAMES)
+
+class CalculatorPlugin(BasePlugin):
+
+    def on_plugin_load(self):
+        self.add_on_send_message_hook()
+        self.add_menu_item(
+            MenuItemData(
+                menu_type=MenuItemType.CHAT_ACTION_MENU,
+                text="Настройки Калькулятора",
+                icon="msg_settings",
+                on_click=self._open_plugin_settings
+            )
+        )
+
+    def _open_plugin_settings(self, context: dict):
+        """Opens the settings activity for this specific plugin."""
+        def action():
+            try:
+                java_plugin = PluginsController.getInstance().plugins.get(self.id)
+                if java_plugin:
+                    last_fragment = get_last_fragment()
+                    if last_fragment:
+                        last_fragment.presentFragment(PluginSettingsActivity(java_plugin))
+            except Exception as e:
+                log(f"Failed to open plugin settings: {e}")
+        
+        run_on_ui_thread(action)
+
+    def create_settings(self):
+        return [
+            Header(text="Настройки калькулятора"),
+            Switch(
+                key="only_answer",
+                text="Отправлять только ответ",
+                subtext="Вместо '2+2=4' будет отправлено '4'",
+                default=False
+            ),
+            Divider(text="Команда: .calc [выражение]. Поддерживает функции из модуля math (sin, cos, pi, e и т.д.).")
+        ]
+
+    def on_send_message_hook(self, account, params):
+        if not hasattr(params, "message") or not isinstance(params.message, str):
+            return HookResult()
+
+        command_prefix = ".calc "
+        if not params.message.lower().startswith(command_prefix):
+            return HookResult()
+
+        expression_str = params.message[len(command_prefix):].strip()
+
+        if not expression_str:
+            BulletinHelper.show_error("Пожалуйста, введите математическое выражение после .calc")
+            return HookResult(strategy=HookStrategy.CANCEL)
+
+        processed_expression = expression_str.replace(':', '/').replace(',', '.')
+
+        try:
+            result = eval(processed_expression, SAFE_EVAL_GLOBALS, {})
+            
+            if isinstance(result, (float, int)):
+                result = round(result, 10)
+
+        except SyntaxError:
+            BulletinHelper.show_error("Ошибка: Неверный синтаксис выражения.")
+            return HookResult(strategy=HookStrategy.CANCEL)
+        except NameError as e:
+            name = "unknown"
+            try:
+                name = str(e).split("'")[1]
+            except IndexError:
+                pass
+            BulletinHelper.show_error(f"Ошибка: Неизвестное имя '{name}'. Разрешены только математические функции и константы.")
+            return HookResult(strategy=HookStrategy.CANCEL)
+        except TypeError as e:
+            BulletinHelper.show_error(f"Ошибка типа: {e}. Возможно, вы пытаетесь использовать неподдерживаемую операцию.")
+            return HookResult(strategy=HookStrategy.CANCEL)
+        except ZeroDivisionError:
+            BulletinHelper.show_error("Ошибка: Деление на ноль.")
+            return HookResult(strategy=HookStrategy.CANCEL)
+        except Exception as e:
+            BulletinHelper.show_error(f"Неизвестная ошибка: {type(e).__name__} - {e}")
+            return HookResult(strategy=HookStrategy.CANCEL)
+
+        show_only_answer = self.get_setting("only_answer", False)
+
+        if show_only_answer:
+            output_message = str(result)
+        else:
+        
+            output_message = f"{expression_str} = {result}"
+
+        params.message = output_message
+        return HookResult(strategy=HookStrategy.MODIFY, params=params)

@@ -1,0 +1,6 @@
+__name__ = "Min Version Test"
+__author__ = "idk"
+__description__ = "testplugin"
+__version__ = "1.5.0"
+__min_version__ = "12.1.0"
+__id__ = "testzalupa"

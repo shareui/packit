@@ -1,0 +1,77 @@
+from base_plugin import BasePlugin, MethodHook
+from hook_utils import find_class
+from typing import Any
+
+__id__ = "shareui_nmp"
+__name__ = "No More MusicPlayer"
+__description__ = "Replaces the music card player."
+__author__ = "@shareui(@doctashare)"
+__version__ = "1.0.0"
+__icon__ = ""
+__min_version__ = "12.1.0"
+
+VIEW_GONE = 8
+
+class ConstructorHook(MethodHook):
+    def after_hooked_method(self, param: Any) -> None:
+        try:
+            card = param.thisObject
+            card.setVisibility(VIEW_GONE)
+            lp = card.getLayoutParams()
+            if lp is not None:
+                lp.height = 0
+                lp.topMargin = 0
+                lp.bottomMargin = 0
+                card.setLayoutParams(lp)
+        except Exception:
+            pass
+
+
+class SetHook(MethodHook):
+    def after_hooked_method(self, param: Any) -> None:
+        try:
+            nowPlayingCardData = param.args[0]
+            if nowPlayingCardData is None:
+                return
+            if nowPlayingCardData.getNowPlayingDTO().getPlatform() != "TELEGRAM":
+                return
+            card = param.thisObject
+            card.setVisibility(VIEW_GONE)
+            lp = card.getLayoutParams()
+            if lp is not None:
+                lp.height = 0
+                lp.topMargin = 0
+                lp.bottomMargin = 0
+                card.setLayoutParams(lp)
+            card.requestLayout()
+        except Exception:
+            pass
+
+
+class VanillaPlayerPlugin(BasePlugin):
+    def on_plugin_load(self) -> None:
+        concreteClass = find_class("org.telegram.ui.ProfileActivity$ListAdapter$5")
+        abstractClass = find_class(
+            "com.exteragram.messenger.nowplaying.ui.components.NowPlayingCard"
+        )
+
+        if concreteClass is None or abstractClass is None:
+            self.log(f"class not found: concrete={concreteClass} abstract={abstractClass}")
+            return
+
+        self._hook_constructor(concreteClass)
+        self._hook_set(abstractClass)
+
+    def _hook_constructor(self, cls: Any) -> None:
+        try:
+            hooks = self.hook_all_methods(cls, "<init>", ConstructorHook())
+            self.log(f"hooked constructor ({len(hooks)} method(s))")
+        except Exception as e:
+            self.log(f"failed to hook constructor: {e}")
+
+    def _hook_set(self, cls: Any) -> None:
+        try:
+            hooks = self.hook_all_methods(cls, "set", SetHook())
+            self.log(f"hooked set ({len(hooks)} method(s))")
+        except Exception as e:
+            self.log(f"failed to hook set: {e}")

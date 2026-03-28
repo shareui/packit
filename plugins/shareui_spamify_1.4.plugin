@@ -1,0 +1,337 @@
+from base_plugin import BasePlugin, HookResult, HookStrategy
+from client_utils import send_message, run_on_queue, get_last_fragment
+from ui.settings import Header, Input
+from ui.bulletin import BulletinHelper
+from java.util import Locale
+
+__id__ = "shareui_spamify"
+__name__ = "Spamify"
+__description__ = """**[RU]**
+Руководство по использованию: [клик](https://t.me/fuchslog/66)
+
+**[EN]**
+Usage guide: [click](https://t.me/fuchslog/66)
+
+**IMPORTANT**: The plugin ID was changed in version 1.2 Fix. **REMOVE THE OLD VERSION BEFORE INSTALLING!!!**
+
+**ВАЖНО**: ID плагина было изменено в версии 1.2 Fix, **УДАЛИТЕ СТАРУЮ ВЕРСИЮ ПЕРЕД УСТАНОВКОЙ!!!**
+"""
+__author__ = "@shareui(@doctashare)"
+__version__ = "1.4"
+__icon__ = "plugin232/7"
+__min_version__ = "12.0.0"
+
+DEFAULT_DELAY = 200
+MAX_SPAM_COUNT = 1000
+
+global_spam_status = {}
+global_delay = DEFAULT_DELAY
+
+
+class LocalizationManager:
+    def __init__(self):
+        self.language = Locale.getDefault().getLanguage()
+        self.language = self.language if self.language in self._get_supported_languages() else "en"
+
+    def get_string(self, string):
+        return self.strings[self.language][string]
+
+    def _get_supported_languages(self):
+        return self.strings.keys()
+
+    strings = {
+        "ru": {
+            "USAGE_EXAMPLE": "пример: .wspam привет как дела",
+            "SETTINGS_TITLE": "настройки плагина",
+            "SETTINGS_DELAY": "задержка между сообщениями (мс)",
+            "SETTINGS_DELAY_SUB": "по умолчанию 200 мс",
+            "ERROR_NO_ARGS": "Недостаточно аргументов",
+            "ERROR_INVALID_NUMBER": "Неверное число",
+            "ERROR_COUNT_RANGE": "Количество должно быть от 1 до {max}",
+            "ERROR_EMPTY_MESSAGE": "Сообщение не может быть пустым",
+            "ERROR_EMPTY_TEXT": "Текст не может быть пустым",
+            "USAGE_DELAY": "Использование: .delay <миллисекунды>",
+            "USAGE_SPAM": "Использование: .spam <количество> <текст>",
+            "USAGE_CSPAM": "Использование: .cspam <текст>",
+            "USAGE_WSPAM": "Использование: .wspam <слово1> <слово2> ...",
+            "USAGE_SSPAM": "Использование: .sspam <текст с переносами строк>",
+            "DELAY_SET": "Задержка: {delay} мс",
+            "SPAM_STOPPED": "Спам остановлен",
+            "NO_SPAM_RUNNING": "Не запущен ни один спам"
+        },
+        "en": {
+            "USAGE_EXAMPLE": "usage: .wspam hello how are you",
+            "SETTINGS_TITLE": "plugin settings",
+            "SETTINGS_DELAY": "delay between messages (ms)",
+            "SETTINGS_DELAY_SUB": "default is 200 ms",
+            "ERROR_NO_ARGS": "Not enough arguments",
+            "ERROR_INVALID_NUMBER": "Invalid number",
+            "ERROR_COUNT_RANGE": "Count must be between 1 and {max}",
+            "ERROR_EMPTY_MESSAGE": "Message cannot be empty",
+            "ERROR_EMPTY_TEXT": "Text cannot be empty",
+            "USAGE_DELAY": "Usage: .delay <milliseconds>",
+            "USAGE_SPAM": "Usage: .spam <count> <text>",
+            "USAGE_CSPAM": "Usage: .cspam <text>",
+            "USAGE_WSPAM": "Usage: .wspam <word1> <word2> ...",
+            "USAGE_SSPAM": "Usage: .sspam <text with line breaks>",
+            "DELAY_SET": "Delay: {delay} ms",
+            "SPAM_STOPPED": "Spam stopped",
+            "NO_SPAM_RUNNING": "No spam running"
+        }
+    }
+
+
+locali = LocalizationManager()
+
+
+def start_spam(message, count, peer, replyToMsg=None, replyToTopMsg=None):
+    global global_spam_status, global_delay
+    peer_id = str(peer)
+    global_spam_status[peer_id] = True
+    for i in range(count):
+        def send_msg(m=message, p_id=peer_id):
+            if not global_spam_status.get(p_id, False):
+                return
+            msg_params = {"peer": peer, "message": m}
+            if replyToMsg is not None:
+                msg_params["replyToMsg"] = replyToMsg
+            if replyToTopMsg is not None:
+                msg_params["replyToTopMsg"] = replyToTopMsg
+            send_message(msg_params)
+        run_on_queue(send_msg, "pluginsQueue", global_delay * i)
+
+
+class WordSpamPlugin(BasePlugin):
+    def on_plugin_load(self):
+        self.add_on_send_message_hook()
+
+    def create_settings(self):
+        return [
+            Header(locali.get_string("SETTINGS_TITLE")),
+            Input(
+                key="wspam_delay",
+                text=locali.get_string("SETTINGS_DELAY"),
+                default=str(DEFAULT_DELAY),
+                subtext=locali.get_string("SETTINGS_DELAY_SUB")
+            )
+        ]
+
+    def on_send_message_hook(self, account, params):
+        global global_spam_status, global_delay
+
+        if not hasattr(params, "message") or not isinstance(params.message, str):
+            return HookResult()
+
+        text = params.message
+
+        try:
+            global_delay = int(self.get_setting('wspam_delay', str(DEFAULT_DELAY)))
+        except Exception:
+            pass
+
+        if text.startswith(".delay"):
+            try:
+                parts = text.split(maxsplit=1)
+                if len(parts) < 2:
+                    BulletinHelper.show_error(locali.get_string("USAGE_DELAY"), get_last_fragment())
+                    return HookResult(strategy=HookStrategy.CANCEL, params=params)
+                
+                delay_str = parts[1].strip()
+                if not delay_str:
+                    BulletinHelper.show_error(locali.get_string("ERROR_NO_ARGS"), get_last_fragment())
+                    return HookResult(strategy=HookStrategy.CANCEL, params=params)
+                
+                try:
+                    delay_value = int(delay_str)
+                except ValueError:
+                    BulletinHelper.show_error(locali.get_string("ERROR_INVALID_NUMBER"), get_last_fragment())
+                    return HookResult(strategy=HookStrategy.CANCEL, params=params)
+                
+                if delay_value <= 0:
+                    BulletinHelper.show_error(locali.get_string("ERROR_INVALID_NUMBER"), get_last_fragment())
+                    return HookResult(strategy=HookStrategy.CANCEL, params=params)
+                
+                global_delay = delay_value
+                for k in ["wspam_delay", "delay", "delay_ms"]:
+                    try:
+                        self.set_setting(k, str(global_delay))
+                    except Exception:
+                        pass
+                
+                BulletinHelper.show_success(locali.get_string("DELAY_SET").format(delay=global_delay), get_last_fragment())
+                return HookResult(strategy=HookStrategy.CANCEL, params=params)
+            except Exception:
+                BulletinHelper.show_error(locali.get_string("USAGE_DELAY"), get_last_fragment())
+                return HookResult(strategy=HookStrategy.CANCEL, params=params)
+
+        if text.startswith(".stop"):
+            peer = getattr(params, "peer", None)
+            if peer:
+                peer_id = str(peer)
+                if global_spam_status.get(peer_id, False):
+                    global_spam_status[peer_id] = False
+                    BulletinHelper.show_success(locali.get_string("SPAM_STOPPED"), get_last_fragment())
+                else:
+                    BulletinHelper.show_info(locali.get_string("NO_SPAM_RUNNING"), get_last_fragment())
+            return HookResult(strategy=HookStrategy.CANCEL, params=params)
+
+        if text.startswith(".spam"):
+            try:
+                parts = text.split()
+                if len(parts) < 2:
+                    BulletinHelper.show_error(locali.get_string("USAGE_SPAM"), get_last_fragment())
+                    return HookResult(strategy=HookStrategy.CANCEL, params=params)
+                
+                if len(parts) < 3:
+                    BulletinHelper.show_error(locali.get_string("USAGE_SPAM"), get_last_fragment())
+                    return HookResult(strategy=HookStrategy.CANCEL, params=params)
+                
+                try:
+                    count = int(parts[1])
+                except ValueError:
+                    BulletinHelper.show_error(locali.get_string("ERROR_INVALID_NUMBER"), get_last_fragment())
+                    return HookResult(strategy=HookStrategy.CANCEL, params=params)
+                
+                if count < 1 or count > MAX_SPAM_COUNT:
+                    BulletinHelper.show_error(locali.get_string("ERROR_COUNT_RANGE").format(max=MAX_SPAM_COUNT), get_last_fragment())
+                    return HookResult(strategy=HookStrategy.CANCEL, params=params)
+                
+                message = " ".join(parts[2:]).strip()
+                if not message:
+                    BulletinHelper.show_error(locali.get_string("ERROR_EMPTY_MESSAGE"), get_last_fragment())
+                    return HookResult(strategy=HookStrategy.CANCEL, params=params)
+                
+                peer = getattr(params, "peer", None)
+                replyToMsg = getattr(params, "replyToMsg", None)
+                replyToTopMsg = getattr(params, "replyToTopMsg", None)
+                start_spam(message, count, peer, replyToMsg, replyToTopMsg)
+                return HookResult(strategy=HookStrategy.CANCEL, params=params)
+            except Exception:
+                BulletinHelper.show_error(locali.get_string("USAGE_SPAM"), get_last_fragment())
+                return HookResult(strategy=HookStrategy.CANCEL, params=params)
+
+        if text.startswith(".cspam"):
+            try:
+                parts = text.split(maxsplit=1)
+                if len(parts) < 2:
+                    BulletinHelper.show_error(locali.get_string("USAGE_CSPAM"), get_last_fragment())
+                    return HookResult(strategy=HookStrategy.CANCEL, params=params)
+                
+                msg_text = parts[1].strip()
+                if not msg_text:
+                    BulletinHelper.show_error(locali.get_string("ERROR_EMPTY_TEXT"), get_last_fragment())
+                    return HookResult(strategy=HookStrategy.CANCEL, params=params)
+                
+                chars = list(msg_text)
+                if len(chars) > MAX_SPAM_COUNT:
+                    BulletinHelper.show_error(locali.get_string("ERROR_COUNT_RANGE").format(max=MAX_SPAM_COUNT), get_last_fragment())
+                    return HookResult(strategy=HookStrategy.CANCEL, params=params)
+
+                peer = getattr(params, "peer", None)
+                peer_id = str(peer)
+                global_spam_status[peer_id] = True
+                replyToMsg = getattr(params, "replyToMsg", None)
+                replyToTopMsg = getattr(params, "replyToTopMsg", None)
+
+                for idx, ch in enumerate(chars):
+                    def send_char(c=ch, p_id=peer_id):
+                        if not global_spam_status.get(p_id, False):
+                            return
+                        msg_params = {"peer": peer, "message": c}
+                        if replyToMsg is not None:
+                            msg_params["replyToMsg"] = replyToMsg
+                        if replyToTopMsg is not None:
+                            msg_params["replyToTopMsg"] = replyToTopMsg
+                        send_message(msg_params)
+                    run_on_queue(send_char, "pluginsQueue", global_delay * idx)
+                return HookResult(strategy=HookStrategy.CANCEL, params=params)
+            except Exception:
+                BulletinHelper.show_error(locali.get_string("USAGE_CSPAM"), get_last_fragment())
+                return HookResult(strategy=HookStrategy.CANCEL, params=params)
+
+        if text.startswith(".wspam"):
+            try:
+                parts = text.split()
+                if len(parts) < 2:
+                    BulletinHelper.show_error(locali.get_string("USAGE_WSPAM"), get_last_fragment())
+                    return HookResult(strategy=HookStrategy.CANCEL, params=params)
+                
+                words = parts[1:]
+                words = [w.strip() for w in words if w.strip()]
+                
+                if not words:
+                    BulletinHelper.show_error(locali.get_string("ERROR_EMPTY_TEXT"), get_last_fragment())
+                    return HookResult(strategy=HookStrategy.CANCEL, params=params)
+                
+                if len(words) > MAX_SPAM_COUNT:
+                    BulletinHelper.show_error(locali.get_string("ERROR_COUNT_RANGE").format(max=MAX_SPAM_COUNT), get_last_fragment())
+                    return HookResult(strategy=HookStrategy.CANCEL, params=params)
+                
+                peer = getattr(params, "peer", None)
+                peer_id = str(peer)
+                global_spam_status[peer_id] = True
+                replyToMsg = getattr(params, "replyToMsg", None)
+                replyToTopMsg = getattr(params, "replyToTopMsg", None)
+
+                for idx, word in enumerate(words):
+                    def send_word(w=word, p_id=peer_id):
+                        if not global_spam_status.get(p_id, False):
+                            return
+                        msg_params = {"peer": peer, "message": w}
+                        if replyToMsg is not None:
+                            msg_params["replyToMsg"] = replyToMsg
+                        if replyToTopMsg is not None:
+                            msg_params["replyToTopMsg"] = replyToTopMsg
+                        send_message(msg_params)
+                    run_on_queue(send_word, "pluginsQueue", global_delay * idx)
+                return HookResult(strategy=HookStrategy.CANCEL, params=params)
+            except Exception:
+                BulletinHelper.show_error(locali.get_string("USAGE_WSPAM"), get_last_fragment())
+                return HookResult(strategy=HookStrategy.CANCEL, params=params)
+
+        if text.startswith(".sspam"):
+            try:
+                parts = text.split(maxsplit=1)
+                if len(parts) < 2:
+                    BulletinHelper.show_error(locali.get_string("USAGE_SSPAM"), get_last_fragment())
+                    return HookResult(strategy=HookStrategy.CANCEL, params=params)
+                
+                msg_text = parts[1]
+                if not msg_text:
+                    BulletinHelper.show_error(locali.get_string("ERROR_EMPTY_TEXT"), get_last_fragment())
+                    return HookResult(strategy=HookStrategy.CANCEL, params=params)
+                
+                lines = msg_text.split('\n')
+                lines = [line for line in lines if line.strip()]
+                
+                if not lines:
+                    BulletinHelper.show_error(locali.get_string("ERROR_EMPTY_TEXT"), get_last_fragment())
+                    return HookResult(strategy=HookStrategy.CANCEL, params=params)
+                
+                if len(lines) > MAX_SPAM_COUNT:
+                    BulletinHelper.show_error(locali.get_string("ERROR_COUNT_RANGE").format(max=MAX_SPAM_COUNT), get_last_fragment())
+                    return HookResult(strategy=HookStrategy.CANCEL, params=params)
+                
+                peer = getattr(params, "peer", None)
+                peer_id = str(peer)
+                global_spam_status[peer_id] = True
+                replyToMsg = getattr(params, "replyToMsg", None)
+                replyToTopMsg = getattr(params, "replyToTopMsg", None)
+
+                for idx, line in enumerate(lines):
+                    def send_line(l=line, p_id=peer_id):
+                        if not global_spam_status.get(p_id, False):
+                            return
+                        msg_params = {"peer": peer, "message": l}
+                        if replyToMsg is not None:
+                            msg_params["replyToMsg"] = replyToMsg
+                        if replyToTopMsg is not None:
+                            msg_params["replyToTopMsg"] = replyToTopMsg
+                        send_message(msg_params)
+                    run_on_queue(send_line, "pluginsQueue", global_delay * idx)
+                return HookResult(strategy=HookStrategy.CANCEL, params=params)
+            except Exception:
+                BulletinHelper.show_error(locali.get_string("USAGE_SSPAM"), get_last_fragment())
+                return HookResult(strategy=HookStrategy.CANCEL, params=params)
+
+        return HookResult()

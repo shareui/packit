@@ -1,0 +1,76 @@
+{
+  "permissions": {
+    "everyone": [400216230, 2037728749]
+  },
+  "trusted_repo": [
+    "https://raw.githubusercontent.com/shareui/packit/main/configs/config.json"
+  ],
+  "blacklist": {
+    "repos": [],
+    "plugins": []
+  },
+  "latest_ver": [
+    "1.1.0-dev.400",
+    "• Test\n•Test2",
+    "randomshareui/0",
+    "https://t.me/packitrel/2"
+  ],
+  "badges": [
+    {
+      "id": "vestr_user",
+      "user_id": 2037728749,
+      "emoji_id": 5208665577555512622,
+      "text_ru": "**Vestr** — ведущий разработчик **Packit** и основатель **Meta Plugins**.",
+      "text_en": "**Vestr** is the official lead developer of **Packit** and founder of **Meta Plugins**."
+    },
+    {
+      "id": "vestr_channel",
+      "chat_id": 2693931764,
+      "emoji_id": 5208665577555512622,
+      "text_ru": "**Meta Plugins** — официальный канал **Vestr**.",
+      "text_en": "**Meta Plugins** is official **Vestr** channel."
+    },
+    {
+      "id": "fuchs_user",
+      "user_id": 400216230,
+      "emoji_id": 5814204048726826670,
+      "text_ru": "**Fuchs** является основателем **PackIt**.",
+      "text_en": "**Fuchs** is the founder of **PackIt**."
+    },
+    {
+      "id": "fuchs_channel",
+      "chat_id": 3752892253,
+      "emoji_id": 5814152715277704795,
+      "text_ru": "**Docta Share** — это канал с плагинами от **shareui**.",
+      "text_en": "**Docta Share** is a channel with plugins from **shareui**."
+    },
+    {
+      "id": "packitground_group",
+      "chat_id": 3663388991,
+      "emoji_id": 6037310381230135764,
+      "text_ru": "**PackitGround** является официальным ресурсом **Packit**.",
+      "text_en": "**PackitGround** is the official resource for **Packit**."
+    },
+    {
+      "id": "packit_links",
+      "chat_id": 3707831768,
+      "emoji_id": 6037310381230135764,
+      "text_ru": "**PackIt Releases** является официальным ресурсом **PackIt**.",
+      "text_en": "**PackIt Releases** is the official resource for **PackIt**."
+    },
+    {
+      "id": "packit_main",
+      "chat_id": 3744051103,
+      "emoji_id": 6037310381230135764,
+      "text_ru": "**PackIt** является официальным ресурсом **PackIt**.",
+      "text_en": "**PackIt** is the official resource for **PackIt**."
+    },
+    {
+      "id": "packit_en",
+      "chat_id": 3537035182,
+      "emoji_id": 6037310381230135764,
+      "text_ru": "**PackIt EN** является официальным ресурсом **PackIt**.",
+      "text_en": "**PackIt EN** is the official resource for **PackIt**."
+    }
+  ]
+}

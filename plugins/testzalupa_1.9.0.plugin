@@ -1,0 +1,6 @@
+__id__ = "testzalupa"
+__name__ = "testzalupa"
+__description__ = "testzalupa"
+__author__ = "@huy"
+__version__ = "1.9.0"
+__min_version__ = "12.2.0"
