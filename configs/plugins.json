@@ -14,15 +14,18 @@
       "id": "devsettingicons",
       "name": "DevSettingIcons",
       "author": "@CactusPlugins",
-      "version": "1.4.2",
+      "version": "1.4.3",
       "state": "release",
       "icon": "remusic/3",
       "min_version": "11.13.0",
+      "app_version": ">=11.13.0",
+      "sdk_version": "Unknown",
       "suspicious": "false",
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/devsettingicons_1.4.2.elyx",
-      "size": "81.09 KB",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/devsettingicons_1.4.3.eaf",
+      "size": "61.29 KB",
       "description": "[For Devs] All icons/animations/colors for plugin settings/bulletins and more with filters!",
-      "hash": "8ed8b978cee700ce83c477fceb3fa4afe0c65a5ec2595c3450de34cb3350a6df",
+      "hash": "60f8db63406cd3df563f48dc543e7425f485c6a16f64d4174cd53fabe43b0e48",
+      "bithash": "5a6a55b077cd883f",
       "tags": [
         [
           "Elyx",
@@ -41,8 +44,13 @@
         ]
       ],
       "release_date": "18.03.26",
-      "bithash": "64bddce6b87aed17",
-      "app_version": ">=11.13.0"
+      "update_date": "01.04.26",
+      "versions": {
+        "1.4.2": {
+          "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/devsettingicons_1.4.2.elyx",
+          "app_version": ">=11.13.0"
+        }
+      }
     },
     {
       "id": "quantahut",
