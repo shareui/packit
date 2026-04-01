@@ -693,21 +693,30 @@
           "key_avatar_background2Cyan",
           ""
         ]
+      ],
+      "social": [
+        [
+          "msg_channel",
+          "Channel",
+          "https://t.me/doctashare"
+        ]
       ]
     },
     {
       "id": "shareui_bettersearch",
-      "name": "BetterSearch",
+      "name": "Better Search",
       "author": "@shareui(@doctashare)",
-      "version": "1.0.2",
+      "version": "2.0.0",
       "state": "release",
       "icon": "AgnesTachyon/1",
-      "min_version": "12.2.10",
+      "app_version": ">=12.5.1",
+      "sdk_version": ">=1.4.3.2",
       "suspicious": "false",
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_bettersearch_1.0.2.plugin",
-      "size": "20.73 KB",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_bettersearch_2.0.0.plugin",
+      "size": "41.84 KB",
       "description": "Significantly improves search in the plugin list. Library source code: [shareui/plugins/assets/bettersearch.c](https://github.com/shareui/plugins/blob/main/assets/bettersearch.c)",
-      "hash": "b3038e00636c04d73cd9b9fad74f65eb6c912f1545bbdd6a2757b00492aacf22",
+      "hash": "45f23b212721c990db3733ffaf8b143069de66c42bbf90b58b70522a7f20986b",
+      "bithash": "e301cc886407c6c7",
       "tags": [
         [
           "Featured",
@@ -721,15 +730,30 @@
         ]
       ],
       "release_date": "21.03.26",
-      "update_date": "21.03.26",
+      "update_date": "01.04.26",
       "versions": {
         "1.0.1": {
           "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_bettersearch_1.0.1.plugin",
           "app_version": ">=12.2.10"
+        },
+        "1.0.2": {
+          "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_bettersearch_1.0.2.plugin",
+          "app_version": ">=12.2.10"
         }
       },
-      "bithash": "3211421e3674ee3d",
-      "app_version": ">=12.2.10"
+      "changelog": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/changelogs/changelog_shareui_bettersearch.md",
+      "social": [
+        [
+          "input_bot1",
+          "Source code",
+          "https://github.com/shareui/plugins/blob/main/assets/bettersearch.c"
+        ],
+        [
+          "msg_channel",
+          "Channel",
+          "https://t.me/doctashare"
+        ]
+      ]
     },
     {
       "id": "shareui_fservice",
@@ -747,13 +771,23 @@
       "description": "Keeps client alive in background on Chinese ROM devices to ensure notifications are delivered. **Only for Chinese ROM.** / Держит соединение клиента в фоне. **Только для китайских прошивок.**",
       "hash": "40b4d9a7ea1b7556733297088590a1a637a986b0b16d48d30a24f2d5f9732d8e",
       "bithash": "f77a05db85b044f2",
-      "release_date": "28.03.26",
       "tags": [
         [
           "System",
           "key_color_lightblue",
           ""
         ]
+      ],
+      "social": [
+        [
+          "msg_channel",
+          "Channel",
+          "https://t.me/doctashare"
+        ]
+      ],
+      "release_date": "28.03.26",
+      "client_incompatibilities": [
+        "com.radolyn.ayugram"
       ]
     }
   ]
