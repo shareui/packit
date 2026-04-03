@@ -1,5 +1,7 @@
-**Update v2.0.0**
+**Patch v2.0.1**  
+• Fixed path retrieval on all devices. If the library was not found or did not work for you, update.
 
+**Update v2.0.0**  
 • Plugin search: The more similar the plugin name is to the query, the higher the plugin will appear in the list.
 • Redesigned plugin settings.
 • Library status (Library: ...) is now updated instantly.
