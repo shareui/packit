@@ -771,18 +771,17 @@
       "id": "shareui_fservice",
       "name": "Foreground service",
       "author": "@shareui(@doctashare)",
-      "version": "1.0.0",
+      "version": "1.3.0",
       "state": "release",
       "icon": "",
-      "min_version": "12.2.10",
-      "app_version": ">=12.2.10",
-      "sdk_version": "Unknown",
+      "app_version": ">=12.5.1",
+      "sdk_version": ">=1.4.3.2",
       "suspicious": "false",
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_fservice_1.0.0.plugin",
-      "size": "4.35 KB",
-      "description": "Keeps client alive in background on Chinese ROM devices to ensure notifications are delivered. **Only for Chinese ROM.** / Держит соединение клиента в фоне. **Только для китайских прошивок.**",
-      "hash": "40b4d9a7ea1b7556733297088590a1a637a986b0b16d48d30a24f2d5f9732d8e",
-      "bithash": "f77a05db85b044f2",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_fservice_1.3.0.plugin",
+      "size": "69.43 KB",
+      "description": "Ensures reliable background notifications **on Chinese ROM**. \n**Only for exteraGram!**",
+      "hash": "a9a572fd2abdb7b062e0fbdb234e232613ba8ab6de4bed75e47528084b335ade",
+      "bithash": "7379e655bea1fff5",
       "tags": [
         [
           "System",
@@ -798,9 +797,16 @@
         ]
       ],
       "release_date": "28.03.26",
+      "update_date": "12.04.26",
       "client_incompatibilities": [
         "com.radolyn.ayugram"
-      ]
+      ],
+      "versions": {
+        "1.0.0": {
+          "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_fservice_1.0.0.plugin",
+          "app_version": ">=12.2.10"
+        }
+      }
     }
   ]
 }
