@@ -159,44 +159,6 @@
         "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/UPixel/1000055579.png",
         "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/icons/UPixel/1000055268.png"
       ]
-    },
-    {
-      "id": "b5b19e39-a804-417d-91d6-96cae2d8b2e9",
-      "name": "Fluent 2 Design",
-      "author": "@ezhe42",
-      "version": "1.0",
-      "icon_count": 841,
-      "link": "https://raw.githubusercontent.com/user/repo/refs/heads/main/icons/custom.b5b19e39-a804-417d-91d6-96cae2d8b2e9.icons",
-      "preview": [
-        "https://raw.githubusercontent.com/user/repo/refs/heads/main/icons/custom.b5b19e39-a804-417d-91d6-96cae2d8b2e9/msg_block.svg",
-        "https://raw.githubusercontent.com/user/repo/refs/heads/main/icons/custom.b5b19e39-a804-417d-91d6-96cae2d8b2e9/10357.png",
-        "https://raw.githubusercontent.com/user/repo/refs/heads/main/icons/custom.b5b19e39-a804-417d-91d6-96cae2d8b2e9/msg_remove.svg",
-        "https://raw.githubusercontent.com/user/repo/refs/heads/main/icons/custom.b5b19e39-a804-417d-91d6-96cae2d8b2e9/filled_calls_plus.svg",
-        "https://raw.githubusercontent.com/user/repo/refs/heads/main/icons/custom.b5b19e39-a804-417d-91d6-96cae2d8b2e9/msg_stories_link.svg",
-        "https://raw.githubusercontent.com/user/repo/refs/heads/main/icons/custom.b5b19e39-a804-417d-91d6-96cae2d8b2e9/10651.png",
-        "https://raw.githubusercontent.com/user/repo/refs/heads/main/icons/custom.b5b19e39-a804-417d-91d6-96cae2d8b2e9/outline_profile_settings.svg",
-        "https://raw.githubusercontent.com/user/repo/refs/heads/main/icons/custom.b5b19e39-a804-417d-91d6-96cae2d8b2e9/media_settings.svg",
-        "https://raw.githubusercontent.com/user/repo/refs/heads/main/icons/custom.b5b19e39-a804-417d-91d6-96cae2d8b2e9/play_mini_video.svg",
-        "https://raw.githubusercontent.com/user/repo/refs/heads/main/icons/custom.b5b19e39-a804-417d-91d6-96cae2d8b2e9/story_link.svg"
-      ]
-    },
-    {
-      "id": "remix_new",
-      "name": "Remix New",
-      "author": "@Darksourse399, @logicPlugins",
-      "version": "1.2",
-      "icon_count": 8,
-      "link": "https://raw.githubusercontent.com/user/repo/refs/heads/main/icons/RemixNew.icons",
-      "preview": [
-        "https://raw.githubusercontent.com/user/repo/refs/heads/main/icons/RemixNew/weather_rainy.svg",
-        "https://raw.githubusercontent.com/user/repo/refs/heads/main/icons/RemixNew/weather_partly_cloudy.svg",
-        "https://raw.githubusercontent.com/user/repo/refs/heads/main/icons/RemixNew/weather_night.svg",
-        "https://raw.githubusercontent.com/user/repo/refs/heads/main/icons/RemixNew/weather_thunderstorm.svg",
-        "https://raw.githubusercontent.com/user/repo/refs/heads/main/icons/RemixNew/weather_snowy.svg",
-        "https://raw.githubusercontent.com/user/repo/refs/heads/main/icons/RemixNew/weather_foggy.svg",
-        "https://raw.githubusercontent.com/user/repo/refs/heads/main/icons/RemixNew/weather_sunny.svg",
-        "https://raw.githubusercontent.com/user/repo/refs/heads/main/icons/RemixNew/weather_cloudy.svg"
-      ]
     }
   ]
 }
