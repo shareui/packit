@@ -216,25 +216,17 @@
       "id": "shareui_efch",
       "name": "exteraFetch",
       "author": "@shareui(@doctashare)",
-      "version": "1.1.1",
+      "version": "1.2.0",
       "state": "release",
       "icon": "miyabiZZZ/1",
-      "min_version": "12.1.1",
-      "suspicious": "false",
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_efch_1.1.1.plugin",
-      "size": "35.34 KB",
-      "description": "displays sys info [.efch]\n\n(half of everything doesn't work)",
-      "hash": "db76509883fce509e5f41257fed4ffc5f9c4017577c5bccf788aace2c21a667a",
-      "social": [
-        [
-          "msg_channel",
-          "Channel",
-          "https://t.me/doctashare"
-        ]
-      ],
-      "release_date": "18.03.26",
-      "bithash": "98024cdfafef5d9b",
       "app_version": ">=12.1.1",
+      "sdk_version": ">=1.4.3.2",
+      "suspicious": "false",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_efch_1.2.0.plugin",
+      "size": "74.62 KB",
+      "description": "displays sys info [.efch] or a interface in the plugin settings",
+      "hash": "465184bd88ff2c405744736f4ef2d9366e0f1c6fcbe49950a619d1882d9fcc48",
+      "bithash": "2b24906a8ffc7d86",
       "tags": [
         [
           "System",
@@ -246,7 +238,22 @@
           "key_avatar_background2Orange",
           ""
         ]
-      ]
+      ],
+      "social": [
+        [
+          "msg_channel",
+          "Channel",
+          "https://t.me/doctashare"
+        ]
+      ],
+      "release_date": "18.03.26",
+      "update_date": "16.04.26",
+      "versions": {
+        "1.1.1": {
+          "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_efch_1.1.1.plugin",
+          "app_version": ">=12.1.1"
+        }
+      }
     },
     {
       "id": "shareui_exteragit",
