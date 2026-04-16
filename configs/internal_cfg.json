@@ -7,7 +7,10 @@
   ],
   "blacklist": {
     "repos": [],
-    "plugins": []
+    "plugins": [],
+    "users": {
+      "1234": "test"
+    }
   },
   "latest_ver": [
     "1.1.0-dev.400",
