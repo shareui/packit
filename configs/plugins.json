@@ -510,8 +510,8 @@
     },
     {
       "id": "shareui_x0",
-      "name": "Simple photo link",
-      "author": "@shrdevv(@doctashare)",
+      "name": "author",
+      "author": "@shareui(@doctashare)",
       "version": "1.0.1",
       "state": "release",
       "icon": "plugin232/12",
