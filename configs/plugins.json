@@ -778,17 +778,17 @@
       "id": "shareui_fservice",
       "name": "Foreground service",
       "author": "@shareui(@doctashare)",
-      "version": "1.3.0",
+      "version": "1.3.1",
       "state": "release",
       "icon": "",
       "app_version": ">=12.5.1",
       "sdk_version": ">=1.4.3.2",
       "suspicious": "false",
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_fservice_1.3.0.plugin",
-      "size": "69.43 KB",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_fservice_1.3.1.plugin",
+      "size": "69.42 KB",
       "description": "Ensures reliable background notifications **on Chinese ROM**. \n**Only for exteraGram!**",
-      "hash": "a9a572fd2abdb7b062e0fbdb234e232613ba8ab6de4bed75e47528084b335ade",
-      "bithash": "7379e655bea1fff5",
+      "hash": "49f43f6212b3992dd928d05a3ebe55bb43b5666f5c0a720b427610f4d2c02c6e",
+      "bithash": "498515aa0c43b36f",
       "tags": [
         [
           "System",
@@ -804,7 +804,7 @@
         ]
       ],
       "release_date": "28.03.26",
-      "update_date": "12.04.26",
+      "update_date": "19.04.26",
       "client_incompatibilities": [
         "com.radolyn.ayugram"
       ],
@@ -812,6 +812,10 @@
         "1.0.0": {
           "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_fservice_1.0.0.plugin",
           "app_version": ">=12.2.10"
+        },
+        "1.3.0": {
+          "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_fservice_1.3.0.plugin",
+          "app_version": ">=12.5.1"
         }
       }
     }
