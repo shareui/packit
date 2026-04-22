@@ -16,7 +16,7 @@
     "1.1.0-dev.400",
     "• Test\n•Test2",
     "randomshareui/0",
-    "https://t.me/packitrel/2"
+    ""
   ],
   "badges": [
     {
@@ -58,8 +58,8 @@
       "id": "packit_links",
       "chat_id": 3707831768,
       "emoji_id": 6037310381230135764,
-      "text_ru": "**PackIt Links** является официальным ресурсом **PackIt**.",
-      "text_en": "**PackIt Links** is the official resource for **PackIt**."
+      "text_ru": "**PackIt** является главным и всегда актуальным каналом плагина **PackIt**.",
+      "text_en": "**PackIt** is the main and always up-to-date channel of the **PackIt** plugin."
     },
     {
       "id": "packit_main",
