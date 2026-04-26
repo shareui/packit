@@ -512,7 +512,7 @@
     },
     {
       "id": "shareui_x0",
-      "name": "author",
+      "name": "Simple Photo Link",
       "author": "@shareui(@doctashare)",
       "version": "1.0.1",
       "state": "release",
@@ -837,6 +837,40 @@
           ]
         }
       }
+    },
+    {
+      "id": "shareui_shareui",
+      "name": "ShareUI",
+      "author": "@shareui(@doctashare)",
+      "version": "1.0.0",
+      "state": "release",
+      "icon": "",
+      "app_version": ">=12.5.1",
+      "sdk_version": ">=1.4.3.3",
+      "suspicious": "false",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_shareui_1.0.0.plugin",
+      "size": "5.16 KB",
+      "description": "Replaces system share with Telegram ShareAlert when sharing plugins in PluginCell",
+      "hash": "5717b881e5d4d2aeddb10ae5570bc3067118e2ae74163901f3f438a4575a175a",
+      "bithash": "9f31c98859e57d75",
+      "release_date": "26.04.26"
+    },
+    {
+      "id": "shareui_dkta",
+      "name": "Don't kill the download!",
+      "author": "@shareui(@doctashare)",
+      "version": "1.0.0",
+      "state": "release",
+      "icon": "",
+      "app_version": ">=12.5.1",
+      "sdk_version": ">=1.4.3.3",
+      "suspicious": "false",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_dkta_1.0.0.plugin",
+      "size": "1.27 KB",
+      "description": "Continues downloading files in the background when exiting the chat.",
+      "hash": "4eb3173268b7ee3abad157dd02ea0d3362ca56ca527ad44be443027d6c05e6d6",
+      "bithash": "704d890cb0f9ad4d",
+      "release_date": "26.04.26"
     }
   ]
 }
