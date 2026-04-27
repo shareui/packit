@@ -866,11 +866,12 @@
       "sdk_version": ">=1.4.3.3",
       "suspicious": "false",
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_dkta_1.0.0.plugin",
-      "size": "1.27 KB",
+      "size": "1.22 KB",
       "description": "Continues downloading files in the background when exiting the chat.",
-      "hash": "4eb3173268b7ee3abad157dd02ea0d3362ca56ca527ad44be443027d6c05e6d6",
-      "bithash": "704d890cb0f9ad4d",
-      "release_date": "26.04.26"
+      "hash": "8c39324d9210537c30bc95a0336ca08276eb4f87ea2aa88bfbdd9b738c3125cd",
+      "bithash": "94dcc6f811eb3f17",
+      "release_date": "26.04.26",
+      "update_date": "27.04.26"
     }
   ]
 }
