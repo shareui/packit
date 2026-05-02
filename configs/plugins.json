@@ -161,7 +161,9 @@
           "app_version": ">=12.2.0",
           "size": "0.15 KB",
           "changelog": [
-            "None"
+            "None",
+            "+1",
+            "-1"
           ]
         }
       }
@@ -288,7 +290,9 @@
           "app_version": ">=12.1.1",
           "size": "35.34 KB",
           "changelog": [
-            "None"
+            "None",
+            "+661",
+            "-23"
           ]
         }
       }
@@ -653,7 +657,9 @@
           "app_version": ">=11.12.0",
           "size": "4.96 KB",
           "changelog": [
-            "None"
+            "None",
+            "+274",
+            "-52"
           ]
         }
       }
@@ -831,7 +837,9 @@
           "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_bettersearch_2.0.0.plugin",
           "app_version": ">=12.5.1",
           "changelog": [
-            "https://t.me/doctashare/81"
+            "https://t.me/doctashare/81",
+            "+3",
+            "-3"
           ],
           "size": "41.84 KB"
         }
@@ -886,7 +894,9 @@
           "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_fservice_1.3.0.plugin",
           "app_version": ">=12.5.1",
           "changelog": [
-            "https://t.me/doctashare/87"
+            "https://t.me/doctashare/87",
+            "+2",
+            "-2"
           ],
           "size": "69.43 KB"
         }
