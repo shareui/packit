@@ -48,7 +48,11 @@
       "versions": {
         "1.4.2": {
           "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/devsettingicons_1.4.2.elyx",
-          "app_version": ">=11.13.0"
+          "app_version": ">=11.13.0",
+          "size": "81.09 KB",
+          "changelog": [
+            "None"
+          ]
         }
       }
     },
@@ -102,37 +106,65 @@
       "state": "release",
       "icon": "",
       "min_version": "12.2.0",
+      "app_version": ">=12.2.0",
       "suspicious": "false",
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/testzalupa_1.9.0.plugin",
       "size": "0.15 KB",
       "description": "testzalupa",
       "hash": "ff7b28be8d22a735ab5c7d5328b39fd5284de8a6de9a01b133ee67b907de2faf",
+      "bithash": "bdbfabf765d0dd90",
       "release_date": "18.03.26",
       "update_date": "18.03.26",
       "versions": {
         "1.4.8.8": {
           "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/testzalupa_1.4.8.8.plugin",
-          "app_version": ">=14.8.8"
+          "app_version": ">=14.8.8",
+          "size": "0.12 KB",
+          "changelog": [
+            "None",
+            "+3",
+            "-4"
+          ]
         },
         "1.5.0": {
           "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/testzalupa_1.5.0.plugin",
-          "app_version": ">=12.1.0"
+          "app_version": ">=12.1.0",
+          "size": "0.15 KB",
+          "changelog": [
+            "None",
+            "+6",
+            "-6"
+          ]
         },
         "1.6.0": {
           "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/testzalupa_1.6.0.plugin",
-          "app_version": ">=12.2.0"
+          "app_version": ">=12.2.0",
+          "size": "0.15 KB",
+          "changelog": [
+            "None",
+            "+1",
+            "-1"
+          ]
         },
         "1.7.0": {
           "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/testzalupa_1.7.0.plugin",
-          "app_version": ">=12.2.0"
+          "app_version": ">=12.2.0",
+          "size": "0.15 KB",
+          "changelog": [
+            "None",
+            "+1",
+            "-1"
+          ]
         },
         "1.8.0": {
           "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/testzalupa_1.8.0.plugin",
-          "app_version": ">=12.2.0"
+          "app_version": ">=12.2.0",
+          "size": "0.15 KB",
+          "changelog": [
+            "None"
+          ]
         }
-      },
-      "bithash": "bdbfabf765d0dd90",
-      "app_version": ">=12.2.0"
+      }
     },
     {
       "id": "ui_tweaks",
@@ -238,6 +270,9 @@
           ""
         ]
       ],
+      "changelog": [
+        "https://t.me/doctashare/102"
+      ],
       "social": [
         [
           "msg_channel",
@@ -250,12 +285,13 @@
       "versions": {
         "1.1.1": {
           "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_efch_1.1.1.plugin",
-          "app_version": ">=12.1.1"
+          "app_version": ">=12.1.1",
+          "size": "35.34 KB",
+          "changelog": [
+            "None"
+          ]
         }
-      },
-      "changelog": [
-        "https://t.me/doctashare/102"
-      ]
+      }
     },
     {
       "id": "shareui_exteragit",
@@ -586,11 +622,23 @@
       "state": "release",
       "icon": "plugin232/1",
       "min_version": "12.4.1",
+      "app_version": ">=12.4.1",
       "suspicious": "false",
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_advcalc_2.0.0.plugin",
       "size": "16.95 KB",
       "description": "**Advanced math, BMI, Currency, etc.**\n[Documentation](https://github.com/shareui/plugins/blob/main/assets/advcalcdocs.md)",
       "hash": "d6c2f544174788d518b5ed7608e43b7cd3cc0ab64a41e5de8aedb29e57c3dcc6",
+      "bithash": "66d0218325fff598",
+      "tags": [
+        [
+          "Utility",
+          "key_avatar_background2Orange",
+          ""
+        ]
+      ],
+      "changelog": [
+        "https://t.me/doctashare/32"
+      ],
       "social": [
         [
           "msg_channel",
@@ -602,21 +650,13 @@
       "versions": {
         "1.0.0": {
           "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_advcalc_1.0.0.plugin",
-          "app_version": ">=11.12.0"
+          "app_version": ">=11.12.0",
+          "size": "4.96 KB",
+          "changelog": [
+            "None"
+          ]
         }
-      },
-      "bithash": "66d0218325fff598",
-      "app_version": ">=12.4.1",
-      "tags": [
-        [
-          "Utility",
-          "key_avatar_background2Orange",
-          ""
-        ]
-      ],
-      "changelog": [
-        "https://t.me/doctashare/32"
-      ]
+      }
     },
     {
       "id": "shareui_sh",
@@ -749,6 +789,9 @@
           ""
         ]
       ],
+      "changelog": [
+        "https://t.me/doctashare/83"
+      ],
       "social": [
         [
           "input_bot1",
@@ -768,27 +811,31 @@
           "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_bettersearch_1.0.1.plugin",
           "app_version": ">=12.2.10",
           "changelog": [
-            "https://t.me/doctashare/67"
-          ]
+            "https://t.me/doctashare/67",
+            "+5",
+            "-9"
+          ],
+          "size": "20.52 KB"
         },
         "1.0.2": {
           "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_bettersearch_1.0.2.plugin",
           "app_version": ">=12.2.10",
           "changelog": [
-            "https://t.me/doctashare/68"
-          ]
+            "https://t.me/doctashare/68",
+            "+66",
+            "-343"
+          ],
+          "size": "20.73 KB"
         },
         "2.0.0": {
           "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_bettersearch_2.0.0.plugin",
           "app_version": ">=12.5.1",
           "changelog": [
             "https://t.me/doctashare/81"
-          ]
+          ],
+          "size": "41.84 KB"
         }
-      },
-      "changelog": [
-        "https://t.me/doctashare/83"
-      ]
+      }
     },
     {
       "id": "shareui_fservice",
@@ -827,14 +874,21 @@
       "versions": {
         "1.0.0": {
           "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_fservice_1.0.0.plugin",
-          "app_version": ">=12.2.10"
+          "app_version": ">=12.2.10",
+          "size": "4.35 KB",
+          "changelog": [
+            "None",
+            "+36",
+            "-1102"
+          ]
         },
         "1.3.0": {
           "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_fservice_1.3.0.plugin",
           "app_version": ">=12.5.1",
           "changelog": [
             "https://t.me/doctashare/87"
-          ]
+          ],
+          "size": "69.43 KB"
         }
       }
     },
