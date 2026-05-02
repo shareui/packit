@@ -43,6 +43,9 @@
           ""
         ]
       ],
+      "changelog": [
+        "None"
+      ],
       "release_date": "18.03.26",
       "update_date": "01.04.26",
       "versions": {
@@ -96,7 +99,10 @@
       "release_date": "18.03.26",
       "readme": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/readmes/readme_quantahut.md",
       "bithash": "10f504a2507705c2",
-      "app_version": ">=12.2.10"
+      "app_version": ">=12.2.10",
+      "changelog": [
+        "None"
+      ]
     },
     {
       "id": "testzalupa",
@@ -113,6 +119,11 @@
       "description": "testzalupa",
       "hash": "ff7b28be8d22a735ab5c7d5328b39fd5284de8a6de9a01b133ee67b907de2faf",
       "bithash": "bdbfabf765d0dd90",
+      "changelog": [
+        "None",
+        "+1",
+        "-1"
+      ],
       "release_date": "18.03.26",
       "update_date": "18.03.26",
       "versions": {
@@ -211,7 +222,10 @@
       ],
       "release_date": "18.03.26",
       "bithash": "f34740eee2218554",
-      "app_version": ">=12.2.10"
+      "app_version": ">=12.2.10",
+      "changelog": [
+        "None"
+      ]
     },
     {
       "id": "shareui_clibmini",
@@ -243,6 +257,9 @@
           "key_avatar_backgroundGreen",
           ""
         ]
+      ],
+      "changelog": [
+        "None"
       ]
     },
     {
@@ -273,7 +290,9 @@
         ]
       ],
       "changelog": [
-        "https://t.me/doctashare/102"
+        "https://t.me/doctashare/102",
+        "+661",
+        "-23"
       ],
       "social": [
         [
@@ -327,6 +346,9 @@
           "key_avatar_background2Orange",
           ""
         ]
+      ],
+      "changelog": [
+        "None"
       ]
     },
     {
@@ -359,6 +381,9 @@
           "key_avatar_backgroundGreen",
           ""
         ]
+      ],
+      "changelog": [
+        "None"
       ]
     },
     {
@@ -390,6 +415,9 @@
           "key_avatar_background2Orange",
           ""
         ]
+      ],
+      "changelog": [
+        "None"
       ]
     },
     {
@@ -421,6 +449,9 @@
           "key_avatar_background2Orange",
           ""
         ]
+      ],
+      "changelog": [
+        "None"
       ]
     },
     {
@@ -453,6 +484,9 @@
           "key_avatar_backgroundGreen",
           ""
         ]
+      ],
+      "changelog": [
+        "None"
       ]
     },
     {
@@ -485,6 +519,9 @@
           "key_avatar_backgroundGreen",
           ""
         ]
+      ],
+      "changelog": [
+        "None"
       ]
     },
     {
@@ -517,6 +554,9 @@
           "key_avatar_backgroundGreen",
           ""
         ]
+      ],
+      "changelog": [
+        "None"
       ]
     },
     {
@@ -548,6 +588,9 @@
           "key_avatar_background2Orange",
           ""
         ]
+      ],
+      "changelog": [
+        "None"
       ]
     },
     {
@@ -585,6 +628,9 @@
           "key_avatar_background2Orange",
           ""
         ]
+      ],
+      "changelog": [
+        "None"
       ]
     },
     {
@@ -616,6 +662,9 @@
           "key_avatar_background2Orange",
           ""
         ]
+      ],
+      "changelog": [
+        "None"
       ]
     },
     {
@@ -641,7 +690,9 @@
         ]
       ],
       "changelog": [
-        "https://t.me/doctashare/32"
+        "https://t.me/doctashare/32",
+        "+274",
+        "-52"
       ],
       "social": [
         [
@@ -703,7 +754,10 @@
         ]
       ],
       "bithash": "07f431c691e230a2",
-      "app_version": ">=12.1.1"
+      "app_version": ">=12.1.1",
+      "changelog": [
+        "None"
+      ]
     },
     {
       "id": "shareui_vanillamusicplayer",
@@ -734,6 +788,9 @@
           "key_avatar_backgroundGreen",
           ""
         ]
+      ],
+      "changelog": [
+        "None"
       ]
     },
     {
@@ -766,6 +823,9 @@
           "Channel",
           "https://t.me/doctashare"
         ]
+      ],
+      "changelog": [
+        "None"
       ]
     },
     {
@@ -796,7 +856,9 @@
         ]
       ],
       "changelog": [
-        "https://t.me/doctashare/83"
+        "https://t.me/doctashare/83",
+        "+3",
+        "-3"
       ],
       "social": [
         [
@@ -868,7 +930,9 @@
         ]
       ],
       "changelog": [
-        "https://t.me/doctashare/104"
+        "https://t.me/doctashare/104",
+        "+2",
+        "-2"
       ],
       "social": [
         [
@@ -917,7 +981,10 @@
       "description": "Replaces system share with Telegram ShareAlert when sharing plugins in PluginCell",
       "hash": "5717b881e5d4d2aeddb10ae5570bc3067118e2ae74163901f3f438a4575a175a",
       "bithash": "9f31c98859e57d75",
-      "release_date": "26.04.26"
+      "release_date": "26.04.26",
+      "changelog": [
+        "None"
+      ]
     },
     {
       "id": "shareui_dkta",
@@ -935,7 +1002,10 @@
       "hash": "8c39324d9210537c30bc95a0336ca08276eb4f87ea2aa88bfbdd9b738c3125cd",
       "bithash": "94dcc6f811eb3f17",
       "release_date": "26.04.26",
-      "update_date": "27.04.26"
+      "update_date": "27.04.26",
+      "changelog": [
+        "None"
+      ]
     }
   ]
 }
