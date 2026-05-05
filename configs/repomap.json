@@ -4,11 +4,11 @@
     "rm_maintainer": "@shareui",
     "rm_url": "https://github.com/shareui/packit",
     "rm_mid": "400216230",
-    "rm_rid": "shareui_official"
+    "rm_rid": "shareui_official",
+    "rm_reports": "123"
   },
   "repomap": {
     "plugins": "https://raw.githubusercontent.com/shareui/packit/main/configs/plugins.json",
-    "icons": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/configs/icons.json",
-    "configs": ""
+    "icons": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/configs/icons.json"
   }
 }
