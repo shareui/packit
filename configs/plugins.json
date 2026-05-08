@@ -5,7 +5,7 @@
     "DevTools": 2,
     "Library": 1,
     "Customization": 2,
-    "Tweaks": 8,
+    "Tweaks": 10,
     "System": 3,
     "Utility": 9
   },
@@ -103,81 +103,6 @@
       "changelog": [
         "None"
       ]
-    },
-    {
-      "id": "testzalupa",
-      "name": "testzalupa",
-      "author": "@huy",
-      "version": "1.9.0",
-      "state": "release",
-      "icon": "",
-      "min_version": "12.2.0",
-      "app_version": ">=12.2.0",
-      "suspicious": "false",
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/testzalupa_1.9.0.plugin",
-      "size": "0.15 KB",
-      "description": "testzalupa",
-      "hash": "ff7b28be8d22a735ab5c7d5328b39fd5284de8a6de9a01b133ee67b907de2faf",
-      "bithash": "bdbfabf765d0dd90",
-      "changelog": [
-        "None",
-        "+1",
-        "-1"
-      ],
-      "release_date": "18.03.26",
-      "update_date": "18.03.26",
-      "versions": {
-        "1.4.8.8": {
-          "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/testzalupa_1.4.8.8.plugin",
-          "app_version": ">=14.8.8",
-          "size": "0.12 KB",
-          "changelog": [
-            "None",
-            "+3",
-            "-4"
-          ]
-        },
-        "1.5.0": {
-          "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/testzalupa_1.5.0.plugin",
-          "app_version": ">=12.1.0",
-          "size": "0.15 KB",
-          "changelog": [
-            "None",
-            "+6",
-            "-6"
-          ]
-        },
-        "1.6.0": {
-          "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/testzalupa_1.6.0.plugin",
-          "app_version": ">=12.2.0",
-          "size": "0.15 KB",
-          "changelog": [
-            "None",
-            "+1",
-            "-1"
-          ]
-        },
-        "1.7.0": {
-          "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/testzalupa_1.7.0.plugin",
-          "app_version": ">=12.2.0",
-          "size": "0.15 KB",
-          "changelog": [
-            "None",
-            "+1",
-            "-1"
-          ]
-        },
-        "1.8.0": {
-          "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/testzalupa_1.8.0.plugin",
-          "app_version": ">=12.2.0",
-          "size": "0.15 KB",
-          "changelog": [
-            "None",
-            "+1",
-            "-1"
-          ]
-        }
-      }
     },
     {
       "id": "ui_tweaks",
@@ -992,6 +917,20 @@
       "release_date": "26.04.26",
       "changelog": [
         "None"
+      ],
+      "tags": [
+        [
+          "Tweaks",
+          "key_avatar_backgroundGreen",
+          ""
+        ]
+      ],
+      "social": [
+        [
+          "msg_channel",
+          "Channel",
+          "https://t.me/doctashare"
+        ]
       ]
     },
     {
@@ -1013,6 +952,20 @@
       "update_date": "27.04.26",
       "changelog": [
         "None"
+      ],
+      "tags": [
+        [
+          "Tweaks",
+          "key_avatar_backgroundGreen",
+          ""
+        ]
+      ],
+      "social": [
+        [
+          "msg_channel",
+          "Channel",
+          "https://t.me/doctashare"
+        ]
       ]
     }
   ]
