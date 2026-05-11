@@ -10,5 +10,9 @@
   "repomap": {
     "plugins": "https://raw.githubusercontent.com/shareui/packit/main/configs/plugins.json",
     "icons": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/configs/icons.json"
-  }
+  },
+  "reasons": {
+    "reasons": ["test", "test2", "Other / Другое"],
+    "settings": [],
+  },
 }
