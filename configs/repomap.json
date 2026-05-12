@@ -12,7 +12,7 @@
     "icons": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/configs/icons.json"
   },
   "reasons": {
-    "reasons": ["test", "test2", "Other / Другое"],
+    "reasons": ["test", "test2", "test3", "test4", "test5", "Other / Другое"],
     "settings": []
   }
 }
