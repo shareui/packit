@@ -19,6 +19,7 @@ PackIt is a plugin and resource catalog for [exteraGram](https://t.me/exteraGram
 | Source code | [github.com/shareui/packit-source](https://github.com/shareui/packit-source) |
 | Telegram channel | [t.me/packitX](https://t.me/packitX) |
 | Telegram forum | [t.me/packitGround](https://t.me/packitGround) |
+| Publication rules | [shareui.io/packit/rules/](https://shareui.github.io/packit/rules/) |
 
 ## Maintainer
 
