@@ -12,7 +12,7 @@
     "icons": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/configs/icons.json"
   },
   "reasons": {
-    "reasons": ["test", "test2", "test3", "test4", "test5", "test6", "test7", "test67", "Other / Другое"],
+    "reasons": ["Безопасность / Security", "Качество / Quality", "Авторские права / Copyright", "Вредоносное ПО / Malware", "Ввод в заблуждение / Deception", "Other / Другое"],
     "settings": ["packitGround", 10312]
   }
 }
