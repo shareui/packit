@@ -14,18 +14,18 @@
       "id": "devsettingicons",
       "name": "DevSettingIcons",
       "author": "@CactusPlugins",
-      "version": "1.4.3",
+      "version": "1.4.4",
       "state": "release",
       "icon": "remusic/3",
       "min_version": "11.13.0",
       "app_version": ">=11.13.0",
       "sdk_version": "Unknown",
       "suspicious": "false",
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/devsettingicons_1.4.3.eaf",
-      "size": "61.29 KB",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/devsettingicons_1.4.4.elyx",
+      "size": "83.20 KB",
       "description": "[For Devs] All icons/animations/colors for plugin settings/bulletins and more with filters!",
-      "hash": "60f8db63406cd3df563f48dc543e7425f485c6a16f64d4174cd53fabe43b0e48",
-      "bithash": "5a6a55b077cd883f",
+      "hash": "c9a0857e48eea6905e48e37ee931a035d6d227c27a6c4a1820043720d6137f64",
+      "bithash": "12ec0af0a98233c4",
       "tags": [
         [
           "Elyx",
@@ -47,12 +47,20 @@
         "None"
       ],
       "release_date": "18.03.26",
-      "update_date": "01.04.26",
+      "update_date": "15.05.26",
       "versions": {
         "1.4.2": {
           "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/devsettingicons_1.4.2.elyx",
           "app_version": ">=11.13.0",
           "size": "81.09 KB",
+          "changelog": [
+            "None"
+          ]
+        },
+        "1.4.3": {
+          "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/devsettingicons_1.4.3.eaf",
+          "app_version": ">=11.13.0",
+          "size": "61.29 KB",
           "changelog": [
             "None"
           ]
@@ -967,6 +975,29 @@
           "https://t.me/doctashare"
         ]
       ]
+    },
+    {
+      "id": "testzalupa",
+      "name": "testzalupa",
+      "author": "@huy",
+      "version": "1.8.0",
+      "state": "release",
+      "icon": "",
+      "min_version": "12.2.0",
+      "app_version": ">=12.2.0",
+      "sdk_version": "Unknown",
+      "suspicious": "false",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/testzalupa_1.8.0.plugin",
+      "size": "0.15 KB",
+      "description": "testzalupa",
+      "hash": "a6ac529c430b1c61e88647f9d0e5d7e816ef64ef5ea36b9fd5880958a78725cf",
+      "bithash": "3d89188bc801c487",
+      "changelog": [
+        "None",
+        "+1",
+        "-1"
+      ],
+      "release_date": "15.05.26"
     }
   ]
 }
