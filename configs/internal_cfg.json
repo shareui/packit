@@ -48,6 +48,13 @@
       "text_en": "Tester of PackIt."
     },
     {
+      "id": "agasais",
+      "user_id": 5045334895,
+      "emoji_id": 6037310381230135764,
+      "text_ru": "Тестер PackIt.",
+      "text_en": "Tester of PackIt."
+    },
+    {
       "id": "packitground_group",
       "chat_id": 3663388991,
       "emoji_id": 6037310381230135764,
