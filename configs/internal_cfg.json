@@ -31,35 +31,35 @@
       "user_id": 400216230,
       "emoji_id": 5814204048726826670,
       "text_ru": "Основатель PackIt.",
-      "text_en": "Founder of the PackIt."
+      "text_en": "Founder of PackIt."
     },
     {
       "id": "packitground_group",
       "chat_id": 3663388991,
       "emoji_id": 6037310381230135764,
-      "text_ru": "**PackitGround** является официальным ресурсом **Packit**.",
-      "text_en": "**PackitGround** is the official resource for **Packit**."
+      "text_ru": "Официальный ресурс PackIt.",
+      "text_en": "Official PackIt resource."
     },
     {
       "id": "packit_links",
       "chat_id": 3707831768,
       "emoji_id": 6037310381230135764,
-      "text_ru": "**PackIt** является главным и всегда актуальным каналом плагина **PackIt**.",
-      "text_en": "**PackIt** is the main and always up-to-date channel of the **PackIt** plugin."
+      "text_ru": "Официальный ресурс PackIt.",
+      "text_en": "Official PackIt resource."
     },
     {
       "id": "packit_main",
       "chat_id": 3744051103,
       "emoji_id": 6037310381230135764,
-      "text_ru": "**PackIt** является официальным ресурсом **PackIt**.",
-      "text_en": "**PackIt** is the official resource for **PackIt**."
+      "text_ru": "Официальный ресурс PackIt.",
+      "text_en": "Official PackIt resource."
     },
     {
       "id": "packit_en",
       "chat_id": 3537035182,
       "emoji_id": 6037310381230135764,
-      "text_ru": "**PackIt EN** является официальным ресурсом **PackIt**.",
-      "text_en": "**PackIt EN** is the official resource for **PackIt**."
+      "text_ru": "Официальный ресурс PackIt.",
+      "text_en": "Official PackIt resource."
     }
   ]
 }
