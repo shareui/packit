@@ -34,6 +34,13 @@
       "text_en": "Founder of PackIt."
     },
     {
+      "id": "watcha",
+      "user_id": 1061520526,
+      "emoji_id": 5341320225222569798,
+      "text_ru": "Тестер PackIt.",
+      "text_en": "Tester of PackIt."
+    },
+    {
       "id": "packitground_group",
       "chat_id": 3663388991,
       "emoji_id": 6037310381230135764,
