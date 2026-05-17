@@ -1,0 +1,65 @@
+from typing import Any, List
+from base_plugin import BasePlugin, MethodHook, MethodReplacement
+from hook_utils import find_class
+from ui.settings import Switch
+
+__id__ = "shareui_vanillamusicplayer"
+__name__ = "Vanilla Music Player"
+__description__ = "Replaces the exteraGram music player in profiles with the original Telegram player"
+__author__ = "@shareui(@doctashare)"
+__version__ = "1.0.2"
+__app_version__ = ">=12.6.4"
+
+class AlwaysTrueHook(MethodReplacement):
+    def __init__(self, plugin):
+        self.plugin = plugin
+    def replace_hooked_method(self, param):
+        return True
+
+class AlwaysFalseHook(MethodReplacement):
+    def __init__(self, plugin):
+        self.plugin = plugin
+    def replace_hooked_method(self, param):
+        return False
+
+class DisableApiCheckHook(MethodHook):
+    def __init__(self, plugin):
+        self.plugin = plugin
+    def before_hooked_method(self, param):
+        if self.plugin.get_setting("disable_scrobbling", False):
+            param.args[2] = False
+
+class VanillaMusicPlayerPlugin(BasePlugin):
+    def on_plugin_load(self):
+        controllerClass = find_class("com.exteragram.messenger.nowplaying.NowPlayingController")
+        if not controllerClass:
+            self.log("NowPlayingController not found — skipping hook")
+            return
+        try:
+            self.hook_all_methods(controllerClass, "isSeparateStylesSupported", AlwaysTrueHook(self))
+            self.log("hooked isSeparateStylesSupported")
+        except Exception as e:
+            self.log(f"failed to hook isSeparateStylesSupported: {e}")
+        try:
+            self.hook_all_methods(controllerClass, "shouldShowCard", AlwaysFalseHook(self))
+            self.log("hooked shouldShowCard")
+        except Exception as e:
+            self.log(f"failed to hook shouldShowCard: {e}")
+        try:
+            self.hook_all_methods(controllerClass, "getCurrentPlayingTrack", DisableApiCheckHook(self))
+            self.log("hooked getCurrentPlayingTrack")
+        except Exception as e:
+            self.log(f"failed to hook getCurrentPlayingTrack: {e}")
+
+    def on_plugin_unload(self):
+        self.log("unloaded")
+
+    def create_settings(self) -> List[Any]:
+        return [
+            Switch(
+                key="disable_scrobbling",
+                text="Disable scrobbling",
+                subtext="Minimizes lags",
+                default=False,
+            ),
+        ]

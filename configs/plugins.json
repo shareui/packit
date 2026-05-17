@@ -704,25 +704,17 @@
       "id": "shareui_vanillamusicplayer",
       "name": "Vanilla Music Player",
       "author": "@shareui(@doctashare)",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "state": "release",
       "icon": "",
-      "min_version": "12.4.1",
+      "app_version": ">=12.6.4",
+      "sdk_version": "Unknown",
       "suspicious": "false",
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_vanillamusicplayer_1.0.1.plugin",
-      "size": "1.89 KB",
-      "description": "Replaces the exteraGram music player in profiles with the original Telegram player [only for exteraGram Beta 12.4.1]",
-      "hash": "ebacc47a226ef852272bf54dd25a718c2f9f282c500f2ffd073b7608d8b2bbd0",
-      "social": [
-        [
-          "msg_channel",
-          "Channel",
-          "https://t.me/doctashare"
-        ]
-      ],
-      "release_date": "18.03.26",
-      "bithash": "f5a762daf116815c",
-      "app_version": ">=12.4.1",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_vanillamusicplayer_1.0.2.plugin",
+      "size": "2.36 KB",
+      "description": "Replaces the exteraGram music player in profiles with the original Telegram player",
+      "hash": "2f1681ca47714705456c2b5667a596bd89e96badb4aa48a833d4ef7fa951308f",
+      "bithash": "88c02ec426c22237",
       "tags": [
         [
           "Tweaks",
@@ -731,8 +723,29 @@
         ]
       ],
       "changelog": [
-        "None"
-      ]
+        "https://t.me/doctashare/137",
+        "+0",
+        "-0"
+      ],
+      "social": [
+        [
+          "msg_channel",
+          "Channel",
+          "https://t.me/doctashare"
+        ]
+      ],
+      "release_date": "18.03.26",
+      "update_date": "17.05.26",
+      "versions": {
+        "1.0.1": {
+          "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_vanillamusicplayer_1.0.1.plugin",
+          "app_version": ">=12.4.1",
+          "size": "1.89 KB",
+          "changelog": [
+            "None"
+          ]
+        }
+      }
     },
     {
       "id": "shareui_accountunread",
