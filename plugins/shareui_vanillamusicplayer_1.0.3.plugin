@@ -1,0 +1,160 @@
+from typing import Any, List
+from base_plugin import BasePlugin, MethodHook, MethodReplacement
+from hook_utils import find_class
+from ui.settings import Switch
+
+__id__ = "shareui_vanillamusicplayer"
+__name__ = "Vanilla Music Player"
+__description__ = "Replaces the exteraGram music player in profiles with the original Telegram player\n (12.6.4 exteraGram)"
+__author__ = "@shareui(@doctashare)"
+__version__ = "1.0.3"
+__app_version__ = "==12.6.4"
+
+SEARCH_CLASS = False
+REMOTE_UTILS_CLASS = "x.sua"
+REMOTE_UTILS_METHOD = "k"
+SEPARATE_MUSIC_STYLES_KEY = "separate_music_styles"
+
+class AlwaysFalseHook(MethodReplacement):
+    def __init__(self, plugin):
+        self.plugin = plugin
+
+    def replace_hooked_method(self, param):
+        try:
+            return False
+        except Exception as e:
+            self.plugin.log(f"AlwaysFalseHook error: {e}")
+            return False
+
+class RemoteConfigBoolHook(MethodHook):
+    def __init__(self, plugin):
+        self.plugin = plugin
+
+    def after_hooked_method(self, param):
+        try:
+            if param.args[0] == SEPARATE_MUSIC_STYLES_KEY:
+                param.setResult(True)
+        except Exception as e:
+            self.plugin.log(f"RemoteConfigBoolHook error: {e}")
+
+
+class DisableApiCheckHook(MethodHook):
+    def __init__(self, plugin):
+        self.plugin = plugin
+
+    def before_hooked_method(self, param):
+        try:
+            if self.plugin.get_setting("disable_scrobbling", False):
+                param.args[2] = False
+        except Exception as e:
+            self.plugin.log(f"DisableApiCheckHook error: {e}")
+
+def searchRemoteUtilsClass(plugin):
+    try:
+        from hook_utils import get_private_field
+        from java.lang import Class as JClass, String as JString, Boolean as JBoolean
+        from java.lang.reflect import Modifier
+
+        controllerClass = find_class("com.exteragram.messenger.nowplaying.NowPlayingController")
+        if not controllerClass:
+            plugin.log("debug: NowPlayingController not found")
+            return
+
+        loader = controllerClass.getClass().getClassLoader()
+        pathList = get_private_field(loader, "pathList")
+        dexElements = get_private_field(pathList, "dexElements")
+
+        allNames = []
+        for element in dexElements:
+            dexFile = get_private_field(element, "dexFile")
+            if not dexFile:
+                continue
+            entries = dexFile.entries()
+            while entries.hasMoreElements():
+                allNames.append(str(entries.nextElement()))
+
+        stringClass = JString().getClass()
+        booleanClass = JBoolean(True).getClass()
+        boolPrimitive = JBoolean.TYPE
+
+        plugin.log(f"debug: scanning {len(allNames)} classes by signature")
+
+        for name in allNames:
+            try:
+                cls = JClass.forName(name, False, loader)
+                for m in cls.getDeclaredMethods():
+                    if not Modifier.isStatic(m.getModifiers()):
+                        continue
+                    if m.getReturnType() != booleanClass:
+                        continue
+                    params = m.getParameterTypes()
+                    if len(params) != 2:
+                        continue
+                    if params[0] != stringClass:
+                        continue
+                    if params[1] != boolPrimitive:
+                        continue
+                    plugin.log(f"debug: candidate: {name} method={m.getName()}")
+                    break
+            except Exception:
+                pass
+
+    except Exception as e:
+        plugin.log(f"debug: searchRemoteUtilsClass error: {e}")
+
+
+class VanillaMusicPlayerPlugin(BasePlugin):
+    def on_plugin_load(self):
+        try:
+            controllerClass = find_class("com.exteragram.messenger.nowplaying.NowPlayingController")
+            if not controllerClass:
+                self.log("NowPlayingController not found")
+                return
+
+            try:
+                self.hook_all_methods(controllerClass, "shouldShowCard", AlwaysFalseHook(self))
+                self.log("hooked shouldShowCard")
+            except Exception as e:
+                self.log(f"failed to hook shouldShowCard: {e}")
+
+            try:
+                self.hook_all_methods(controllerClass, "getCurrentPlayingTrack", DisableApiCheckHook(self))
+                self.log("hooked getCurrentPlayingTrack")
+            except Exception as e:
+                self.log(f"failed to hook getCurrentPlayingTrack: {e}")
+
+            if SEARCH_CLASS:
+                searchRemoteUtilsClass(self)
+            else:
+                try:
+                    remoteUtilsClass = find_class(REMOTE_UTILS_CLASS)
+                    if not remoteUtilsClass:
+                        self.log(f"RemoteUtils ({REMOTE_UTILS_CLASS}) not found")
+                    else:
+                        self.hook_all_methods(remoteUtilsClass, REMOTE_UTILS_METHOD, RemoteConfigBoolHook(self))
+                        self.log(f"hooked {REMOTE_UTILS_CLASS}.{REMOTE_UTILS_METHOD}")
+                except Exception as e:
+                    self.log(f"failed to hook {REMOTE_UTILS_CLASS}.{REMOTE_UTILS_METHOD}: {e}")
+
+        except Exception as e:
+            self.log(f"on_plugin_load error: {e}")
+
+    def on_plugin_unload(self):
+        try:
+            self.log("unloaded")
+        except Exception:
+            pass
+
+    def create_settings(self) -> List[Any]:
+        try:
+            return [
+                Switch(
+                    key="disable_scrobbling",
+                    text="Disable scrobbling",
+                    subtext="Minimizes lags",
+                    default=False,
+                ),
+            ]
+        except Exception as e:
+            self.log(f"create_settings error: {e}")
+            return []

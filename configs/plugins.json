@@ -704,17 +704,17 @@
       "id": "shareui_vanillamusicplayer",
       "name": "Vanilla Music Player",
       "author": "@shareui(@doctashare)",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "state": "release",
       "icon": "",
-      "app_version": ">=12.6.4",
+      "app_version": "==12.6.4",
       "sdk_version": "Unknown",
       "suspicious": "false",
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_vanillamusicplayer_1.0.2.plugin",
-      "size": "2.36 KB",
-      "description": "Replaces the exteraGram music player in profiles with the original Telegram player",
-      "hash": "2f1681ca47714705456c2b5667a596bd89e96badb4aa48a833d4ef7fa951308f",
-      "bithash": "88c02ec426c22237",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_vanillamusicplayer_1.0.3.plugin",
+      "size": "5.64 KB",
+      "description": "Replaces the exteraGram music player in profiles with the original Telegram player\n (12.6.4 exteraGram)",
+      "hash": "94614ca509094d672a54382c01b9eeb9adc0ba7dd4394a4bbe16ed5dcfb63de1",
+      "bithash": "100f9378b4fde875",
       "tags": [
         [
           "Tweaks",
@@ -723,7 +723,7 @@
         ]
       ],
       "changelog": [
-        "https://t.me/doctashare/137",
+        "https://t.me/doctashare/140",
         "+0",
         "-0"
       ],
@@ -743,6 +743,16 @@
           "size": "1.89 KB",
           "changelog": [
             "None"
+          ]
+        },
+        "1.0.2": {
+          "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_vanillamusicplayer_1.0.2.plugin",
+          "app_version": ">=12.6.4",
+          "size": "2.36 KB",
+          "changelog": [
+            "https://t.me/doctashare/137",
+            "+0",
+            "-0"
           ]
         }
       }
