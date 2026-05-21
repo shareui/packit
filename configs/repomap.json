@@ -12,11 +12,31 @@
     "icons": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/configs/icons.json"
   },
   "reasons": {
-    "reasons": ["Безопасность / Security", "Качество / Quality", "Авторские права / Copyright", "Вредоносное ПО / Malware", "Ввод в заблуждение / Deception", "Безопасность / Safety", "Другое / Other"],
+    "reasons": [
+      "Безопасность / Security",
+      "Качество / Quality",
+      "Авторские права / Copyright",
+      "Вредоносное ПО / Malware",
+      "Ввод в заблуждение / Deception",
+      "Безопасность / Safety",
+      "Другое / Other"
+    ],
     "settings": ["packitGround", 10312]
-  }
+  },
   "suggest_plugins": {
-    "settings": {}
-    "config": []
+    "settings": {
+      "allow_forks": true,
+      "allow_links": true,
+      "allow_notes": true,
+      "allow_tags": true,
+      "allow_changelog": true,
+      "allow_state": true,
+      "allow_multi_files": true
+    },
+    "config": {
+      "acc_id": 8534178686,
+      "acc_user": "windcv",
+      "rules": "https://shareui.github.io/packit/rules"
+    }
   }
 }
