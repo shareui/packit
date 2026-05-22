@@ -37,7 +37,8 @@
       "acc_id": 8534178686,
       "acc_user": "windcv",
       "rules": "https://shareui.github.io/packit/rules",
-      "rules_name": "packit/rules"
+      "rules_name": "packit/rules",
+      "json": false
     }
   }
 }
