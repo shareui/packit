@@ -31,7 +31,7 @@
       "allow_tags": true,
       "allow_changelog": true,
       "allow_state": true,
-      "allow_multi_files": true
+      "allow_multi_files": 3
     },
     "config": {
       "acc_id": 8534178686,
