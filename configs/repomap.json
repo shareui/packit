@@ -26,9 +26,7 @@
   "suggest_plugins": {
     "settings": {
       "allow_forks": true,
-      "allow_links": true,
       "allow_notes": true,
-      "allow_tags": true,
       "allow_changelog": true,
       "allow_state": true,
       "allow_multi_files": 3,
