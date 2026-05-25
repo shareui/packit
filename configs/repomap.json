@@ -28,7 +28,6 @@
       "allow_forks": true,
       "allow_notes": true,
       "allow_changelog": true,
-      "allow_state": true,
       "allow_multi_files": 3,
       "allow_socials": 5
     },
@@ -37,7 +36,7 @@
       "acc_user": "windcv",
       "rules": "https://shareui.github.io/packit/rules",
       "rules_name": "packit/rules",
-      "json": false
+      "json": true
     }
   }
 }
