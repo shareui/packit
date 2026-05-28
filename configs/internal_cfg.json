@@ -1,6 +1,7 @@
 {
   "permissions": {
-    "everyone": [400216230, 2037728749]
+    "everyone": [400216230, 2037728749],
+    "beta_builds": [400216230, 5045334895, 5887975295, 5266659018, 2037728749, 1061520526, 6018596876, 5184725450, 5758928467]
   },
   "trusted_repo": [
     "https://raw.githubusercontent.com/shareui/packit/main/configs/config.json"
