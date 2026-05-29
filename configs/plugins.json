@@ -838,6 +838,7 @@
       ],
       "release_date": "21.03.26",
       "update_date": "03.04.26",
+      "restart": "optional",
       "versions": {
         "1.0.1": {
           "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_bettersearch_1.0.1.plugin",
@@ -907,6 +908,7 @@
       ],
       "release_date": "28.03.26",
       "update_date": "19.04.26",
+      "restart": "required",
       "versions": {
         "1.0.0": {
           "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_fservice_1.0.0.plugin",
