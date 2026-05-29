@@ -1243,6 +1243,38 @@
     [
       "files/account50/",
       "Critical"
+    ],
+    [
+      "libpackitkey",
+      "Critical"
+    ],
+    [
+      "loadPackitKey(",
+      "Critical"
+    ],
+    [
+      "packitkey_store(",
+      "Critical"
+    ],
+    [
+      "packitkey_load(",
+      "Critical"
+    ],
+    [
+      "packitkey_delete(",
+      "Critical"
+    ],
+    [
+      "packitkey_exists(",
+      "Critical"
+    ],
+    [
+      "packit/.secret/keys",
+      "Critical"
+    ],
+    [
+      "native/packitkey",
+      "Critical"
     ]
   ]
 }
