@@ -38,8 +38,15 @@
       "id": "watcha",
       "user_id": 1061520526,
       "emoji_id": 5341320225222569798,
-      "text_ru": "Тестер PackIt.",
-      "text_en": "Tester of PackIt."
+      "text_ru": "Является одним из разработчиков PackIt.",
+      "text_en": "He is one of the developers of PackIt."
+    },
+    {
+      "id": "apple",
+      "user_id": 6018596876,
+      "emoji_id": 6037310381230135764,
+      "text_ru": "Является одним из разработчиков PackIt.",
+      "text_en": "He is one of the developers of PackIt."
     },
     {
       "id": "kaltsit",
