@@ -46,11 +46,11 @@ tg://packit?install
 
 ### Открыть плагины репозитория
 ```
-tg://packit?install&repo=<rm_id>
+tg://packit?install&repo=<rm_rid>
 ```
 | Параметр | Описание |
 |----------|----------|
-| `rm_id` | ID репозитория (должен быть добавлен в PackIt) |
+| `rm_rid` | ID репозитория (должен быть добавлен в PackIt) |
 
 ### Открыть профиль плагина
 ```
@@ -65,14 +65,14 @@ tg://packit?plugin=<plugin_id>&repo=<rm_rid>
 
 ### Установить конкретный плагин
 ```
-tg://packit?install&repo=<rm_id>&plugin=<plugin_id>
+tg://packit?install&repo=<rm_rid>&plugin=<plugin_id>
 ```
 ```
-tg://packit?install&repo=<rm_id>&plugin=<plugin_id>&version=<version>
+tg://packit?install&repo=<rm_rid>&plugin=<plugin_id>&version=<version>
 ```
 | Параметр | Обязательный | Описание |
 |----------|:---:|----------|
-| `rm_id` | ✅ | ID репозитория |
+| `rm_rid` | ✅ | ID репозитория |
 | `plugin_id` | ✅ | ID плагина внутри репозитория |
 | `version` | ❌ | Версия плагина. Если не указана — устанавливается последняя |
 
@@ -80,11 +80,11 @@ tg://packit?install&repo=<rm_id>&plugin=<plugin_id>&version=<version>
 
 ### Установить иконку
 ```
-tg://packit?install&repo=<rm_id>&icon=<icon_id>
+tg://packit?install&repo=<rm_rid>&icon=<icon_id>
 ```
 | Параметр | Описание |
 |----------|----------|
-| `rm_id` | ID репозитория |
+| `rm_rid` | ID репозитория |
 | `icon_id` | ID иконки внутри репозитория |
 
 Скачивает иконку и открывает нативный диалог установки.
@@ -114,11 +114,11 @@ tg://packit?update
 
 ### Обновить кэш конкретного репозитория
 ```
-tg://packit?update&repo=<rm_id>
+tg://packit?update&repo=<rm_rid>
 ```
 | Параметр | Описание |
 |----------|----------|
-| `rm_id` | ID репозитория (должен быть добавлен в PackIt) |
+| `rm_rid` | ID репозитория (должен быть добавлен в PackIt) |
 
 Обновляет кэш только одного указанного репозитория. Показывает уведомление об успехе или ошибке.
 
@@ -126,6 +126,16 @@ tg://packit?update&repo=<rm_id>
 
 <a name="ru-утилиты"></a>
 ## Утилиты
+
+### Отправить плагин на проверку
+```
+tg://packit?suggestion=<rm_rid>
+```
+| Параметр | Описание |
+|----------|----------|
+| `rm_rid` | ID репозитория (должен быть добавлен в PackIt) |
+
+Если в конфиге настроены все необходимые пункты — открывает меню отправки плагина на проверку.
 
 ### Форум PackIt
 ```
@@ -188,11 +198,11 @@ tg://packit?install
 
 ### Open repository plugins
 ```
-tg://packit?install&repo=<rm_id>
+tg://packit?install&repo=<rm_rid>
 ```
 | Parameter | Description |
 |-----------|-------------|
-| `rm_id` | Repository ID (must be added to PackIt) |
+| `rm_rid` | Repository ID (must be added to PackIt) |
 
 ### Open plugin profile
 ```
@@ -207,14 +217,14 @@ Fetches the plugin from the repository and opens its profile page.
 
 ### Install a specific plugin
 ```
-tg://packit?install&repo=<rm_id>&plugin=<plugin_id>
+tg://packit?install&repo=<rm_rid>&plugin=<plugin_id>
 ```
 ```
-tg://packit?install&repo=<rm_id>&plugin=<plugin_id>&version=<version>
+tg://packit?install&repo=<rm_rid>&plugin=<plugin_id>&version=<version>
 ```
 | Parameter | Required | Description |
 |-----------|:---:|-------------|
-| `rm_id` | ✅ | Repository ID |
+| `rm_rid` | ✅ | Repository ID |
 | `plugin_id` | ✅ | Plugin ID within the repository |
 | `version` | ❌ | Plugin version. If omitted, installs the latest |
 
@@ -222,11 +232,11 @@ Downloads the plugin and opens the native install dialog.
 
 ### Install an icon
 ```
-tg://packit?install&repo=<rm_id>&icon=<icon_id>
+tg://packit?install&repo=<rm_rid>&icon=<icon_id>
 ```
 | Parameter | Description |
 |-----------|-------------|
-| `rm_id` | Repository ID |
+| `rm_rid` | Repository ID |
 | `icon_id` | Icon ID within the repository |
 
 Downloads the icon and opens the native install dialog.
@@ -256,11 +266,11 @@ Updates the cache of all added repositories and syncs their metadata.
 
 ### Update a specific repository cache
 ```
-tg://packit?update&repo=<rm_id>
+tg://packit?update&repo=<rm_rid>
 ```
 | Parameter | Description |
 |-----------|-------------|
-| `rm_id` | Repository ID (must be added to PackIt) |
+| `rm_rid` | Repository ID (must be added to PackIt) |
 
 Updates the cache of only the specified repository. Shows a success or error notification.
 
@@ -268,6 +278,16 @@ Updates the cache of only the specified repository. Shows a success or error not
 
 <a name="en-utilities"></a>
 ## Utilities
+
+### Submit plugin for review
+```
+tg://packit?suggestion=<rm_rid>
+```
+| Parameter | Description |
+|-----------|-------------|
+| `rm_rid` | Repository ID (must be added to PackIt) |
+
+If all required fields in the config are set — opens the menu for submitting a plugin for review.
 
 ### PackIt forum
 ```
