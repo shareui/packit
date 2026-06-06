@@ -5,9 +5,9 @@
     "DevTools": 2,
     "Library": 1,
     "Customization": 2,
-    "Tweaks": 10,
+    "Tweaks": 8,
     "System": 3,
-    "Utility": 9
+    "Utility": 8
   },
   "plugins": [
     {
@@ -46,6 +46,28 @@
       "changelog": [
         "None"
       ],
+      "social": [
+        [
+          "msg_channel",
+          "Channel",
+          "https://t.me/CactusPlugins"
+        ],
+        [
+          "msg_openprofile",
+          "GitHub",
+          "http://github.com/pixwet"
+        ]
+      ],
+      "team": [
+        [
+          "5184725450",
+          "Maintainer"
+        ],
+        [
+          "400216230",
+          "Developer"
+        ]
+      ],
       "release_date": "18.03.26",
       "update_date": "15.05.26",
       "versions": {
@@ -75,11 +97,13 @@
       "state": "release",
       "icon": "luvztroyIcons/14",
       "min_version": "12.2.10",
+      "app_version": ">=12.2.10",
       "suspicious": "false",
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/quantahut_1.5.2.plugin",
       "size": "232.85 KB",
       "description": "Library for Quanta plugins",
       "hash": "88e725a5ea1e7431e0ff9a32d5bfea42ee4d5f07b5b102e8dc2fe33e90f6d965",
+      "bithash": "10f504a2507705c2",
       "tags": [
         [
           "Featured",
@@ -92,6 +116,10 @@
           "https://t.me/packitGround/13/1053"
         ]
       ],
+      "changelog": [
+        "None"
+      ],
+      "readme": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/readmes/readme_quantahut.md",
       "social": [
         [
           "msg_channel",
@@ -104,13 +132,13 @@
           "https://t.me/QuantaPlayground"
         ]
       ],
-      "release_date": "18.03.26",
-      "readme": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/readmes/readme_quantahut.md",
-      "bithash": "10f504a2507705c2",
-      "app_version": ">=12.2.10",
-      "changelog": [
-        "None"
-      ]
+      "team": [
+        [
+          "6985852072",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "18.03.26"
     },
     {
       "id": "ui_tweaks",
@@ -120,11 +148,13 @@
       "state": "release",
       "icon": "luvztroyIcons/13",
       "min_version": "12.2.10",
+      "app_version": ">=12.2.10",
       "suspicious": "false",
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/ui_tweaks_1.8.4.plugin",
       "size": "664.74 KB",
       "description": "Well sometimes you just need to tweak things... (requires [QuantaHut](https://t.me/QuantaPlugins/228))",
       "hash": "96d1c2c65c6609154c3838c2efd994626250a13668f67d0a11fc7367ef1509a1",
+      "bithash": "f34740eee2218554",
       "deps": [
         "quantahut"
       ],
@@ -140,6 +170,9 @@
           ""
         ]
       ],
+      "changelog": [
+        "None"
+      ],
       "readme": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/readmes/readme_ui_tweaks.md",
       "social": [
         [
@@ -153,12 +186,13 @@
           "https://t.me/QuantaPlayground"
         ]
       ],
-      "release_date": "18.03.26",
-      "bithash": "f34740eee2218554",
-      "app_version": ">=12.2.10",
-      "changelog": [
-        "None"
-      ]
+      "team": [
+        [
+          "6985852072",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "18.03.26"
     },
     {
       "id": "shareui_clibmini",
@@ -168,22 +202,13 @@
       "state": "release",
       "icon": "",
       "min_version": "12.2.10",
+      "app_version": ">=12.2.10",
       "suspicious": "false",
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_clibmini_1.0.1.plugin",
       "size": "6.78 KB",
       "description": "Mini version of CactusLib :D\n\nThe fork now supports premium emojis (You can change the emojis in the plugin settings)",
       "hash": "9adb25a7f8a62401b7c2136ed732160902d3ddcd44a15f30cffef92642a42da6",
-      "social": [
-        [
-          "msg_channel",
-          "Channel",
-          "https://t.me/doctashare"
-        ]
-      ],
-      "release_date": "18.03.26",
-      "archived": "18.03.26",
       "bithash": "d41ae8362958c4be",
-      "app_version": ">=12.2.10",
       "tags": [
         [
           "Tweaks",
@@ -194,6 +219,26 @@
       "changelog": [
         "None"
       ],
+      "social": [
+        [
+          "msg_channel",
+          "Channel",
+          "https://t.me/doctashare"
+        ],
+        [
+          "msg_openprofile",
+          "GitHub",
+          "http://github.com/shareui"
+        ]
+      ],
+      "team": [
+        [
+          "400216230",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "18.03.26",
+      "archived": "18.03.26",
       "forked": [
         "CactusLib Mini",
         "https://t.me/CactusPlugins/74"
@@ -236,6 +281,17 @@
           "msg_channel",
           "Channel",
           "https://t.me/doctashare"
+        ],
+        [
+          "msg_openprofile",
+          "GitHub",
+          "http://github.com/shareui"
+        ]
+      ],
+      "team": [
+        [
+          "400216230",
+          "Maintainer"
         ]
       ],
       "release_date": "18.03.26",
@@ -261,22 +317,13 @@
       "state": "release",
       "icon": "plugin232/10",
       "min_version": "12.0.1",
+      "app_version": ">=12.0.1",
       "suspicious": "false",
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_exteragit_1.0.0.plugin",
       "size": "30.96 KB",
       "description": "Search GitHub and GitLab resources. Commands in the plugin settings.",
       "hash": "d08cfe0a75352ad4f2def9b382a4d16a9e35423ba36bb66ae7c36edf3b0ed648",
-      "social": [
-        [
-          "msg_channel",
-          "Channel",
-          "https://t.me/doctashare"
-        ]
-      ],
-      "release_date": "18.03.26",
-      "archived": "18.03.26",
       "bithash": "031166e233d2a8af",
-      "app_version": ">=12.0.1",
       "tags": [
         [
           "Utility",
@@ -286,7 +333,27 @@
       ],
       "changelog": [
         "None"
-      ]
+      ],
+      "social": [
+        [
+          "msg_channel",
+          "Channel",
+          "https://t.me/doctashare"
+        ],
+        [
+          "msg_openprofile",
+          "GitHub",
+          "http://github.com/shareui"
+        ]
+      ],
+      "team": [
+        [
+          "400216230",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "18.03.26",
+      "archived": "18.03.26"
     },
     {
       "id": "shareui_frel",
@@ -296,22 +363,13 @@
       "state": "release",
       "icon": "EllenZZZ/1",
       "min_version": "12.1.1",
+      "app_version": ">=12.1.1",
       "suspicious": "false",
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_frel_1.0.0.plugin",
       "size": "1.79 KB",
       "description": "Adds quick app restart button to side menu\n\nДобавляет кнопку быстрого перезапуска приложения в боковое меню",
       "hash": "4a9afcc790995cc8700b4104ba73f961ecc7eabf09fb0b6e8bba94f4ae4496c1",
-      "social": [
-        [
-          "msg_channel",
-          "Channel",
-          "https://t.me/doctashare"
-        ]
-      ],
-      "release_date": "18.03.26",
-      "archived": "18.03.26",
       "bithash": "62ea47d4e33b98a3",
-      "app_version": ">=12.1.1",
       "tags": [
         [
           "Tweaks",
@@ -321,41 +379,27 @@
       ],
       "changelog": [
         "None"
-      ]
-    },
-    {
-      "id": "shareui_github",
-      "name": "GitHub utilities",
-      "author": "@shareui(@doctashare)",
-      "version": "1.4.3",
-      "state": "release",
-      "icon": "plugin232/10",
-      "min_version": "11.12.1",
-      "suspicious": "false",
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_github_1.4.3.plugin",
-      "size": "17.19 KB",
-      "description": "Ищет ресурсы на GitHub.com\nКоманды:\n    .gitsrc - ищет репозитории\n    .gituser - ищет аккаунты\n    .gitorg - ищет организации",
-      "hash": "30953be840d9691351590b01787f3aca6cffc375982dbdec2def2b63988249fc",
+      ],
       "social": [
         [
           "msg_channel",
           "Channel",
           "https://t.me/doctashare"
+        ],
+        [
+          "msg_openprofile",
+          "GitHub",
+          "http://github.com/shareui"
+        ]
+      ],
+      "team": [
+        [
+          "400216230",
+          "Maintainer"
         ]
       ],
       "release_date": "18.03.26",
-      "bithash": "13e26b4299bfd052",
-      "app_version": ">=11.12.1",
-      "tags": [
-        [
-          "Utility",
-          "key_avatar_background2Orange",
-          ""
-        ]
-      ],
-      "changelog": [
-        "None"
-      ]
+      "archived": "18.03.26"
     },
     {
       "id": "shareui_modrinth",
@@ -365,21 +409,13 @@
       "state": "release",
       "icon": "plugin232/11",
       "min_version": "11.12.1",
+      "app_version": ">=11.12.1",
       "suspicious": "false",
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_modrinth_1.2.0.plugin",
       "size": "7.54 KB",
       "description": "Плагин который ищет модификации Minecraft на сайте modrinth.com.\nКоманды:\n   .srcmod - поиск модов\n   .srctp - поиск ресурспаков\n   .srcplug - поиск плагинов\n   .srcdata - поиск дата-паков\n   .srcshd - поиск шейдеров",
       "hash": "d48d2cc71321a5d4697acd377ffb99d615d64d700fa03136f232f4eacca2092f",
-      "social": [
-        [
-          "msg_channel",
-          "Channel",
-          "https://t.me/doctashare"
-        ]
-      ],
-      "release_date": "18.03.26",
       "bithash": "556af3f22f145702",
-      "app_version": ">=11.12.1",
       "tags": [
         [
           "Utility",
@@ -389,42 +425,26 @@
       ],
       "changelog": [
         "None"
-      ]
-    },
-    {
-      "id": "shareui_nmhttps",
-      "name": "NoMoreHttps",
-      "author": "@shareui(@doctashare)",
-      "version": "1.0.0",
-      "state": "release",
-      "icon": "SpizzhennyeStiki/0",
-      "min_version": "11.12.0",
-      "suspicious": "false",
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_nmhttps_1.0.0.plugin",
-      "size": "0.96 KB",
-      "description": "Удаляет http:// и https:// из отправляемых ссылок.",
-      "hash": "ecf1567dae9ccaeb77420e98ad43ee8cb4a4a5680ed13e69f793f0f027d09e67",
+      ],
       "social": [
         [
           "msg_channel",
           "Channel",
           "https://t.me/doctashare"
-        ]
-      ],
-      "release_date": "18.03.26",
-      "archived": "18.03.26",
-      "bithash": "423e618e5548be6a",
-      "app_version": ">=11.12.0",
-      "tags": [
+        ],
         [
-          "Tweaks",
-          "key_avatar_backgroundGreen",
-          ""
+          "msg_openprofile",
+          "GitHub",
+          "http://github.com/shareui"
         ]
       ],
-      "changelog": [
-        "None"
-      ]
+      "team": [
+        [
+          "400216230",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "18.03.26"
     },
     {
       "id": "shareui_nmp",
@@ -434,22 +454,13 @@
       "state": "release",
       "icon": "",
       "min_version": "12.1.0",
+      "app_version": ">=12.1.0",
       "suspicious": "false",
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_nmp_1.0.0.plugin",
       "size": "2.49 KB",
       "description": "Replaces the music card player.",
       "hash": "3602852fd9ee6180887414b86d0e7e18e0aa756efd31de1ab2344628b8ada230",
-      "social": [
-        [
-          "msg_channel",
-          "Channel",
-          "https://t.me/doctashare"
-        ]
-      ],
-      "release_date": "18.03.26",
-      "archived": "18.03.26",
       "bithash": "017b55c5fbd8732b",
-      "app_version": ">=12.1.0",
       "tags": [
         [
           "Tweaks",
@@ -459,42 +470,27 @@
       ],
       "changelog": [
         "None"
-      ]
-    },
-    {
-      "id": "shareui_req",
-      "name": "rekvplug",
-      "author": "@shareui(@doctashare)",
-      "version": "2.1.0",
-      "state": "release",
-      "icon": "plugin232/0",
-      "min_version": "11.12.0",
-      "suspicious": "false",
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_req_2.1.0.plugin",
-      "size": "8.63 KB",
-      "description": "Отправляет указанные в настройках реквизиты по команде .rekv / обязательно посмотри .helprekv",
-      "hash": "c340ecf6de77925beaa75540291ceec43a2b5c2e35c069d1bf1215e30d1ccfe6",
+      ],
       "social": [
         [
           "msg_channel",
           "Channel",
           "https://t.me/doctashare"
+        ],
+        [
+          "msg_openprofile",
+          "GitHub",
+          "http://github.com/shareui"
+        ]
+      ],
+      "team": [
+        [
+          "400216230",
+          "Maintainer"
         ]
       ],
       "release_date": "18.03.26",
-      "archived": "18.03.26",
-      "bithash": "2d5dddb18a1435dd",
-      "app_version": ">=11.12.0",
-      "tags": [
-        [
-          "Tweaks",
-          "key_avatar_backgroundGreen",
-          ""
-        ]
-      ],
-      "changelog": [
-        "None"
-      ]
+      "archived": "18.03.26"
     },
     {
       "id": "shareui_spamify",
@@ -504,21 +500,13 @@
       "state": "release",
       "icon": "plugin232/7",
       "min_version": "12.0.0",
+      "app_version": ">=12.0.0",
       "suspicious": "false",
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_spamify_1.4.plugin",
       "size": "16.19 KB",
       "description": "**[RU]**\nРуководство по использованию: [клик](https://t.me/fuchslog/66)\n\n**[EN]**\nUsage guide: [click](https://t.me/fuchslog/66)\n\n**IMPORTANT**: The plugin ID was changed in version 1.2 Fix. **REMOVE THE OLD VERSION BEFORE INSTALLING!!!**\n\n**ВАЖНО**: ID плагина было изменено в версии 1.2 Fix, **УДАЛИТЕ СТАРУЮ ВЕРСИЮ ПЕРЕД УСТАНОВКОЙ!!!**",
       "hash": "0f4da349ebbb587c59b8d9b8aa6e3fb392f0563157bb42fbdaa518fcd6dfd218",
-      "social": [
-        [
-          "msg_channel",
-          "Channel",
-          "https://t.me/doctashare"
-        ]
-      ],
-      "release_date": "18.03.26",
       "bithash": "10ed758ef73ff375",
-      "app_version": ">=12.0.0",
       "tags": [
         [
           "Utility",
@@ -528,7 +516,26 @@
       ],
       "changelog": [
         "None"
-      ]
+      ],
+      "social": [
+        [
+          "msg_channel",
+          "Channel",
+          "https://t.me/doctashare"
+        ],
+        [
+          "msg_openprofile",
+          "GitHub",
+          "http://github.com/shareui"
+        ]
+      ],
+      "team": [
+        [
+          "400216230",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "18.03.26"
     },
     {
       "id": "shareui_x0",
@@ -538,22 +545,13 @@
       "state": "release",
       "icon": "plugin232/12",
       "min_version": "11.12.0",
+      "app_version": ">=11.12.0",
       "suspicious": "false",
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_x0_1.0.1.plugin",
       "size": "12.44 KB",
       "description": "Загружает медиафайл (фото, видео, гиф, документ) на хостинг x0.at и отправляет полученную ссылку в чат. Для использования, ответьте на сообщение с медиафайлом командой .x0",
       "hash": "35084d1efada328fa76899f961621cffa0e5412e96453b5714210145c174aa76",
-      "social": [
-        [
-          "msg_channel",
-          "Channel",
-          "https://t.me/doctashare"
-        ]
-      ],
-      "release_date": "18.03.26",
-      "archived": "18.03.26",
       "bithash": "1fea2e79a369cadc",
-      "app_version": ">=11.12.0",
       "tags": [
         [
           "Tweaks",
@@ -568,7 +566,27 @@
       ],
       "changelog": [
         "None"
-      ]
+      ],
+      "social": [
+        [
+          "msg_channel",
+          "Channel",
+          "https://t.me/doctashare"
+        ],
+        [
+          "msg_openprofile",
+          "GitHub",
+          "http://github.com/shareui"
+        ]
+      ],
+      "team": [
+        [
+          "400216230",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "18.03.26",
+      "archived": "18.03.26"
     },
     {
       "id": "shareui_gtht",
@@ -578,21 +596,13 @@
       "state": "release",
       "icon": "zwyPluginsIcons/2",
       "min_version": "11.12.1",
+      "app_version": ">=11.12.1",
       "suspicious": "false",
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_gtht_1.0.5.plugin",
       "size": "5.32 KB",
       "description": "Creates search link [.search <query>] Fork by @shareui original plugin @zwylair.",
       "hash": "3803ef69d6f3463fed2afcdd180d90b510b7b523d06e0dd74274426c349d5314",
-      "social": [
-        [
-          "msg_channel",
-          "Channel",
-          "https://t.me/doctashare"
-        ]
-      ],
-      "release_date": "18.03.26",
       "bithash": "0249301af98f0876",
-      "app_version": ">=11.12.1",
       "tags": [
         [
           "Utility",
@@ -603,6 +613,25 @@
       "changelog": [
         "None"
       ],
+      "social": [
+        [
+          "msg_channel",
+          "Channel",
+          "https://t.me/doctashare"
+        ],
+        [
+          "msg_openprofile",
+          "GitHub",
+          "http://github.com/shareui"
+        ]
+      ],
+      "team": [
+        [
+          "400216230",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "18.03.26",
       "forked": [
         "GoogleThat",
         "https://t.me/zwyPlugins/33"
@@ -640,6 +669,17 @@
           "msg_channel",
           "Channel",
           "https://t.me/doctashare"
+        ],
+        [
+          "msg_openprofile",
+          "GitHub",
+          "http://github.com/shareui"
+        ]
+      ],
+      "team": [
+        [
+          "400216230",
+          "Maintainer"
         ]
       ],
       "release_date": "18.03.26",
@@ -664,19 +704,13 @@
       "state": "release",
       "icon": "plugin232/5",
       "min_version": "12.1.1",
+      "app_version": ">=12.1.1",
       "suspicious": "false",
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_sh_1.1.1.plugin",
       "size": "11.55 KB",
       "description": "Execute shell commands and subprocesses [.sh/.sproc]\n Usage: [link](https://t.me/fuchslog/527)",
       "hash": "f7ae2209fd87059265c99c66529f0e22bfc82b34d3c7eb55a43cf31f9fbe8141",
-      "social": [
-        [
-          "msg_channel",
-          "Channel",
-          "https://t.me/doctashare"
-        ]
-      ],
-      "release_date": "18.03.26",
+      "bithash": "07f431c691e230a2",
       "tags": [
         [
           "DevTools",
@@ -694,11 +728,28 @@
           ""
         ]
       ],
-      "bithash": "07f431c691e230a2",
-      "app_version": ">=12.1.1",
       "changelog": [
         "None"
-      ]
+      ],
+      "social": [
+        [
+          "msg_channel",
+          "Channel",
+          "https://t.me/doctashare"
+        ],
+        [
+          "msg_openprofile",
+          "GitHub",
+          "http://github.com/shareui"
+        ]
+      ],
+      "team": [
+        [
+          "400216230",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "18.03.26"
     },
     {
       "id": "shareui_vanillamusicplayer",
@@ -732,6 +783,17 @@
           "msg_channel",
           "Channel",
           "https://t.me/doctashare"
+        ],
+        [
+          "msg_openprofile",
+          "GitHub",
+          "http://github.com/shareui"
+        ]
+      ],
+      "team": [
+        [
+          "400216230",
+          "Maintainer"
         ]
       ],
       "release_date": "18.03.26",
@@ -765,15 +827,13 @@
       "state": "release",
       "icon": "",
       "min_version": "12.4.1",
+      "app_version": ">=12.4.1",
       "suspicious": "false",
       "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_accountunread_1.0.1.plugin",
       "size": "3.24 KB",
       "description": "Shows unread (non-muted) notifications count in account switcher",
       "hash": "677d4dba2fc8ee3a261d32c0710543dfe205f541c22e7ffb9a2b54de73bc267b",
-      "release_date": "19.03.26",
-      "update_date": "19.03.26",
       "bithash": "4cc9de05e24ab67e",
-      "app_version": ">=12.4.1",
       "tags": [
         [
           "Customization",
@@ -781,16 +841,29 @@
           ""
         ]
       ],
+      "changelog": [
+        "None"
+      ],
       "social": [
         [
           "msg_channel",
           "Channel",
           "https://t.me/doctashare"
+        ],
+        [
+          "msg_openprofile",
+          "GitHub",
+          "http://github.com/shareui"
         ]
       ],
-      "changelog": [
-        "None"
-      ]
+      "team": [
+        [
+          "400216230",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "19.03.26",
+      "update_date": "19.03.26"
     },
     {
       "id": "shareui_bettersearch",
@@ -834,6 +907,17 @@
           "msg_channel",
           "Channel",
           "https://t.me/doctashare"
+        ],
+        [
+          "msg_openprofile",
+          "GitHub",
+          "http://github.com/shareui"
+        ]
+      ],
+      "team": [
+        [
+          "400216230",
+          "Maintainer"
         ]
       ],
       "release_date": "21.03.26",
@@ -904,6 +988,17 @@
           "msg_channel",
           "Channel",
           "https://t.me/doctashare"
+        ],
+        [
+          "msg_openprofile",
+          "GitHub",
+          "http://github.com/shareui"
+        ]
+      ],
+      "team": [
+        [
+          "400216230",
+          "Maintainer"
         ]
       ],
       "release_date": "28.03.26",
@@ -947,10 +1042,6 @@
       "description": "Replaces system share with Telegram ShareAlert when sharing plugins in PluginCell",
       "hash": "5717b881e5d4d2aeddb10ae5570bc3067118e2ae74163901f3f438a4575a175a",
       "bithash": "9f31c98859e57d75",
-      "release_date": "26.04.26",
-      "changelog": [
-        "None"
-      ],
       "tags": [
         [
           "Tweaks",
@@ -958,13 +1049,28 @@
           ""
         ]
       ],
+      "changelog": [
+        "None"
+      ],
       "social": [
         [
           "msg_channel",
           "Channel",
           "https://t.me/doctashare"
+        ],
+        [
+          "msg_openprofile",
+          "GitHub",
+          "http://github.com/shareui"
         ]
-      ]
+      ],
+      "team": [
+        [
+          "400216230",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "26.04.26"
     },
     {
       "id": "shareui_dkta",
@@ -981,11 +1087,6 @@
       "description": "Continues downloading files in the background when exiting the chat.",
       "hash": "8c39324d9210537c30bc95a0336ca08276eb4f87ea2aa88bfbdd9b738c3125cd",
       "bithash": "94dcc6f811eb3f17",
-      "release_date": "26.04.26",
-      "update_date": "27.04.26",
-      "changelog": [
-        "None"
-      ],
       "tags": [
         [
           "Tweaks",
@@ -993,13 +1094,29 @@
           ""
         ]
       ],
+      "changelog": [
+        "None"
+      ],
       "social": [
         [
           "msg_channel",
           "Channel",
           "https://t.me/doctashare"
+        ],
+        [
+          "msg_openprofile",
+          "GitHub",
+          "http://github.com/shareui"
         ]
-      ]
+      ],
+      "team": [
+        [
+          "400216230",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "26.04.26",
+      "update_date": "27.04.26"
     },
     {
       "id": "testzalupa",
@@ -1022,7 +1139,27 @@
         "+1",
         "-1"
       ],
-      "release_date": "15.05.26"
+      "social": [
+        [
+          "msg_channel",
+          "Channel",
+          "https://t.me/doctashare"
+        ],
+        [
+          "msg_openprofile",
+          "GitHub",
+          "http://github.com/shareui"
+        ]
+      ],
+      "team": [
+        [
+          "400216230",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "15.05.26",
+      "closed_source": true,
+      "paid": true
     }
   ]
 }
