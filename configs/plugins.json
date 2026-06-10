@@ -70,6 +70,7 @@
       ],
       "release_date": "18.03.26",
       "update_date": "15.05.26",
+      "closed_source": "checked",
       "versions": {
         "1.4.2": {
           "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/devsettingicons_1.4.2.elyx",
