@@ -900,19 +900,14 @@
       ],
       "social": [
         [
-          "input_bot1",
-          "Source code",
-          "https://github.com/shareui/plugins/blob/main/assets/bettersearch.c"
+          "msg_openprofile",
+          "GitHub",
+          "http://github.com/shareui"
         ],
         [
           "msg_channel",
           "Channel",
           "https://t.me/doctashare"
-        ],
-        [
-          "msg_openprofile",
-          "GitHub",
-          "http://github.com/shareui"
         ]
       ],
       "team": [
@@ -955,6 +950,18 @@
           ],
           "size": "41.84 KB"
         }
+      },
+      "sources": {
+        "license": "Apache 2.0",
+        "source_links": "https://github.com/shareui/better-search",
+        "langs": [
+          "Python",
+          "C"
+        ],
+        "clients": [
+          "exteraGram",
+          "AyuGram"
+        ]
       }
     },
     {
