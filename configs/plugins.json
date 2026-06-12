@@ -1,11 +1,11 @@
 {
   "tags_summary": {
-    "Elyx": 1,
-    "Featured": 4,
+    "Elyx": 2,
+    "Featured": 3,
     "DevTools": 2,
     "Library": 1,
     "Customization": 2,
-    "Tweaks": 8,
+    "Tweaks": 7,
     "System": 3,
     "Utility": 8
   },
@@ -867,104 +867,6 @@
       "update_date": "19.03.26"
     },
     {
-      "id": "shareui_bettersearch",
-      "name": "Better Search",
-      "author": "@shareui(@doctashare)",
-      "version": "2.0.1",
-      "state": "release",
-      "icon": "AgnesTachyon/1",
-      "app_version": ">=12.5.1",
-      "sdk_version": ">=1.4.3.2",
-      "suspicious": "false",
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_bettersearch_2.0.1.plugin",
-      "size": "41.85 KB",
-      "description": "Significantly improves search in the plugin list. Library source code: [shareui/plugins/assets/bettersearch.c](https://github.com/shareui/plugins/blob/main/assets/bettersearch.c)",
-      "hash": "60ca7ae92a306fc7057f38a1ec5449f60aa94b0cbb992b09a3b1172c93e414a6",
-      "bithash": "cc70b8c0a3ef2e6b",
-      "tags": [
-        [
-          "Featured",
-          "key_avatar_backgroundInProfileBlue",
-          "https://t.me/packitGround/13/988"
-        ],
-        [
-          "Tweaks",
-          "key_avatar_backgroundGreen",
-          ""
-        ]
-      ],
-      "changelog": [
-        "https://t.me/doctashare/83",
-        "+3",
-        "-3"
-      ],
-      "social": [
-        [
-          "msg_openprofile",
-          "GitHub",
-          "http://github.com/shareui"
-        ],
-        [
-          "msg_channel",
-          "Channel",
-          "https://t.me/doctashare"
-        ]
-      ],
-      "team": [
-        [
-          "400216230",
-          "Maintainer"
-        ]
-      ],
-      "release_date": "21.03.26",
-      "update_date": "03.04.26",
-      "restart": "optional",
-      "versions": {
-        "1.0.1": {
-          "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_bettersearch_1.0.1.plugin",
-          "app_version": ">=12.2.10",
-          "changelog": [
-            "https://t.me/doctashare/67",
-            "+10",
-            "-5"
-          ],
-          "size": "20.52 KB"
-        },
-        "1.0.2": {
-          "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_bettersearch_1.0.2.plugin",
-          "app_version": ">=12.2.10",
-          "changelog": [
-            "https://t.me/doctashare/68",
-            "+611",
-            "-91"
-          ],
-          "size": "20.73 KB"
-        },
-        "2.0.0": {
-          "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_bettersearch_2.0.0.plugin",
-          "app_version": ">=12.5.1",
-          "changelog": [
-            "https://t.me/doctashare/81",
-            "+3",
-            "-3"
-          ],
-          "size": "41.84 KB"
-        }
-      },
-      "sources": {
-        "license": "Apache 2.0",
-        "source_links": "https://github.com/shareui/better-search",
-        "langs": [
-          "Python",
-          "C"
-        ],
-        "clients": [
-          "exteraGram",
-          "AyuGram"
-        ]
-      }
-    },
-    {
       "id": "shareui_fservice",
       "name": "Foreground service",
       "author": "@shareui(@doctashare)",
@@ -1168,6 +1070,65 @@
       "release_date": "15.05.26",
       "closed_source": true,
       "paid": true
+    },
+    {
+      "id": "shareui_bettersearch",
+      "name": "Better Search",
+      "author": "@shareui",
+      "version": "0.1.0",
+      "state": "release",
+      "icon": "shareui_plugins/0",
+      "app_version": ">=12.6.4",
+      "sdk_version": ">=1.4.3.3",
+      "suspicious": "false",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/shareui_bettersearch_0.1.0.eaf",
+      "size": "46.84 KB",
+      "description": "Improves search across the entire Telegram",
+      "hash": "af5f6641724554a3313c42d34d049d9a7fb4df34e9166634cc7676260d8d649e",
+      "bithash": "847fb7244d6bf8b1",
+      "tags": [
+        [
+          "Elyx",
+          "key_avatar_backgroundBlue",
+          "https://t.me/CactusPlugins"
+        ]
+      ],
+      "changelog": [
+        "https://t.me/doctashare/83",
+        "+3",
+        "-3"
+      ],
+      "team": [
+        [
+          "400216230",
+          "Founder"
+        ]
+      ],
+      "release_date": "12.06.26",
+      "sources": {
+        "clients": [
+          "exteraGram",
+          "AyuGram"
+        ],
+        "license": "Apache 2.0",
+        "source_links": "https://github.com/shareui/better-search",
+        "langs": [
+          "Python",
+          "C"
+        ]
+      },
+      "social": [
+        [
+          "msg_channel",
+          "Channel",
+          "https://t.me/doctashare"
+        ],
+        [
+          "msg_openprofile",
+          "GitHub",
+          "http://github.com/shareui"
+        ]
+      ]
     }
   ]
 }
