@@ -1,11 +1,11 @@
 {
   "tags_summary": {
     "Elyx": 2,
-    "Featured": 3,
+    "Featured": 4,
     "DevTools": 2,
     "Library": 1,
     "Customization": 2,
-    "Tweaks": 7,
+    "Tweaks": 8,
     "System": 3,
     "Utility": 8
   },
@@ -1091,6 +1091,16 @@
           "Elyx",
           "key_avatar_backgroundBlue",
           "https://t.me/CactusPlugins"
+        ],
+        [
+          "Featured",
+          "key_avatar_backgroundInProfileBlue",
+          "https://t.me/packitGround/13/988"
+        ],
+        [
+          "Tweaks",
+          "key_avatar_backgroundGreen",
+          ""
         ]
       ],
       "changelog": [
@@ -1128,7 +1138,8 @@
           "GitHub",
           "http://github.com/shareui"
         ]
-      ]
+      ],
+      "bug_reports": "https://github.com/shareui/better-search/issues"
     }
   ]
 }
