@@ -29,7 +29,9 @@
       "allow_notes": true,
       "allow_changelog": true,
       "allow_multi_files": 3,
-      "allow_socials": 5
+      "allow_socials": 5,
+      "allow_paid": true,
+      "allor_source": true
     },
     "config": {
       "acc_id": 8534178686,
