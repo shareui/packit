@@ -1137,7 +1137,8 @@
         "langs": [
           "Python",
           "C"
-        ]
+        ],
+        "bug_reports": "https://github.com/shareui/better-search/issues"
       },
       "bug_reports": "https://github.com/shareui/better-search/issues"
     }
