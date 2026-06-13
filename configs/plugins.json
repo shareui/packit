@@ -1108,10 +1108,22 @@
         "+3",
         "-3"
       ],
+      "social": [
+        [
+          "msg_channel",
+          "Channel",
+          "https://t.me/doctashare"
+        ],
+        [
+          "msg_openprofile",
+          "GitHub",
+          "http://github.com/shareui"
+        ]
+      ],
       "team": [
         [
           "400216230",
-          "Founder"
+          "Maintainer"
         ]
       ],
       "release_date": "12.06.26",
@@ -1127,18 +1139,6 @@
           "C"
         ]
       },
-      "social": [
-        [
-          "msg_channel",
-          "Channel",
-          "https://t.me/doctashare"
-        ],
-        [
-          "msg_openprofile",
-          "GitHub",
-          "http://github.com/shareui"
-        ]
-      ],
       "bug_reports": "https://github.com/shareui/better-search/issues"
     }
   ]
