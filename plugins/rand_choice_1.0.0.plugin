@@ -1,0 +1,255 @@
+import re
+import random
+import traceback
+from decimal import Decimal, getcontext
+from typing import Any
+
+from base_plugin import BasePlugin, HookStrategy, HookResult
+from android_utils import run_on_ui_thread, log
+from client_utils import get_last_fragment, send_text
+from ui.bulletin import BulletinHelper
+from ui.settings import Header, Divider, Text, Switch
+
+getcontext().prec = 28
+
+__id__ = "rand_choice"
+__name__ = "Randomizer"
+__description__ = "Random number range or choice picker. Commands: .rand / .ранд"
+__author__ = "@Kaktusik_A & AI"
+__version__ = "1.0.0"
+__icon__ = "sPluginIDE/5"
+__min_version__ = "11.12.0"
+
+COMMANDS = (".ранд", ".rand")
+
+STRINGS = {
+    "en": {
+        "result":       "Result: {}",
+        "result_label": "\"{}\", Result: {}",
+        "error_input": (
+            "Invalid input. Examples:\n"
+            ".rand 1-10\n"
+            ".rand cat/dog/fox\n"
+            ".rand Label  1-10\n"
+            ".rand Label  cat/dog/fox\n"
+            ".rand apple or banana"
+        ),
+        "error_chat": "Could not determine chat",
+        "s_how":       "How to use",
+        "s_range":     ".rand 1-100  —  random number from range",
+        "s_float":     ".rand 0.5-2.5  —  float range",
+        "s_slash":     ".rand cat/dog/fox  —  random choice via /",
+        "s_or":        ".rand apple or banana  —  choice via \"or\"/\"или\"",
+        "s_label_note":"Label — double space before the spec",
+        "s_label1":    ".rand Question  1-10",
+        "s_label2":    ".rand What to eat  pizza/burger/sushi",
+        "s_aliases":   "Aliases",
+        "s_alias":     ".rand  /  .ранд  —  both work the same",
+        "s_footer":    "Command is intercepted — only result is sent to chat",
+        "s_lang":      "Ru/En",
+    },
+    "ru": {
+        "result":       "Результат: {}",
+        "result_label": "\"{}\", Результат: {}",
+        "error_input": (
+            "Неверный ввод. Примеры:\n"
+            ".ранд 1-10\n"
+            ".ранд кот/пёс/ёж\n"
+            ".ранд Подпись  1-10\n"
+            ".ранд Подпись  кот/пёс/ёж\n"
+            ".ранд яблоко или огурец"
+        ),
+        "error_chat": "Не удалось определить чат",
+        "s_how":       "Как пользоваться",
+        "s_range":     ".ранд 1-100  —  случайное число из диапазона",
+        "s_float":     ".ранд 0.5-2.5  —  диапазон с дробными числами",
+        "s_slash":     ".ранд кот/пёс/ёж  —  случайный вариант через /",
+        "s_or":        ".ранд яблоко или огурец  —  вариант через «или»/«or»",
+        "s_label_note":"Подпись — двойной пробел перед параметром",
+        "s_label1":    ".ранд Вопрос  1-10",
+        "s_label2":    ".ранд Что съесть  пицца/бургер/суши",
+        "s_aliases":   "Псевдонимы",
+        "s_alias":     ".ранд  /  .rand  —  оба работают одинаково",
+        "s_footer":    "Команда перехватывается, в чат отправляется только результат",
+        "s_lang":      "Ru/En",
+    },
+}
+
+
+def _split_choices(text: str):
+    text = text.strip()
+    if "/" in text:
+        parts = [p.strip() for p in re.split(r"/+", text)]
+    else:
+        parts = [p.strip() for p in re.split(r"\s+(?:или|or)\s+", text, flags=re.I)]
+    return [p for p in parts if p]
+
+
+def _pick_by_choices(text: str) -> str:
+    parts = _split_choices(text)
+    return random.choice(parts) if parts else ""
+
+
+def _pick_by_range(text: str) -> str:
+    m = re.match(r"^\s*([+-]?\d+(?:[.,]\d+)?)\s*-\s*([+-]?\d+(?:[.,]\d+)?)\s*$", text)
+    if not m:
+        return ""
+    left = Decimal(m.group(1).replace(",", "."))
+    right = Decimal(m.group(2).replace(",", "."))
+    lo, hi = (left, right) if left <= right else (right, left)
+    prec_lo = max(0, -lo.as_tuple().exponent)
+    prec_hi = max(0, -hi.as_tuple().exponent)
+    digits = max(prec_lo, prec_hi)
+    if digits == 0:
+        return str(random.randint(int(lo), int(hi)))
+    scale = 10 ** digits
+    lo_i, hi_i = int(lo * scale), int(hi * scale)
+    if lo_i > hi_i:
+        lo_i, hi_i = hi_i, lo_i
+    res = (Decimal(random.randint(lo_i, hi_i)) / Decimal(scale)).quantize(
+        Decimal(1) / Decimal(scale)
+    )
+    return str(res)
+
+
+def _parse_input(args: str):
+    s = args.strip() if args else ""
+    if not s:
+        return "", "1-100", "range"
+    if "  " in s:
+        label_part, _, spec_part = s.partition("  ")
+        spec_part = spec_part.strip()
+        if spec_part:
+            if re.fullmatch(r"[+-]?\d+(?:[.,]\d+)?\s*-\s*[+-]?\d+(?:[.,]\d+)?", spec_part):
+                return label_part.strip(), spec_part, "range"
+            return label_part.strip(), spec_part, "choices"
+    if re.fullmatch(r"[+-]?\d+(?:[.,]\d+)?\s*-\s*[+-]?\d+(?:[.,]\d+)?", s):
+        return "", s, "range"
+    m_end = re.search(r"([+-]?\d+(?:[.,]\d+)?)\s*-\s*([+-]?\d+(?:[.,]\d+)?)\s*$", s)
+    if m_end:
+        return s[:m_end.start()].strip(), s[m_end.start():m_end.end()].strip(), "range"
+    if "/" in s:
+        last_slash = s.rfind("/")
+        start = s.rfind(" ", 0, last_slash)
+        start = 0 if start == -1 else start + 1
+        spec = s[start:].strip()
+        if "/" in spec:
+            return s[:start].strip(), spec, "choices"
+        return s, s, "choices"
+    if re.search(r"\b(?:или|or)\b", s, flags=re.I):
+        return s, s, "choices"
+    return "", s, "range"
+
+
+def _extract_dialog_id(params: Any) -> int:
+    for key in ("dialog_id", "did"):
+        try:
+            v = getattr(params, key)
+            if isinstance(v, int) and v != 0:
+                return int(v)
+        except Exception:
+            pass
+    try:
+        peer = getattr(params, "peer")
+        if peer:
+            for attr, sign in (("user_id", 1), ("chat_id", -1), ("channel_id", -1)):
+                try:
+                    v = getattr(peer, attr)
+                    if isinstance(v, int) and v != 0:
+                        return sign * int(v)
+                except Exception:
+                    pass
+    except Exception:
+        pass
+    try:
+        fragment = get_last_fragment()
+        if fragment:
+            v = fragment.getDialogId()
+            if isinstance(v, int) and v != 0:
+                return int(v)
+    except Exception:
+        pass
+    return 0
+
+
+class RandomizerPlugin(BasePlugin):
+
+    def _lang(self) -> str:
+        return "ru" if self.get_setting("use_russian", False) else "en"
+
+    def _t(self, key: str) -> str:
+        return STRINGS[self._lang()][key]
+
+    def on_plugin_load(self):
+        self.add_on_send_message_hook()
+
+    def on_plugin_unload(self):
+        pass
+
+    def create_settings(self):
+        s = STRINGS[self._lang()]
+        return [
+            Switch(
+                key="use_russian",
+                text=s["s_lang"],
+                default=False,
+                on_change=lambda v: self.set_setting("use_russian", v, reload_settings=True),
+            ),
+            Divider(),
+            Header(text=s["s_how"]),
+            Text(text=s["s_range"]),
+            Text(text=s["s_float"]),
+            Text(text=s["s_slash"]),
+            Text(text=s["s_or"]),
+            Divider(text=s["s_label_note"]),
+            Text(text=s["s_label1"]),
+            Text(text=s["s_label2"]),
+            Divider(),
+            Header(text=s["s_aliases"]),
+            Text(text=s["s_alias"]),
+            Divider(text=s["s_footer"]),
+        ]
+
+    def on_send_message_hook(self, account: int, params: Any) -> HookResult:
+        try:
+            if not isinstance(params.message, str):
+                return HookResult()
+            raw = params.message.strip()
+            if not raw:
+                return HookResult()
+            lower = raw.lower()
+            cmd_used = None
+            for cmd in COMMANDS:
+                if lower == cmd or lower.startswith(cmd + " "):
+                    cmd_used = cmd
+                    break
+            if cmd_used is None:
+                return HookResult()
+            args = raw[len(cmd_used):].strip()
+            label, spec, mode = _parse_input(args)
+            result = ""
+            if mode == "choices":
+                result = _pick_by_choices(spec)
+            else:
+                result = _pick_by_range(spec)
+                if not result:
+                    result = _pick_by_choices(spec)
+            if result:
+                if label:
+                    out = self._t("result_label").format(label, result)
+                else:
+                    out = self._t("result").format(result)
+            else:
+                out = self._t("error_input")
+            dialog_id = _extract_dialog_id(params)
+            if dialog_id == 0:
+                run_on_ui_thread(lambda: BulletinHelper.show_error(self._t("error_chat")))
+                return HookResult(HookStrategy.CANCEL)
+            reply_msg = getattr(params, "replyToMsg", None)
+            def _send(did=dialog_id, text=out, reply=reply_msg):
+                send_text(did, text, replyToMsg=reply)
+            run_on_ui_thread(_send)
+            return HookResult(HookStrategy.CANCEL)
+        except Exception:
+            log(f"[{__id__}] on_send_message_hook error: {traceback.format_exc()}")
+            return HookResult()

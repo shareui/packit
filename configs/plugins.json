@@ -1,6 +1,6 @@
 {
   "tags_summary": {
-    "Elyx": 2,
+    "Elyx": 3,
     "Featured": 4,
     "DevTools": 2,
     "Library": 1,
@@ -1141,6 +1141,413 @@
         "bug_reports": "https://github.com/shareui/better-search/issues"
       },
       "bug_reports": "https://github.com/shareui/better-search/issues"
+    },
+    {
+      "id": "plugin_creator",
+      "name": "Plugin creator",
+      "author": "@mr_Vestr",
+      "version": "3.1",
+      "state": "release",
+      "icon": "mr_vestr/12",
+      "min_version": "12.5.0",
+      "app_version": ">=12.5.0",
+      "sdk_version": "Unknown",
+      "suspicious": "false",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/plugin_creator_3.1.plugin",
+      "size": "267.45 KB",
+      "description": "Плагин для быстрого создания файлов из текста.\n\nA plugin for quickly creating files from text.",
+      "hash": "d196dc116b5b441eb9402944f4da8e511fd69516718d72dc096832d49d620a52",
+      "bithash": "659b80e47b84a109",
+      "changelog": [
+        "None"
+      ],
+      "social": [
+        [
+          "msg_channel",
+          "Channel",
+          "https://t.me/I_am_Vestr"
+        ],
+        [
+          "msg_openprofile",
+          "GitHub",
+          "https://github.com/mr-Vestr/"
+        ]
+      ],
+      "team": [
+        [
+          "2037728749",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "31.07.26",
+      "sources": {
+        "clients": [
+          "exteraGram",
+          "AyuGram"
+        ]
+      }
+    },
+    {
+      "id": "chimeranft",
+      "name": "Chimera NFT",
+      "author": "@xarmaq",
+      "version": "1.0.0",
+      "state": "release",
+      "icon": "HappyHappyPepe/31",
+      "app_version": ">=11.9.0",
+      "sdk_version": ">=1.4.4.6",
+      "suspicious": "false",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/chimeranft_1.0.0.eaf",
+      "size": "4.14 MB",
+      "description": "{description}",
+      "hash": "27e346b3abbd721aa9147646be7da94f69b9cd54fc0033bbd87d33c13dffb6b3",
+      "bithash": "cecc5b825405311c",
+      "tags": [
+        [
+          "Elyx",
+          "key_avatar_backgroundBlue",
+          "https://t.me/CactusPlugins"
+        ]
+      ],
+      "changelog": [
+        "None"
+      ],
+      "team": [
+        [
+          "5406195402",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "31.07.26",
+      "sources": {
+        "clients": [
+          "exteraGram",
+          "AyuGram"
+        ]
+      }
+    },
+    {
+      "id": "extera_custom_name_icon",
+      "name": "Custom Name & Icon",
+      "author": "github.com/AlexeiCrystal",
+      "version": "1.0",
+      "state": "release",
+      "icon": "exteraGram/0",
+      "app_version": ">=11.12.0",
+      "sdk_version": ">=1.4.3.3",
+      "suspicious": "false",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/extera_custom_name_icon_1.0.plugin",
+      "size": "16.65 KB",
+      "description": "EN: Allows you to set a custom name and icon for the client in the recent apps menu and on the launcher\nRU: Позволяет установить кастомное имя и иконку клиента в меню недавних приложений и на рабочем столе",
+      "hash": "c87f83f5b63dccd2a443505c866185e1ab004d98d8e6e343a779d458f00bf056",
+      "bithash": "92a4249b5112a292",
+      "changelog": [
+        "None"
+      ],
+      "team": [
+        [
+          "1169951070",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "31.07.26",
+      "sources": {
+        "clients": [
+          "exteraGram",
+          "AyuGram"
+        ]
+      }
+    },
+    {
+      "id": "mooninfo",
+      "name": "MoonInfo",
+      "author": "@CodedOwner & @MLPlugins",
+      "version": "1.0.0",
+      "state": "release",
+      "icon": "",
+      "app_version": ">=12.5.1",
+      "sdk_version": "Unknown",
+      "suspicious": "false",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/mooninfo_1.0.0.plugin",
+      "size": "6.07 KB",
+      "description": "RU: Информация об клиенте\nИнформация в настройках exteraGram -> Информация\n\nEN: Information about client\nInformation in exteraGram Settings -> Information",
+      "hash": "3f1576a735951e97d5a11fd918e1e60783216226d06862223506e7d575681f38",
+      "bithash": "a7eba6b75cbf2f51",
+      "changelog": [
+        "None"
+      ],
+      "social": [
+        [
+          "msg_openprofile",
+          "Author",
+          "https://CodedOwner.t.me"
+        ],
+        [
+          "msg_channel",
+          "Channel",
+          "https://MLPlugins.t.me"
+        ]
+      ],
+      "team": [
+        [
+          "6402384348",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "31.07.26",
+      "closed_source": "checked",
+      "sources": {
+        "clients": [
+          "exteraGram",
+          "AyuGram"
+        ]
+      }
+    },
+    {
+      "id": "rand_choice",
+      "name": "Randomizer",
+      "author": "@Kaktusik_A & AI",
+      "version": "1.0.0",
+      "state": "release",
+      "icon": "sPluginIDE/5",
+      "min_version": "11.12.0",
+      "app_version": ">=11.12.0",
+      "sdk_version": "Unknown",
+      "suspicious": "false",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/rand_choice_1.0.0.plugin",
+      "size": "9.32 KB",
+      "description": "Random number range or choice picker. Commands: .rand / .ранд",
+      "hash": "8647c9fe18ae9f3a7d9931f392cd306d386cd1b904b2260b9fb75aa12c7476f4",
+      "bithash": "f302e9fc1e883f75",
+      "changelog": [
+        "None"
+      ],
+      "team": [
+        [
+          "5131734501",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "31.07.26",
+      "closed_source": "checked",
+      "sources": {
+        "clients": [
+          "exteraGram",
+          "AyuGram"
+        ]
+      }
+    },
+    {
+      "id": "timers_stopwatches",
+      "name": "Timers & Stopwatches",
+      "author": "@Kaktusik_A & AI",
+      "version": "2.3.0",
+      "state": "release",
+      "icon": "sPluginIDE/10",
+      "min_version": "11.12.0",
+      "app_version": ">=11.12.0",
+      "sdk_version": "Unknown",
+      "suspicious": "false",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/timers_stopwatches_2.3.0.plugin",
+      "size": "35.16 KB",
+      "description": "Add and manage timers and stopwatches directly from the chat action menu.",
+      "hash": "d799e25bb6a6ceb1209215306efc479a0e1a8c089ba234f7c73d9acd356483da",
+      "bithash": "85cbd63918c5f4f1",
+      "changelog": [
+        "None"
+      ],
+      "team": [
+        [
+          "5131734501",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "31.07.26",
+      "closed_source": "checked",
+      "sources": {
+        "clients": [
+          "exteraGram",
+          "AyuGram"
+        ]
+      }
+    },
+    {
+      "id": "music_uploader",
+      "name": "Music Uploader",
+      "author": "@Kaktusik_A & AI",
+      "version": "1.0.0",
+      "state": "release",
+      "icon": "sPluginIDE/4",
+      "min_version": "11.12.0",
+      "app_version": ">=11.12.0",
+      "sdk_version": "Unknown",
+      "suspicious": "false",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/music_uploader_1.0.0.plugin",
+      "size": "57.63 KB",
+      "description": "Кнопка в меню чата и в настройках — выгружает музыку с устройства через кастомный выбор треков (поиск, обложки, выбор всех). 4 режима отправки в настройках: просто, с очисткой чата, только новое, полная синхронизация.",
+      "hash": "0a960b6e3c06296625ff0dba945103a3bcf9e64427e927e4a135cf1b1dce241b",
+      "bithash": "6c5b133942fd1c6e",
+      "changelog": [
+        "None"
+      ],
+      "team": [
+        [
+          "5131734501",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "31.07.26",
+      "closed_source": "checked",
+      "sources": {
+        "clients": [
+          "exteraGram",
+          "AyuGram"
+        ]
+      }
+    },
+    {
+      "id": "templates",
+      "name": "Templates",
+      "author": "@mr_Vestr",
+      "version": "4.2",
+      "state": "release",
+      "icon": "mr_vestr/7",
+      "min_version": "12.1.1",
+      "app_version": ">=12.1.1",
+      "sdk_version": "Unknown",
+      "suspicious": "false",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/templates_4.2.plugin",
+      "size": "404.04 KB",
+      "description": "A plugin for creating, editing, and quickly sending message templates.\n\nПлагин для создания, редактирования и быстрой отправки шаблонов сообщений.",
+      "hash": "cfec62bfdc6628d987bb2cbaec29a209866f75550c2a136efd1b461f3b0dd62f",
+      "bithash": "7f0e2197c9a4389a",
+      "changelog": [
+        "None"
+      ],
+      "social": [
+        [
+          "msg_channel",
+          "Channel",
+          "https://t.me/I_am_Vestr"
+        ],
+        [
+          "msg_openprofile",
+          "GitHub",
+          "https://github.com/mr-Vestr/"
+        ]
+      ],
+      "team": [
+        [
+          "2037728749",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "31.07.26",
+      "sources": {
+        "clients": [
+          "exteraGram",
+          "AyuGram"
+        ]
+      }
+    },
+    {
+      "id": "bot_account_router",
+      "name": "Аккаунт для бота",
+      "author": "@oaxat",
+      "version": "1.0.0",
+      "state": "release",
+      "icon": "EKCTEPArAM/6",
+      "min_version": "12.5.1",
+      "app_version": ">=12.5.1",
+      "sdk_version": "Unknown",
+      "suspicious": "false",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/bot_account_router_1.0.0.plugin",
+      "size": "16.64 KB",
+      "description": "Открывает чат с ботом через другой аккаунт без переключения.",
+      "hash": "ba62fef6f77aa169c5e85fe8ec0144d0b0bce00483c4374755ec1289641f0dd9",
+      "bithash": "3c8b8ffebf5d7c75",
+      "changelog": [
+        "None"
+      ],
+      "team": [
+        [
+          "8310239728",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "31.07.26",
+      "closed_source": "checked",
+      "sources": {
+        "clients": [
+          "exteraGram",
+          "AyuGram"
+        ]
+      }
+    },
+    {
+      "id": "playlist_downloader",
+      "name": "Playlist Downloader",
+      "author": "@ameerchik6",
+      "version": "1.0",
+      "state": "release",
+      "icon": "litsouls/16",
+      "app_version": ">=12.5.0",
+      "sdk_version": ">=1.4.0",
+      "suspicious": "false",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/playlist_downloader_1.0.plugin",
+      "size": "31.31 KB",
+      "description": "Загружает каждый трек из плейлиста чата в один клик с помощью встроенного загрузчика файлов Telegram.\n\nDownloads every track from a chat's playlist in one tap, through Telegram's own file loader.",
+      "hash": "7fed1c8192651d4745d239e3fe9ff480f13dfd6f4aa5c31b0f5e8c12b3918328",
+      "bithash": "d5e2cb11d89ee48f",
+      "changelog": [
+        "None"
+      ],
+      "team": [
+        [
+          "5527705092",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "31.07.26",
+      "sources": {
+        "clients": [
+          "exteraGram",
+          "AyuGram"
+        ]
+      }
+    },
+    {
+      "id": "resident_cards_7",
+      "name": "Resident Evil 7: Banned Footage, «21»",
+      "author": "@Nondiat x Lutiy vibecode",
+      "version": "3.1.0",
+      "state": "release",
+      "icon": "yiuim_by_fStikBot/8",
+      "min_version": "12.3.0",
+      "app_version": ">=12.3.0",
+      "sdk_version": ">=1.4.0",
+      "suspicious": "false",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/resident_cards_7_3.1.0.plugin",
+      "size": "365.61 KB",
+      "hash": "0b317e20406f87fa452b7c49c81df6a689bc8b0f1e6f591f4750d774a8d59a24",
+      "bithash": "bee3e4b63eb317bd",
+      "changelog": [
+        "None"
+      ],
+      "team": [
+        [
+          "1621402419",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "31.07.26",
+      "sources": {
+        "clients": [
+          "exteraGram",
+          "AyuGram"
+        ]
+      },
+      "description": "Копия карточной игры из игры Resident Evil 7: Biohazard, дополнение «Вырезанные материалы» «21»"
     }
   ]
 }

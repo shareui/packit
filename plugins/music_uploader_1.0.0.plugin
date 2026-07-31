@@ -1,0 +1,1498 @@
+__id__ = "music_uploader"
+__name__ = "Music Uploader"
+__description__ = "Кнопка в меню чата и в настройках — выгружает музыку с устройства через кастомный выбор треков (поиск, обложки, выбор всех). 4 режима отправки в настройках: просто, с очисткой чата, только новое, полная синхронизация."
+__version__ = "1.0.0"
+__author__ = "@Kaktusik_A & AI"
+__icon__ = "sPluginIDE/4"
+__min_version__ = "11.12.0"
+
+import os
+import time
+import threading
+from typing import List, Optional, Tuple, Callable, Dict, Any
+
+from java import dynamic_proxy
+from java.util import ArrayList
+from java.lang import Integer as JInt
+
+from base_plugin import BasePlugin, MenuItemData, MenuItemType
+from client_utils import (
+    run_on_queue,
+    send_audio,
+    get_last_fragment,
+    get_messages_controller,
+    send_request,
+    RequestCallback,
+)
+from android_utils import run_on_ui_thread, log, OnClickListener
+from ui.settings import Header, Text, Divider
+from ui.bulletin import BulletinHelper
+from ui.alert import AlertDialogBuilder
+from hook_utils import find_class, get_private_field
+
+from android.widget import EditText, TextView, LinearLayout, ScrollView, ImageView, HorizontalScrollView
+from android.view import View, Gravity, ViewGroup
+from android.graphics import Color, BitmapFactory, Typeface
+from android.graphics.drawable import GradientDrawable
+from android.media import MediaMetadataRetriever
+
+from org.telegram.messenger import ApplicationLoader, AndroidUtilities
+from org.telegram.tgnet import TLRPC
+from org.telegram.ui.ActionBar import Theme
+
+_MODE_SIMPLE = 0
+_MODE_CLEAR_THEN_SEND = 1
+_MODE_SEND_MISSING = 2
+_MODE_SYNC_DELETE_EXTRA = 3
+
+_MODE_LABELS = [
+    "1: Просто отправить",
+    "2: Очистить чат и отправить всё",
+    "3: Отправить только новое",
+    "4: Синхронизировать (+ удалить лишнее)",
+]
+
+_MODE_SHORT_LABELS = [
+    "Просто",
+    "Очистка + всё",
+    "Только новое",
+    "Синхронизация",
+]
+
+_MODE_HELP_TEXT = (
+    "1. Просто отправить\n"
+    "Находит все треки на устройстве и открывает выбор треков для отправки.\n\n"
+    "2. Очистить чат и отправить всё\n"
+    "Сначала полностью удаляет всю историю чата (для всех участников), "
+    "затем открывает выбор треков из всех найденных. Очистка необратима.\n\n"
+    "3. Отправить только новое\n"
+    "Сравнивает музыку на устройстве с тем, что уже есть в чате (по размеру "
+    "файла и имени), и открывает выбор только среди отсутствующих треков.\n\n"
+    "4. Синхронизировать (+ удалить лишнее)\n"
+    "Как режим 3, но дополнительно удаляет из чата треки, которых больше "
+    "нет на устройстве, а затем открывает выбор недостающих треков.\n\n"
+    "Во всех режимах перед отправкой открывается окно выбора треков — можно "
+    "снять галочки с ненужных песен."
+)
+
+_DialogsActivityClass = find_class("org.telegram.ui.DialogsActivity")
+_DialogsActivityDelegateClass = find_class("org.telegram.ui.DialogsActivity$DialogsActivityDelegate")
+_BundleClass = find_class("android.os.Bundle")
+_TextWatcherClass = find_class("android.text.TextWatcher")
+_TruncateAtClass = find_class("android.text.TextUtils$TruncateAt")
+
+def _build_delegate_class():
+    if _DialogsActivityDelegateClass is None:
+        return None
+    try:
+        try:
+            methods = list(_DialogsActivityDelegateClass.getClass().getDeclaredMethods())
+        except Exception:
+            methods = list(_DialogsActivityDelegateClass.getDeclaredMethods())
+
+        def _default(ret_name):
+            n = str(ret_name or "").lower()
+            if n == "boolean":
+                return True
+            if n in ("int", "short", "byte", "char", "long"):
+                return 0
+            if n in ("float", "double"):
+                return 0.0
+            return None
+
+        base = dynamic_proxy(_DialogsActivityDelegateClass)
+        ns = {}
+
+        for m in methods:
+            try:
+                mname = m.getName()
+                try:
+                    ret = str(m.getReturnType().getName() or "")
+                except Exception:
+                    ret = ""
+
+                def _stub(self, *args, _mn=mname, _rv=ret):
+                    try:
+                        fired = getattr(self, "_fired", False)
+                        on_select = getattr(self, "_on_select", None)
+                        if not fired and on_select and "select" in _mn.lower():
+                            for a in args:
+                                if a is None:
+                                    continue
+                                try:
+                                    if hasattr(a, "size") and int(a.size() or 0) > 0:
+                                        self._fired = True
+                                        on_select(a)
+                                        break
+                                except Exception:
+                                    pass
+                    except Exception as e:
+                        log(f"[music_uploader] delegate.{_mn}: {e}")
+                    return _default(_rv)
+
+                ns[mname] = _stub
+            except Exception:
+                continue
+
+        return type("_MusicDelegate", (base,), ns)
+    except Exception as e:
+        log(f"[music_uploader] delegate build: {e}")
+        return None
+
+_MusicDialogsDelegate = _build_delegate_class()
+
+def _build_text_watcher_class():
+    if _TextWatcherClass is None:
+        return None
+    try:
+        base = dynamic_proxy(_TextWatcherClass)
+
+        def _before(self, s, start, count, after):
+            return None
+
+        def _on_changed(self, s, start, before, count):
+            try:
+                fn = getattr(self, "_fn", None)
+                if fn:
+                    fn(str(s) if s is not None else "")
+            except Exception:
+                pass
+            return None
+
+        def _after(self, s):
+            return None
+
+        def _init(self, fn):
+            self._fn = fn
+            super(type(self), self).__init__()
+
+        return type("_MusicSearchWatcher", (base,), {
+            "__init__": _init,
+            "beforeTextChanged": _before,
+            "onTextChanged": _on_changed,
+            "afterTextChanged": _after,
+        })
+    except Exception as e:
+        log(f"[music_uploader] text watcher build: {e}")
+        return None
+
+_MusicSearchWatcher = _build_text_watcher_class()
+
+def _theme_color(key_name: str, fallback: int) -> int:
+    try:
+        key = getattr(Theme, key_name, None)
+        if key is not None:
+            return int(Theme.getColor(key))
+    except Exception:
+        pass
+    return fallback
+
+class _SongPickerDialog:
+    def __init__(
+        self,
+        plugin: "MusicUploaderPlugin",
+        dialog_id: int,
+        dialog_name: str,
+        songs: List[Dict[str, Any]],
+        current_mode: int,
+        on_confirm: Callable[[List[Dict[str, Any]]], None],
+        on_mode_change: Callable[[int], None],
+    ):
+        self.plugin = plugin
+        self.dialog_id = dialog_id
+        self.dialog_name = dialog_name
+        self.songs = songs
+        self.current_mode = current_mode
+        self.on_confirm = on_confirm
+        self.on_mode_change = on_mode_change
+        self.selected = set(range(len(songs)))
+        self.query = ""
+        self.filtered_indices = list(range(len(songs)))
+        self.compact = True
+
+        self.fragment = get_last_fragment()
+        self.activity = self.fragment.getParentActivity() if self.fragment else None
+
+        self.builder: Optional[AlertDialogBuilder] = None
+        self.container_layout = None
+        self.row_views: Dict[int, Any] = {}
+        self.select_all_button = None
+        self.view_toggle_button = None
+        self.mode_button = None
+        self.mode_info_button = None
+
+        self.color_text = _theme_color("key_dialogTextBlack", 0xFF000000)
+        self.color_gray = _theme_color("key_dialogTextGray2", 0xFF888888)
+        self.color_hint = _theme_color("key_dialogTextHint", 0xFF888888)
+        self.color_link = _theme_color("key_dialogTextLink", 0xFF4E9FFF)
+        self.color_bg = _theme_color("key_dialogBackground", 0x00000000)
+
+    def show(self):
+        if not self.activity:
+            BulletinHelper.show_error("Не удалось открыть выбор треков")
+            return
+
+        ctx = self.activity
+        root = LinearLayout(ctx)
+        root.setOrientation(LinearLayout.VERTICAL)
+
+        search_row = LinearLayout(ctx)
+        search_row.setOrientation(LinearLayout.HORIZONTAL)
+        search_row.setGravity(Gravity.CENTER_VERTICAL)
+        search_row.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(4))
+
+        search_et = EditText(ctx)
+        search_et.setHint("Поиск по названию или автору...")
+        search_et.setSingleLine(True)
+        try:
+            search_et.setTextColor(self.color_text)
+            search_et.setHintTextColor(self.color_hint)
+        except Exception:
+            pass
+        search_et.setLayoutParams(LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0))
+        if _MusicSearchWatcher is not None:
+            try:
+                search_et.addTextChangedListener(_MusicSearchWatcher(self._on_query_changed))
+            except Exception as e:
+                log(f"[music_uploader] search watcher attach: {e}")
+        search_row.addView(search_et)
+
+        spacer1 = View(ctx)
+        spacer1.setLayoutParams(LinearLayout.LayoutParams(AndroidUtilities.dp(8), 0))
+        search_row.addView(spacer1)
+
+        self.select_all_button = self._make_button("Снять всё")
+        self.select_all_button.setOnClickListener(OnClickListener(lambda v: self._toggle_select_all()))
+        search_row.addView(self.select_all_button)
+
+        root.addView(search_row)
+
+        toggle_row = LinearLayout(ctx)
+        toggle_row.setOrientation(LinearLayout.HORIZONTAL)
+        toggle_row.setGravity(Gravity.CENTER_VERTICAL)
+
+        self.view_toggle_button = self._make_button("Крупный вид")
+        self.view_toggle_button.setOnClickListener(OnClickListener(lambda v: self._toggle_view()))
+        toggle_row.addView(self.view_toggle_button)
+
+        spacer2 = View(ctx)
+        spacer2.setLayoutParams(LinearLayout.LayoutParams(AndroidUtilities.dp(12), 0))
+        toggle_row.addView(spacer2)
+
+        self.mode_button = self._make_button(f"Режим: {_MODE_SHORT_LABELS[self.current_mode]}")
+        self.mode_button.setOnClickListener(OnClickListener(lambda v: self._show_mode_picker()))
+        toggle_row.addView(self.mode_button)
+
+        spacer3 = View(ctx)
+        spacer3.setLayoutParams(LinearLayout.LayoutParams(AndroidUtilities.dp(6), 0))
+        toggle_row.addView(spacer3)
+
+        self.mode_info_button = self._make_icon_button("¡")
+        self.mode_info_button.setOnClickListener(OnClickListener(lambda v: self._show_mode_help_dialog()))
+        toggle_row.addView(self.mode_info_button)
+
+        toggle_scroll = HorizontalScrollView(ctx)
+        try:
+            toggle_scroll.setHorizontalScrollBarEnabled(False)
+        except Exception:
+            pass
+        toggle_scroll.setPadding(AndroidUtilities.dp(8), 0, AndroidUtilities.dp(8), AndroidUtilities.dp(6))
+        toggle_scroll.addView(toggle_row)
+        root.addView(toggle_scroll)
+
+        try:
+            list_height = int(AndroidUtilities.displaySize.y * 0.45)
+        except Exception:
+            list_height = AndroidUtilities.dp(380)
+
+        scroll = ScrollView(ctx)
+        scroll.setLayoutParams(LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, list_height))
+        self.container_layout = LinearLayout(ctx)
+        self.container_layout.setOrientation(LinearLayout.VERTICAL)
+        scroll.addView(self.container_layout)
+        root.addView(scroll)
+
+        self._rebuild_list()
+
+        self.builder = AlertDialogBuilder(ctx)
+        self.builder.set_title(f"Выбор музыки — {self.dialog_name}")
+        self.builder.set_view(root)
+        self.builder.set_positive_button("Отправить", lambda b, w: self._on_confirm_click(b))
+        self.builder.set_negative_button("Отмена", lambda b, w: b.dismiss())
+        self.builder.set_cancelable(True)
+        self.builder.show()
+
+        self._update_select_all_label()
+        self._update_confirm_label()
+
+    def _make_button(self, text: str) -> TextView:
+        btn = TextView(self.activity)
+        btn.setText(text)
+        btn.setTextSize(13)
+        btn.setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(6), AndroidUtilities.dp(10), AndroidUtilities.dp(6))
+        try:
+            btn.setTextColor(self.color_link)
+        except Exception:
+            pass
+        return btn
+
+    def _make_icon_button(self, text: str) -> TextView:
+        btn = TextView(self.activity)
+        btn.setText(text)
+        btn.setTextSize(15)
+        btn.setGravity(Gravity.CENTER)
+        btn.setTypeface(None, Typeface.BOLD)
+        size = AndroidUtilities.dp(28)
+        btn.setLayoutParams(LinearLayout.LayoutParams(size, size))
+        try:
+            btn.setTextColor(self.color_link)
+        except Exception:
+            pass
+        try:
+            bg = GradientDrawable()
+            bg.setShape(GradientDrawable.OVAL)
+            r = (self.color_link >> 16) & 0xFF
+            g = (self.color_link >> 8) & 0xFF
+            b = self.color_link & 0xFF
+            bg.setColor(Color.argb(35, r, g, b))
+            btn.setBackground(bg)
+        except Exception:
+            pass
+        return btn
+
+    def _show_mode_help_dialog(self):
+        if not self.activity:
+            BulletinHelper.show_info(_MODE_HELP_TEXT)
+            return
+        builder = AlertDialogBuilder(self.activity)
+        builder.set_title("Режимы отправки")
+        builder.set_message(_MODE_HELP_TEXT)
+        builder.set_positive_button("Понятно", lambda b, w: b.dismiss())
+        builder.set_cancelable(True)
+        builder.show()
+
+    def _show_mode_picker(self):
+        if not self.activity:
+            return
+        builder = AlertDialogBuilder(self.activity)
+        builder.set_title("Режим отправки")
+
+        def _on_item(bld, idx):
+            bld.dismiss()
+            if idx == self.current_mode:
+                return
+            dialog_id = self.dialog_id
+            name = self.dialog_name
+            callback = self.on_mode_change
+            if self.builder is not None:
+                try:
+                    self.builder.dismiss()
+                except Exception:
+                    pass
+            if callback:
+                callback(idx)
+
+        builder.set_items(_MODE_LABELS, _on_item)
+        builder.set_negative_button("Отмена", lambda b, w: b.dismiss())
+        builder.set_cancelable(True)
+        builder.show()
+
+    def _format_duration(self, seconds) -> str:
+        try:
+            seconds = int(seconds or 0)
+        except Exception:
+            seconds = 0
+        m = seconds // 60
+        s = seconds % 60
+        return f"{m}:{s:02d}"
+
+    def _get_cover_bitmap(self, song: Dict[str, Any]):
+        if song.get("cover_bitmap") is not None:
+            return song["cover_bitmap"]
+        cover_bytes = song.get("cover_bytes")
+        if not cover_bytes:
+            return None
+        try:
+            opts = BitmapFactory.Options()
+            opts.inSampleSize = 4
+            bmp = BitmapFactory.decodeByteArray(cover_bytes, 0, len(cover_bytes), opts)
+            song["cover_bitmap"] = bmp
+            return bmp
+        except Exception:
+            return None
+
+    def _set_placeholder(self, image_view):
+        try:
+            bg = GradientDrawable()
+            bg.setShape(GradientDrawable.RECTANGLE)
+            bg.setCornerRadius(float(AndroidUtilities.dp(4)))
+            bg.setColor(Color.parseColor("#33888888"))
+            image_view.setImageDrawable(None)
+            image_view.setBackground(bg)
+        except Exception:
+            pass
+
+    def _on_query_changed(self, text: str):
+        self.query = text or ""
+        self._apply_filter()
+
+    def _apply_filter(self):
+        q = self.query.strip().lower()
+        if not q:
+            self.filtered_indices = list(range(len(self.songs)))
+        else:
+            out = []
+            for i, s in enumerate(self.songs):
+                hay = f"{s.get('title', '')} {s.get('artist', '')}".lower()
+                if q in hay:
+                    out.append(i)
+            self.filtered_indices = out
+        self._rebuild_list()
+        self._update_select_all_label()
+
+    def _toggle_select_all(self):
+        visible = set(self.filtered_indices)
+        if not visible:
+            return
+        if visible.issubset(self.selected):
+            self.selected -= visible
+        else:
+            self.selected |= visible
+        for idx in visible:
+            self._update_row_bg(idx)
+        self._update_select_all_label()
+        self._update_confirm_label()
+
+    def _toggle_view(self):
+        self.compact = not self.compact
+        self.view_toggle_button.setText("Крупный вид" if self.compact else "Компактный вид")
+        self._rebuild_list()
+
+    def _toggle_song(self, idx: int):
+        if idx in self.selected:
+            self.selected.discard(idx)
+        else:
+            self.selected.add(idx)
+        self._update_row_bg(idx)
+        self._update_select_all_label()
+        self._update_confirm_label()
+
+    def _update_row_bg(self, idx: int):
+        row = self.row_views.get(idx)
+        if row is None:
+            return
+        is_selected = idx in self.selected
+        try:
+            row.setBackgroundColor(Color.argb(50, 80, 160, 255) if is_selected else Color.TRANSPARENT)
+        except Exception:
+            pass
+
+    def _update_select_all_label(self):
+        if self.select_all_button is None:
+            return
+        visible = set(self.filtered_indices)
+        all_selected = bool(visible) and visible.issubset(self.selected)
+        self.select_all_button.setText("Снять всё" if all_selected else "Выделить всё")
+
+    def _update_confirm_label(self):
+        if self.builder is None:
+            return
+        try:
+            btn = self.builder.get_button(AlertDialogBuilder.BUTTON_POSITIVE)
+            if btn is not None:
+                btn.setText(f"Отправить ({len(self.selected)})")
+        except Exception:
+            pass
+
+    def _on_confirm_click(self, bld):
+        bld.dismiss()
+        chosen = [self.songs[i] for i in sorted(self.selected)]
+        if not chosen:
+            BulletinHelper.show_info("Ничего не выбрано")
+            return
+        self.on_confirm(chosen)
+
+    def _rebuild_list(self):
+        self.container_layout.removeAllViews()
+        self.row_views = {}
+        for idx in self.filtered_indices:
+            row = self._build_row(idx)
+            self.row_views[idx] = row
+            self.container_layout.addView(row)
+
+    def _build_row(self, idx: int):
+        song = self.songs[idx]
+        ctx = self.activity
+
+        row = LinearLayout(ctx)
+        row.setOrientation(LinearLayout.HORIZONTAL)
+        row.setGravity(Gravity.CENTER_VERTICAL)
+        pad_v = AndroidUtilities.dp(6 if self.compact else 10)
+        pad_h = AndroidUtilities.dp(8)
+        row.setPadding(pad_h, pad_v, pad_h, pad_v)
+
+        is_selected = idx in self.selected
+        try:
+            row.setBackgroundColor(Color.argb(50, 80, 160, 255) if is_selected else Color.TRANSPARENT)
+        except Exception:
+            pass
+
+        cover_size = AndroidUtilities.dp(40 if self.compact else 56)
+        cover = ImageView(ctx)
+        cover.setLayoutParams(LinearLayout.LayoutParams(cover_size, cover_size))
+        try:
+            cover.setScaleType(ImageView.ScaleType.CENTER_CROP)
+        except Exception:
+            pass
+        bmp = self._get_cover_bitmap(song)
+        if bmp is not None:
+            try:
+                cover.setImageBitmap(bmp)
+            except Exception:
+                self._set_placeholder(cover)
+        else:
+            self._set_placeholder(cover)
+        row.addView(cover)
+
+        spacer = View(ctx)
+        spacer.setLayoutParams(LinearLayout.LayoutParams(AndroidUtilities.dp(10), 0))
+        row.addView(spacer)
+
+        text_col = LinearLayout(ctx)
+        text_col.setOrientation(LinearLayout.VERTICAL)
+        text_col.setLayoutParams(LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0))
+
+        title_row = LinearLayout(ctx)
+        title_row.setOrientation(LinearLayout.HORIZONTAL)
+        title_row.setGravity(Gravity.CENTER_VERTICAL)
+
+        title_tv = TextView(ctx)
+        title_tv.setText(song.get("title") or "Без названия")
+        title_tv.setTextSize(14 if self.compact else 16)
+        title_tv.setMaxLines(1)
+        try:
+            title_tv.setTextColor(self.color_text)
+        except Exception:
+            pass
+        try:
+            if _TruncateAtClass is not None:
+                title_tv.setEllipsize(_TruncateAtClass.END)
+        except Exception:
+            pass
+        title_tv.setLayoutParams(LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0))
+        title_row.addView(title_tv)
+
+        dur_tv = TextView(ctx)
+        dur_tv.setText(self._format_duration(song.get("duration", 0)))
+        dur_tv.setTextSize(11 if self.compact else 12)
+        try:
+            dur_tv.setTextColor(self.color_gray)
+        except Exception:
+            pass
+        title_row.addView(dur_tv)
+
+        text_col.addView(title_row)
+
+        artist_tv = TextView(ctx)
+        artist_tv.setText(song.get("artist") or "Неизвестный исполнитель")
+        artist_tv.setTextSize(12 if self.compact else 14)
+        try:
+            artist_tv.setTextColor(self.color_gray)
+        except Exception:
+            pass
+        artist_tv.setMaxLines(1)
+        try:
+            if _TruncateAtClass is not None:
+                artist_tv.setEllipsize(_TruncateAtClass.END)
+        except Exception:
+            pass
+        text_col.addView(artist_tv)
+
+        row.addView(text_col)
+
+        row.setOnClickListener(OnClickListener(lambda v, i=idx: self._toggle_song(i)))
+        return row
+
+class MusicUploaderPlugin(BasePlugin):
+
+    def __init__(self):
+        super().__init__()
+        self._uploading = False
+
+    def on_plugin_load(self):
+        self.add_menu_item(
+            MenuItemData(
+                menu_type=MenuItemType.CHAT_ACTION_MENU,
+                text="Выгрузить музыку",
+                icon="msg_music",
+                on_click=self._on_chat_menu_click,
+            )
+        )
+
+    def create_settings(self):
+        default_id = self._get_default_dialog_id()
+        default_name = self.get_setting("default_dialog_name", "") if default_id is not None else ""
+        pick_label = f"Выбран: {default_name}" if (default_id is not None and default_name) else "Выбрать чат по умолчанию"
+
+        return [
+            Header(text="Music Uploader"),
+            Text(
+                text=pick_label,
+                icon="msg_select",
+                on_click=self._on_pick_default_chat,
+            ),
+            Text(
+                text="Отправить музыку",
+                icon="msg_music",
+                accent=True,
+                on_click=self._on_send_click,
+            ),
+            Text(
+                text="Подробнее о режимах",
+                icon="menu_intro_solar",
+                on_click=self._show_mode_help,
+            ),
+            Text(
+                text="Сбросить чат по умолчанию",
+                icon="msg_delete",
+                red=True,
+                on_click=self._on_reset_default,
+            ),
+            Divider(
+                text=(
+                    "«Отправить музыку» сразу находит треки и открывает их выбор "
+                    "(поиск, обложки, галочки). Режим (обычная отправка / очистка "
+                    "чата / только новое / синхронизация) можно сменить прямо внутри "
+                    "этого окна кнопкой «Режим».\n\n"
+                    "Кнопка «Выгрузить музыку» в меню чата (три точки) делает то же "
+                    "самое сразу для текущего чата, без выбора чата.\n\n"
+                    "«Выбрать чат по умолчанию» запоминает чат — тогда чат для "
+                    "отправки из настроек выбирать не придётся."
+                )
+            ),
+        ]
+
+    def _get_default_dialog_id(self) -> Optional[int]:
+        raw = self.get_setting("default_dialog_id", 0)
+        try:
+            did = int(raw)
+        except Exception:
+            return None
+        return did if did != 0 else None
+
+    def _on_pick_default_chat(self, v=None):
+        def _on_selected(did, name):
+            self.set_setting("default_dialog_id", int(did))
+            self.set_setting("default_dialog_name", str(name or did), reload_settings=True)
+            BulletinHelper.show_success(f"Чат по умолчанию: {name or did}")
+
+        self._pick_method1(_on_selected)
+
+    def _on_reset_default(self, v=None):
+        had_default = self._get_default_dialog_id() is not None
+        self.set_setting("default_dialog_id", 0)
+        self.set_setting("default_dialog_name", "", reload_settings=True)
+        if had_default:
+            BulletinHelper.show_success("Чат по умолчанию сброшен")
+        else:
+            BulletinHelper.show_info("Чат по умолчанию не был задан")
+
+    def _show_mode_help(self, v=None):
+        fragment = get_last_fragment()
+        activity = fragment.getParentActivity() if fragment else None
+        if activity is None:
+            BulletinHelper.show_info(_MODE_HELP_TEXT)
+            return
+        builder = AlertDialogBuilder(activity)
+        builder.set_title("Режимы отправки")
+        builder.set_message(_MODE_HELP_TEXT)
+        builder.set_positive_button("Понятно", lambda b, w: b.dismiss())
+        builder.set_cancelable(True)
+        builder.show()
+
+    def _on_chat_menu_click(self, context):
+        if self._uploading:
+            BulletinHelper.show_info("Загрузка уже идёт, подождите...")
+            return
+
+        dialog_id = None
+        try:
+            dialog_id = context.get("dialog_id")
+        except Exception:
+            dialog_id = None
+
+        if not dialog_id:
+            try:
+                fragment = context.get("fragment")
+                if fragment is not None and hasattr(fragment, "getDialogId"):
+                    dialog_id = fragment.getDialogId()
+            except Exception:
+                dialog_id = None
+
+        if not dialog_id:
+            BulletinHelper.show_error("Не удалось определить чат")
+            return
+
+        dialog_id = int(dialog_id)
+        name = self._get_dialog_name(get_messages_controller(), dialog_id) or str(dialog_id)
+
+        self._run_full_flow(dialog_id, name, _MODE_SIMPLE)
+
+    def _run_full_flow(self, dialog_id: int, name: str, mode: int):
+        run_on_queue(lambda: self._scan_and_execute(dialog_id, name, mode))
+
+    def _scan_and_execute(self, dialog_id: int, name: str, mode: int):
+        run_on_ui_thread(lambda: BulletinHelper.show_info("Сканирую музыку на устройстве..."))
+        files = self._scan_music()
+        if not files:
+            run_on_ui_thread(lambda: BulletinHelper.show_error("Аудиофайлы не найдены на устройстве"))
+            return
+        run_on_ui_thread(lambda: self._run_mode(dialog_id, name, files, mode))
+
+    def _on_send_click(self, v=None):
+        if self._uploading:
+            BulletinHelper.show_info("Загрузка уже идёт, подождите...")
+            return
+
+        default_id = self._get_default_dialog_id()
+        if default_id is not None:
+            default_name = self.get_setting("default_dialog_name", "") or str(default_id)
+            self._run_full_flow(default_id, default_name, _MODE_SIMPLE)
+        else:
+            def _on_selected(did, name):
+                self._run_full_flow(did, name, _MODE_SIMPLE)
+
+            self._pick_method1(_on_selected)
+
+    def _run_mode(self, dialog_id: int, name: str, files: List[str], mode: int):
+        total = len(files)
+
+        def _proceed():
+            run_on_queue(lambda: self._execute_mode(dialog_id, name, files, mode))
+
+        if mode in (_MODE_SIMPLE, _MODE_SEND_MISSING):
+            _proceed()
+            return
+
+        fragment = get_last_fragment()
+        activity = fragment.getParentActivity() if fragment else None
+        if activity is None:
+            _proceed()
+            return
+
+        mode_desc = {
+            _MODE_CLEAR_THEN_SEND: (
+                f"⚠️ Полностью очистить историю «{name}» (для всех участников), "
+                f"а затем предложить выбрать треки из {total} найденных?\n\n"
+                f"Очистка необратима!"
+            ),
+            _MODE_SYNC_DELETE_EXTRA: (
+                f"⚠️ Синхронизировать «{name}» с устройством: удалить из чата "
+                f"треки, которых больше нет на устройстве, и предложить отправить "
+                f"недостающие (из {total} найденных)?"
+            ),
+        }
+        message = mode_desc.get(mode, f"Выполнить действие для {total} треков?")
+
+        builder = AlertDialogBuilder(activity)
+        builder.set_title("Подтверждение")
+        builder.set_message(message)
+
+        def _on_yes(bld, w):
+            bld.dismiss()
+            _proceed()
+
+        def _on_no(bld, w):
+            bld.dismiss()
+
+        builder.set_positive_button("Продолжить", _on_yes)
+        builder.set_negative_button("Отмена", _on_no)
+        try:
+            builder.make_button_red(AlertDialogBuilder.BUTTON_POSITIVE)
+        except Exception:
+            pass
+        builder.set_cancelable(True)
+        builder.show()
+
+    def _execute_mode(self, dialog_id: int, name: str, files: List[str], mode: int):
+        if mode == _MODE_SIMPLE:
+            self._offer_picker_then_upload(dialog_id, name, files, mode)
+
+        elif mode == _MODE_CLEAR_THEN_SEND:
+            run_on_ui_thread(lambda: BulletinHelper.show_info(f"Очищаю историю «{name}»..."))
+            ok, deleted, err = self._clear_history(dialog_id)
+            if not ok:
+                run_on_ui_thread(lambda: BulletinHelper.show_error(f"Не удалось очистить историю: {err}"))
+                return
+            run_on_ui_thread(lambda: BulletinHelper.show_info(f"История очищена ({deleted} сообщ.)."))
+            time.sleep(1.0)
+            self._offer_picker_then_upload(dialog_id, name, files, mode)
+
+        elif mode == _MODE_SEND_MISSING:
+            run_on_ui_thread(lambda: BulletinHelper.show_info("Проверяю, что уже есть в чате..."))
+            existing = self._collect_existing_audio(dialog_id)
+            existing_sizes = {s for _, s, _ in existing if s > 0}
+            existing_names = {n for _, _, n in existing if n}
+            missing = [p for p in files if self._is_file_missing(p, existing_sizes, existing_names)]
+            if not missing:
+                run_on_ui_thread(lambda: BulletinHelper.show_success("Все треки уже есть в чате, отправлять нечего"))
+                return
+            self._offer_picker_then_upload(dialog_id, name, missing, mode)
+
+        elif mode == _MODE_SYNC_DELETE_EXTRA:
+            run_on_ui_thread(lambda: BulletinHelper.show_info("Сверяю музыку с чатом..."))
+            existing = self._collect_existing_audio(dialog_id)
+            existing_sizes = {s for _, s, _ in existing if s > 0}
+            existing_names = {n for _, _, n in existing if n}
+            local_sizes, local_names = self._local_sizes_and_names(files)
+
+            missing = [p for p in files if self._is_file_missing(p, existing_sizes, existing_names)]
+            to_delete_ids = [
+                mid for mid, size, nm in existing
+                if not ((size > 0 and size in local_sizes) or (nm and nm in local_names))
+            ]
+
+            if to_delete_ids:
+                d_total = len(to_delete_ids)
+                run_on_ui_thread(lambda: BulletinHelper.show_info(f"Удаляю лишних треков: {d_total}..."))
+                ok, _deleted_count = self._delete_message_ids(dialog_id, to_delete_ids)
+                if not ok:
+                    run_on_ui_thread(lambda: BulletinHelper.show_error("Не удалось удалить часть треков из чата"))
+                time.sleep(1.0)
+
+            if missing:
+                self._offer_picker_then_upload(dialog_id, name, missing, mode)
+            else:
+                run_on_ui_thread(lambda: BulletinHelper.show_success("Синхронизация завершена, новых треков нет"))
+
+    def _offer_picker_then_upload(self, dialog_id: int, name: str, candidate_files: List[str], mode: int = _MODE_SIMPLE):
+        if not candidate_files:
+            run_on_ui_thread(lambda: BulletinHelper.show_info("Нет треков для отправки"))
+            return
+
+        songs = self._build_song_list(candidate_files)
+        if not songs:
+            run_on_ui_thread(lambda: BulletinHelper.show_error("Не удалось прочитать метаданные треков"))
+            return
+
+        def _on_confirm(chosen_songs: List[Dict[str, Any]]):
+            chosen_paths = [s["path"] for s in chosen_songs]
+            run_on_ui_thread(lambda: BulletinHelper.show_info(f"Начинаю загрузку {len(chosen_paths)} треков..."))
+            run_on_queue(lambda: self._upload_all(dialog_id, chosen_paths))
+
+        def _on_mode_change(new_mode: int):
+            self._run_full_flow(dialog_id, name, new_mode)
+
+        def _show():
+            picker = _SongPickerDialog(self, dialog_id, name, songs, mode, _on_confirm, _on_mode_change)
+            picker.show()
+
+        run_on_ui_thread(_show)
+
+    def _build_song_list(self, files: List[str]) -> List[Dict[str, Any]]:
+        songs: List[Dict[str, Any]] = []
+        total = len(files)
+        if total > 40:
+            run_on_ui_thread(lambda: BulletinHelper.show_info(f"Читаю метаданные {total} треков, это может занять время..."))
+        for i, p in enumerate(files):
+            meta = self._extract_song_metadata(p)
+            songs.append({
+                "path": p,
+                "title": meta["title"],
+                "artist": meta["artist"],
+                "duration": meta["duration"],
+                "cover_bytes": meta["cover"],
+                "cover_bitmap": None,
+            })
+            if (i + 1) % 20 == 0 or i == total - 1:
+                cur = i + 1
+                run_on_ui_thread(lambda c=cur, t=total: BulletinHelper.show_info(f"Читаю метаданные: {c}/{t}..."))
+        return songs
+
+    def _extract_song_metadata(self, path: str) -> Dict[str, Any]:
+        title = os.path.splitext(os.path.basename(path))[0]
+        artist = ""
+        duration_sec = 0
+        cover_bytes = None
+        try:
+            mmr = MediaMetadataRetriever()
+            try:
+                mmr.setDataSource(path)
+                t = mmr.extractMetadata(7)
+                a = mmr.extractMetadata(2)
+                d = mmr.extractMetadata(9)
+                if t:
+                    title = str(t).strip() or title
+                if a:
+                    artist = str(a).strip()
+                if d:
+                    try:
+                        duration_sec = int(int(d) / 1000)
+                    except Exception:
+                        duration_sec = 0
+                try:
+                    cover_bytes = mmr.getEmbeddedPicture()
+                except Exception:
+                    cover_bytes = None
+            finally:
+                try:
+                    mmr.release()
+                except Exception:
+                    pass
+        except Exception as e:
+            log(f"[music_uploader] metadata extract '{os.path.basename(path)}': {e}")
+
+        return {"title": title, "artist": artist, "duration": duration_sec, "cover": cover_bytes}
+
+    def _scan_music(self) -> List[str]:
+        files = self._scan_via_mediastore()
+        if not files:
+            files = self._scan_via_fs()
+        return sorted(files, key=lambda p: os.path.basename(p).lower())
+
+    def _scan_via_mediastore(self) -> List[str]:
+        try:
+            AudioMedia = find_class("android.provider.MediaStore$Audio$Media")
+            if AudioMedia is None:
+                return []
+            ctx = ApplicationLoader.applicationContext
+            cr = ctx.getContentResolver()
+            cursor = cr.query(AudioMedia.EXTERNAL_CONTENT_URI, None, None, None, None)
+            if cursor is None:
+                return []
+            files = []
+            try:
+                col = cursor.getColumnIndex("_data")
+                if col < 0:
+                    return []
+                while cursor.moveToNext():
+                    try:
+                        path = cursor.getString(col)
+                        if path and os.path.isfile(path):
+                            files.append(path)
+                    except Exception:
+                        pass
+            finally:
+                cursor.close()
+            log(f"[music_uploader] MediaStore: {len(files)}")
+            return files
+        except Exception as e:
+            log(f"[music_uploader] MediaStore: {e}")
+            return []
+
+    def _scan_via_fs(self) -> List[str]:
+        EXTS = {'.mp3', '.flac', '.aac', '.ogg', '.m4a', '.wav', '.opus', '.wma'}
+        DIRS = [
+            '/storage/emulated/0/Music',
+            '/storage/emulated/0/Download',
+            '/sdcard/Music',
+            '/sdcard/Download',
+        ]
+        files = []
+        for base in DIRS:
+            if not os.path.isdir(base):
+                continue
+            try:
+                for root, _, names in os.walk(base):
+                    for fn in names:
+                        if os.path.splitext(fn)[1].lower() in EXTS:
+                            files.append(os.path.join(root, fn))
+            except Exception:
+                pass
+        log(f"[music_uploader] FS: {len(files)}")
+        return files
+
+    def _pick_method1(self, on_selected: Callable[[int, str], None]):
+        try:
+            if _MusicDialogsDelegate is None or _DialogsActivityClass is None or _BundleClass is None:
+                raise RuntimeError("native classes unavailable")
+
+            fragment = get_last_fragment()
+            if fragment is None:
+                raise RuntimeError("no fragment")
+
+            try:
+                activity = fragment.getParentActivity()
+            except Exception:
+                activity = None
+            if activity is None:
+                raise RuntimeError("no activity")
+
+            args = _BundleClass()
+            args.putBoolean("onlySelect", True)
+            args.putInt("dialogsType", 3)
+
+            dialogs_fragment = _DialogsActivityClass(args)
+
+            def _on_select(dids):
+                try:
+                    raw = dids.get(0)
+                    if hasattr(raw, "dialogId"):
+                        did = raw.dialogId
+                    elif hasattr(raw, "getDialogId"):
+                        did = raw.getDialogId()
+                    else:
+                        did = int(str(raw))
+
+                    self._close_best_effort(dialogs_fragment)
+                    name = self._get_dialog_name(get_messages_controller(), did) or str(did)
+                    on_selected(did, name)
+                except Exception as e2:
+                    run_on_ui_thread(lambda: BulletinHelper.show_error(f"Ошибка выбора: {e2}"))
+
+            delegate = _MusicDialogsDelegate()
+            delegate._on_select = _on_select
+            delegate._fired = False
+            dialogs_fragment.setDelegate(delegate)
+            fragment.presentFragment(dialogs_fragment)
+        except Exception as e:
+            log(f"[music_uploader] method1 failed: {e}")
+            self._pick_method2(on_selected)
+
+    def _close_best_effort(self, obj):
+        if obj is None:
+            return
+        for name in ("dismiss", "dismissFragment", "finishFragment", "removeSelfFromStack", "onBackPressed"):
+            try:
+                fn = getattr(obj, name, None)
+                if callable(fn):
+                    fn()
+                    return
+            except Exception:
+                pass
+
+    def _pick_method2(self, on_selected: Callable[[int, str], None]):
+        try:
+            fragment = get_last_fragment()
+            if fragment is None:
+                raise RuntimeError("no fragment")
+            activity = fragment.getParentActivity()
+            if activity is None:
+                raise RuntimeError("no activity")
+
+            dialogs = self._get_recent_dialogs(50)
+            if not dialogs:
+                raise RuntimeError("empty dialogs list")
+
+            labels = [name for _, name in dialogs]
+            dids = [did for did, _ in dialogs]
+
+            builder = AlertDialogBuilder(activity)
+            builder.set_title("Выберите чат")
+
+            def _on_item(bld, idx):
+                bld.dismiss()
+                on_selected(dids[idx], labels[idx])
+
+            builder.set_items(labels, _on_item)
+            builder.set_negative_button(
+                "Ввести ID →",
+                lambda b, w: (b.dismiss(), self._pick_method3(on_selected))
+            )
+            builder.set_cancelable(True)
+            builder.show()
+        except Exception as e:
+            log(f"[music_uploader] method2 failed: {e}")
+            self._pick_method3(on_selected)
+
+    def _get_recent_dialogs(self, limit: int = 50) -> List[Tuple[int, str]]:
+        mc = get_messages_controller()
+        results = []
+        try:
+            dialogs_list = None
+            for field_name in ("dialogs", "allDialogs", "dialogsArr"):
+                try:
+                    dialogs_list = get_private_field(mc, field_name)
+                    if dialogs_list is not None and hasattr(dialogs_list, "size"):
+                        break
+                    dialogs_list = None
+                except Exception:
+                    pass
+
+            if dialogs_list is None:
+                return []
+
+            size = min(int(dialogs_list.size() or 0), limit)
+            for i in range(size):
+                try:
+                    dialog = dialogs_list.get(i)
+                    if dialog is None:
+                        continue
+                    did = int(getattr(dialog, "id", 0) or 0)
+                    if did == 0:
+                        continue
+                    name = self._get_dialog_name(mc, did)
+                    if name:
+                        results.append((did, name))
+                except Exception:
+                    continue
+        except Exception as e:
+            log(f"[music_uploader] get_recent_dialogs: {e}")
+        return results
+
+    def _get_dialog_name(self, mc, dialog_id: int) -> Optional[str]:
+        try:
+            if dialog_id > 0:
+                user = mc.getUser(dialog_id)
+                if user is not None:
+                    parts = []
+                    fn = getattr(user, "first_name", None)
+                    ln = getattr(user, "last_name", None)
+                    if fn:
+                        parts.append(str(fn))
+                    if ln:
+                        parts.append(str(ln))
+                    if parts:
+                        return " ".join(parts)
+                    un = getattr(user, "username", None)
+                    return f"@{un}" if un else None
+            else:
+                if dialog_id > -1000000000000:
+                    chat_id = -dialog_id
+                else:
+                    chat_id = -(dialog_id + 1000000000000)
+                chat = mc.getChat(chat_id)
+                if chat is not None:
+                    title = getattr(chat, "title", None)
+                    return str(title) if title else None
+        except Exception:
+            pass
+        return None
+
+    def _pick_method3(self, on_selected: Callable[[int, str], None]):
+        try:
+            fragment = get_last_fragment()
+            if fragment is None:
+                BulletinHelper.show_error("Не удалось открыть окно ввода")
+                return
+            activity = fragment.getParentActivity()
+            if activity is None:
+                BulletinHelper.show_error("Не удалось открыть окно ввода")
+                return
+
+            from android.text import InputType
+
+            et = EditText(activity)
+            et.setHint("Пример: -100123456789")
+            et.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED)
+
+            builder = AlertDialogBuilder(activity)
+            builder.set_title("Введите ID чата")
+            builder.set_message(
+                "Оба автоматических способа недоступны.\n"
+                "Введите числовой dialog_id вручную:\n"
+                "• Личные чаты — положительное число (ID пользователя)\n"
+                "• Группы — отрицательное (например, -1001234567890)"
+            )
+            builder.set_view(et)
+
+            def _on_ok(bld, w):
+                bld.dismiss()
+                try:
+                    text = str(et.getText() or "").strip()
+                    if not text:
+                        return
+                    did = int(text)
+                    on_selected(did, str(did))
+                except Exception as e:
+                    run_on_ui_thread(lambda: BulletinHelper.show_error(f"Ошибка: {e}"))
+
+            builder.set_positive_button("Загрузить", _on_ok)
+            builder.set_negative_button("Отмена", lambda b, w: b.dismiss())
+            builder.show()
+        except Exception as e:
+            log(f"[music_uploader] method3 failed: {e}")
+            BulletinHelper.show_error(f"Все способы выбора чата недоступны: {e}")
+
+    def _collect_existing_audio(self, dialog_id: int, max_total: int = 20000) -> List[Tuple[int, int, str]]:
+        mc = get_messages_controller()
+        collected: List[Tuple[int, int, str]] = []
+        seen_ids = set()
+        offset_id = 0
+        max_pages = 200
+        page_limit = 100
+
+        for _ in range(max_pages):
+            if len(collected) >= max_total:
+                break
+
+            done = threading.Event()
+            page_result = {"items": [], "min_id": None, "size": 0, "error": None}
+
+            try:
+                req = TLRPC.TL_messages_search()
+                req.flags = 0
+                req.peer = mc.getInputPeer(int(dialog_id))
+                req.q = ""
+                req.filter = TLRPC.TL_inputMessagesFilterMusic()
+                req.min_date = 0
+                req.max_date = 0
+                req.offset_id = int(offset_id)
+                req.add_offset = 0
+                req.limit = page_limit
+                req.max_id = 0
+                req.min_id = 0
+                req.hash = 0
+            except Exception as e:
+                log(f"[music_uploader] search build error: {e}")
+                break
+
+            def _cb(response, error, _pr=page_result, _done=done):
+                try:
+                    if error or response is None:
+                        _pr["error"] = getattr(error, "text", "error") if error else "no response"
+                        return
+                    msgs = getattr(response, "messages", None)
+                    if msgs is None:
+                        return
+                    try:
+                        sz = int(msgs.size())
+                    except Exception:
+                        sz = 0
+                    _pr["size"] = sz
+                    min_mid = None
+                    items = []
+                    for j in range(sz):
+                        try:
+                            m = msgs.get(j)
+                        except Exception:
+                            continue
+                        if m is None:
+                            continue
+                        try:
+                            mid = int(getattr(m, "id", 0) or 0)
+                        except Exception:
+                            mid = 0
+                        if mid <= 0:
+                            continue
+                        if min_mid is None or mid < min_mid:
+                            min_mid = mid
+                        try:
+                            media = getattr(m, "media", None)
+                            document = getattr(media, "document", None) if media is not None else None
+                            doc_size = 0
+                            fname_l = ""
+                            if document is not None:
+                                try:
+                                    doc_size = int(getattr(document, "size", 0) or 0)
+                                except Exception:
+                                    doc_size = 0
+                                fname = getattr(document, "file_name_fixed", None)
+                                if fname:
+                                    fname_l = str(fname).strip().lower()
+                            if doc_size > 0 or fname_l:
+                                items.append((mid, doc_size, fname_l))
+                        except Exception:
+                            pass
+                    _pr["items"] = items
+                    _pr["min_id"] = min_mid
+                finally:
+                    _done.set()
+
+            send_request(req, RequestCallback(_cb))
+            done.wait(timeout=20)
+
+            if page_result["error"]:
+                log(f"[music_uploader] existing_audio error: {page_result['error']}")
+                break
+
+            for mid, doc_size, fname_l in page_result["items"]:
+                if mid not in seen_ids:
+                    seen_ids.add(mid)
+                    collected.append((mid, doc_size, fname_l))
+
+            if page_result["size"] <= 0 or page_result["min_id"] is None:
+                break
+
+            offset_id = max(int(page_result["min_id"]) - 1, 0)
+
+        return collected
+
+    def _local_sizes_and_names(self, files: List[str]) -> Tuple[set, set]:
+        sizes = set()
+        names = set()
+        for p in files:
+            try:
+                sz = os.path.getsize(p)
+                if sz > 0:
+                    sizes.add(sz)
+            except Exception:
+                pass
+            name = os.path.basename(p).strip().lower()
+            if name:
+                names.add(name)
+        return sizes, names
+
+    def _is_file_missing(self, path: str, existing_sizes: set, existing_names: set) -> bool:
+        try:
+            local_size = os.path.getsize(path)
+        except Exception:
+            local_size = 0
+        local_name = os.path.basename(path).strip().lower()
+        if local_size > 0 and local_size in existing_sizes:
+            return False
+        if local_name and local_name in existing_names:
+            return False
+        return True
+
+    def _collect_all_message_ids(self, dialog_id: int, max_total: int = 20000) -> List[int]:
+        mc = get_messages_controller()
+        collected: List[int] = []
+        seen = set()
+        offset_id = 0
+        max_pages = 200
+        page_limit = 100
+
+        for _ in range(max_pages):
+            if len(collected) >= max_total:
+                break
+
+            done = threading.Event()
+            page_result = {"ids": [], "min_id": None, "size": 0, "error": None}
+
+            try:
+                req = TLRPC.TL_messages_getHistory()
+                req.peer = mc.getInputPeer(int(dialog_id))
+                req.offset_id = int(offset_id)
+                req.offset_date = 0
+                req.add_offset = 0
+                req.limit = page_limit
+                req.max_id = 0
+                req.min_id = 0
+                req.hash = 0
+            except Exception as e:
+                log(f"[music_uploader] getHistory build error: {e}")
+                break
+
+            def _cb(response, error, _pr=page_result, _done=done):
+                try:
+                    if error or response is None:
+                        _pr["error"] = getattr(error, "text", "error") if error else "no response"
+                        return
+                    msgs = getattr(response, "messages", None)
+                    if msgs is None:
+                        return
+                    try:
+                        sz = int(msgs.size())
+                    except Exception:
+                        sz = 0
+                    _pr["size"] = sz
+                    min_mid = None
+                    ids = []
+                    for j in range(sz):
+                        try:
+                            m = msgs.get(j)
+                        except Exception:
+                            continue
+                        if m is None:
+                            continue
+                        try:
+                            mid = int(getattr(m, "id", 0) or 0)
+                        except Exception:
+                            mid = 0
+                        if mid <= 0:
+                            continue
+                        ids.append(mid)
+                        if min_mid is None or mid < min_mid:
+                            min_mid = mid
+                    _pr["ids"] = ids
+                    _pr["min_id"] = min_mid
+                finally:
+                    _done.set()
+
+            send_request(req, RequestCallback(_cb))
+            done.wait(timeout=20)
+
+            if page_result["error"]:
+                log(f"[music_uploader] collect_all_ids error: {page_result['error']}")
+                break
+
+            for mid in page_result["ids"]:
+                if mid not in seen:
+                    seen.add(mid)
+                    collected.append(mid)
+
+            if page_result["size"] <= 0 or page_result["min_id"] is None:
+                break
+
+            offset_id = max(int(page_result["min_id"]) - 1, 0)
+
+        return collected
+
+    def _delete_message_ids(self, dialog_id: int, ids: List[int]) -> Tuple[bool, int]:
+        if not ids:
+            return True, 0
+        mc = get_messages_controller()
+        total_deleted = 0
+        chunk_size = 100
+        ok = True
+        for pos in range(0, len(ids), chunk_size):
+            chunk = ids[pos: pos + chunk_size]
+            arr = ArrayList()
+            for mid in chunk:
+                try:
+                    arr.add(JInt(int(mid)))
+                except Exception:
+                    try:
+                        arr.add(int(mid))
+                    except Exception:
+                        continue
+            try:
+                mc.deleteMessages(arr, None, None, int(dialog_id), 0, True, 0)
+                total_deleted += int(arr.size())
+            except Exception as e:
+                log(f"[music_uploader] deleteMessages chunk failed: {e}")
+                ok = False
+        return ok, total_deleted
+
+    def _clear_history(self, dialog_id: int) -> Tuple[bool, int, str]:
+        try:
+            ids = self._collect_all_message_ids(dialog_id)
+            if not ids:
+                return True, 0, ""
+            ok, deleted = self._delete_message_ids(dialog_id, ids)
+            if not ok and deleted == 0:
+                return False, 0, "не удалось удалить сообщения"
+            return True, deleted, ""
+        except Exception as e:
+            log(f"[music_uploader] clear_history: {e}")
+            return False, 0, str(e)
+
+    def _upload_all(self, dialog_id: int, files: List[str]):
+        if self._uploading:
+            run_on_ui_thread(lambda: BulletinHelper.show_info("Загрузка уже идёт, подождите..."))
+            return
+        self._uploading = True
+        try:
+            total = len(files)
+            uploaded = 0
+            failed = 0
+
+            run_on_ui_thread(lambda: BulletinHelper.show_info(f"Начало загрузки {total} файлов..."))
+
+            for i, path in enumerate(files):
+                try:
+                    if not os.path.exists(path):
+                        failed += 1
+                        continue
+
+                    send_audio(dialog_id, path)
+                    uploaded += 1
+                    time.sleep(0.5)
+                except Exception as e:
+                    log(f"[music_uploader] send '{os.path.basename(path)}': {e}")
+                    failed += 1
+                    time.sleep(1.0)
+
+                if (i + 1) % 10 == 0 or i == total - 1:
+                    cur, u, f = i + 1, uploaded, failed
+                    run_on_ui_thread(lambda c=cur, u2=u, f2=f: BulletinHelper.show_info(
+                        f"Прогресс: {c}/{total} | Успешно: {u2} | Ошибок: {f2}"
+                    ))
+
+            u_fin, f_fin = uploaded, failed
+            run_on_ui_thread(lambda: BulletinHelper.show_success(
+                f"✅ Готово! Успешно: {u_fin}/{total}, Ошибок: {f_fin}"
+            ))
+        finally:
+            self._uploading = False
