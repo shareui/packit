@@ -1,13 +1,14 @@
 {
   "tags_summary": {
     "Elyx": 3,
-    "Featured": 4,
-    "DevTools": 2,
+    "Featured": 5,
+    "DevTools": 3,
     "Library": 1,
-    "Customization": 2,
-    "Tweaks": 8,
-    "System": 3,
-    "Utility": 8
+    "Customization": 3,
+    "Tweaks": 11,
+    "System": 4,
+    "Utility": 14,
+    "Fun": 4
   },
   "plugins": [
     {
@@ -1184,8 +1185,18 @@
         "clients": [
           "exteraGram",
           "AyuGram"
+        ],
+        "license": "GPL v3.0",
+        "source_links": "https://github.com/mr-Vestr/plugins/blob/main/Plugin%20creator/plugin_creator.py"
+      },
+      "readme": "https://github.com/mr-Vestr/plugins/blob/main/Plugin%20creator/PLUGIN_CREATOR_RU.md",
+      "tags": [
+        [
+          "Utility",
+          "key_avatar_background2Orange",
+          ""
         ]
-      }
+      ]
     },
     {
       "id": "chimeranft",
@@ -1207,6 +1218,21 @@
           "Elyx",
           "key_avatar_backgroundBlue",
           "https://t.me/CactusPlugins"
+        ],
+        [
+          "Featured",
+          "key_avatar_backgroundInProfileBlue",
+          "https://t.me/packitGround/13/988"
+        ],
+        [
+          "Customization",
+          "key_avatar_background2Cyan",
+          ""
+        ],
+        [
+          "Fun",
+          "key_avatar_background2Orange",
+          ""
         ]
       ],
       "changelog": [
@@ -1256,7 +1282,19 @@
           "exteraGram",
           "AyuGram"
         ]
-      }
+      },
+      "tags": [
+        [
+          "Tweaks",
+          "key_avatar_backgroundGreen",
+          ""
+        ],
+        [
+          "Fun",
+          "key_avatar_background2Orange",
+          ""
+        ]
+      ]
     },
     {
       "id": "mooninfo",
@@ -1301,7 +1339,24 @@
           "exteraGram",
           "AyuGram"
         ]
-      }
+      },
+      "tags": [
+        [
+          "System",
+          "key_color_lightblue",
+          ""
+        ],
+        [
+          "DevTools",
+          "key_chat_inDownCall",
+          ""
+        ],
+        [
+          "Utility",
+          "key_avatar_background2Orange",
+          ""
+        ]
+      ]
     },
     {
       "id": "rand_choice",
@@ -1335,7 +1390,19 @@
           "exteraGram",
           "AyuGram"
         ]
-      }
+      },
+      "tags": [
+        [
+          "Tweaks",
+          "key_avatar_backgroundGreen",
+          ""
+        ],
+        [
+          "Fun",
+          "key_avatar_background2Orange",
+          ""
+        ]
+      ]
     },
     {
       "id": "timers_stopwatches",
@@ -1369,7 +1436,14 @@
           "exteraGram",
           "AyuGram"
         ]
-      }
+      },
+      "tags": [
+        [
+          "Utility",
+          "key_avatar_background2Orange",
+          ""
+        ]
+      ]
     },
     {
       "id": "music_uploader",
@@ -1403,7 +1477,14 @@
           "exteraGram",
           "AyuGram"
         ]
-      }
+      },
+      "tags": [
+        [
+          "Utility",
+          "key_avatar_background2Orange",
+          ""
+        ]
+      ]
     },
     {
       "id": "templates",
@@ -1448,7 +1529,15 @@
           "exteraGram",
           "AyuGram"
         ]
-      }
+      },
+      "readme": "https://github.com/mr-Vestr/plugins/blob/main/Templates/TEMPLATES_RU.md",
+      "tags": [
+        [
+          "Utility",
+          "key_avatar_background2Orange",
+          ""
+        ]
+      ]
     },
     {
       "id": "bot_account_router",
@@ -1482,7 +1571,14 @@
           "exteraGram",
           "AyuGram"
         ]
-      }
+      },
+      "tags": [
+        [
+          "Tweaks",
+          "key_avatar_backgroundGreen",
+          ""
+        ]
+      ]
     },
     {
       "id": "playlist_downloader",
@@ -1514,7 +1610,14 @@
           "exteraGram",
           "AyuGram"
         ]
-      }
+      },
+      "tags": [
+        [
+          "Utility",
+          "key_avatar_background2Orange",
+          ""
+        ]
+      ]
     },
     {
       "id": "resident_cards_7",
@@ -1547,7 +1650,14 @@
           "AyuGram"
         ]
       },
-      "description": "Копия карточной игры из игры Resident Evil 7: Biohazard, дополнение «Вырезанные материалы» «21»"
+      "description": "Копия карточной игры из игры Resident Evil 7: Biohazard, дополнение «Вырезанные материалы» «21»",
+      "tags": [
+        [
+          "Fun",
+          "key_avatar_background2Orange",
+          ""
+        ]
+      ]
     }
   ]
 }
