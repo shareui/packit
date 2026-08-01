@@ -1658,6 +1658,46 @@
           ""
         ]
       ]
+    },
+    {
+      "id": "liquid_glass",
+      "name": "Liquid Glass [Fork]",
+      "author": "@PluginProject · @w3b_0s1nt",
+      "version": "3.8.13",
+      "state": "release",
+      "icon": "vkVSfmG_by_achestickbot/5",
+      "min_version": "12.9.0",
+      "app_version": ">=12.9.0",
+      "sdk_version": ">=1.4.3.10",
+      "suspicious": "false",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/liquid_glass_3.8.13.plugin",
+      "size": "227.50 KB",
+      "description": "Liquid Glass: стеклянные шапки и панели. exteraGram 12.9.0+",
+      "hash": "d9f782e5c811b3059f3a73dace070652feb703cfe97fe2c56637435801d96c10",
+      "bithash": "e8a31386a7c1ba11",
+      "changelog": [
+        "None"
+      ],
+      "team": [
+        [
+          "1091284045",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "01.08.26",
+      "sources": {
+        "clients": [
+          "exteraGram",
+          "AyuGram"
+        ]
+      },
+      "social": [
+        [
+          "msg_channel",
+          "Channel",
+          "https://t.me/PluginProject"
+        ]
+      ]
     }
   ]
 }
