@@ -1245,6 +1245,7 @@
         ]
       ],
       "release_date": "31.07.26",
+      "closed_source": "checked",
       "sources": {
         "clients": [
           "exteraGram",
