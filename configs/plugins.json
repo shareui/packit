@@ -1250,40 +1250,28 @@
         "clients": [
           "exteraGram",
           "AyuGram"
+        ],
+        "langs": [
+          "Python",
+          "Kotlin"
         ]
       }
     },
     {
       "id": "extera_custom_name_icon",
       "name": "Custom Name & Icon",
-      "author": "github.com/AlexeiCrystal",
-      "version": "1.0",
+      "author": "@AlexeiCrystal",
+      "version": "1.1",
       "state": "release",
       "icon": "exteraGram/0",
       "app_version": ">=11.12.0",
       "sdk_version": ">=1.4.3.3",
       "suspicious": "false",
-      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/extera_custom_name_icon_1.0.plugin",
-      "size": "16.65 KB",
-      "description": "EN: Allows you to set a custom name and icon for the client in the recent apps menu and on the launcher\nRU: Позволяет установить кастомное имя и иконку клиента в меню недавних приложений и на рабочем столе",
-      "hash": "c87f83f5b63dccd2a443505c866185e1ab004d98d8e6e343a779d458f00bf056",
-      "bithash": "92a4249b5112a292",
-      "changelog": [
-        "None"
-      ],
-      "team": [
-        [
-          "1169951070",
-          "Maintainer"
-        ]
-      ],
-      "release_date": "31.07.26",
-      "sources": {
-        "clients": [
-          "exteraGram",
-          "AyuGram"
-        ]
-      },
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/extera_custom_name_icon_1.1.plugin",
+      "size": "17.00 KB",
+      "description": "**EN:** Allows you to set a custom name and icon for the client in the recent apps menu and on the launcher\n**RU:** Позволяет установить кастомное имя и иконку клиента в меню недавних приложений и на рабочем столе",
+      "hash": "1c37a0729c6ddb206965754afe90aa9d5d9876b5be07ef29406035c83853759c",
+      "bithash": "bffe4b6638403922",
       "tags": [
         [
           "Tweaks",
@@ -1295,7 +1283,36 @@
           "key_avatar_background2Orange",
           ""
         ]
-      ]
+      ],
+      "changelog": [
+        "None",
+        "+0",
+        "-0"
+      ],
+      "team": [
+        [
+          "1169951070",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "31.07.26",
+      "update_date": "01.08.26",
+      "versions": {
+        "1.0": {
+          "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/extera_custom_name_icon_1.0.plugin",
+          "app_version": ">=11.12.0",
+          "size": "16.65 KB",
+          "changelog": [
+            "None"
+          ]
+        }
+      },
+      "sources": {
+        "clients": [
+          "exteraGram",
+          "AyuGram"
+        ]
+      }
     },
     {
       "id": "mooninfo",
@@ -1699,6 +1716,360 @@
           "https://t.me/PluginProject"
         ]
       ]
+    },
+    {
+      "id": "fullscreen_music_player",
+      "name": "DotFi",
+      "author": "@nonPlugins",
+      "version": "2.0",
+      "state": "release",
+      "icon": "feature_plugins/6",
+      "min_version": "11.12.0",
+      "app_version": ">=11.12.0",
+      "sdk_version": "Unknown",
+      "suspicious": "false",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/fullscreen_music_player_2.0.plugin",
+      "size": "225.30 KB",
+      "description": "**EN:** Allows you to set a custom name and icon for the client in the recent apps menu and on the launcher\n**RU:** Позволяет установить кастомное имя и иконку клиента в меню недавних приложений и на рабочем столе",
+      "hash": "4d803022c445528f582be9aac26a7a96cefcf9fd2cfd0bd115bff825747ae116",
+      "bithash": "5247edbc026aaf2d",
+      "changelog": [
+        "https://github.com/AlexeiCrystal/extera-custom-name-icon/releases/tag/v1.1"
+      ],
+      "team": [
+        [
+          "1579871159",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "01.08.26",
+      "sources": {
+        "clients": [
+          "exteraGram",
+          "AyuGram"
+        ]
+      }
+    },
+    {
+      "id": "python_interpreter",
+      "name": "Python Interpreter",
+      "author": "@Exorned, @ExerealPlugins",
+      "version": "0.1.2",
+      "state": "release",
+      "icon": "ExerealPlugins/2",
+      "app_version": ">=12.5.1",
+      "sdk_version": ">=1.4.3.3",
+      "suspicious": "false",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/python_interpreter_0.1.2.plugin",
+      "size": "30.11 KB",
+      "description": "Выполняет код Python командой прямо в чате или из файлов.\n\nКоманды:\n>py (code) - код Python\n>pyopen - запуск .py файла из ответа\n>help - помощь\n>history - история\n>repeat - повтор\n>reset - сброс контекста\n>clearhistory - очистить историю\n>running - идёт ли сейчас выполнение\n>info - инфо\n\nОБЯЗАТЕЛЬНО ПРОЧТИТЕ ВАЖНУЮ ИНФОРМАЦИЮ В НАСТРОЙКАХ ПЛАГИНА.",
+      "hash": "0c3de0608216e0b3da3636dbab26994f4a834f9acd9ed9885e3726ecfac3bfcc",
+      "bithash": "0420558830358961",
+      "changelog": [
+        "None"
+      ],
+      "social": [
+        [
+          "msg_channel",
+          "Channel",
+          "t.me/ExerealPlugins"
+        ]
+      ],
+      "team": [
+        [
+          "8079608100",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "01.08.26",
+      "closed_source": "checked",
+      "sources": {
+        "clients": [
+          "exteraGram",
+          "AyuGram"
+        ]
+      }
+    },
+    {
+      "id": "ios_like_selection",
+      "name": "IOS-like selection",
+      "author": "@PESSDES_Plugins",
+      "version": "7.4",
+      "state": "release",
+      "icon": "VoiceToText7/6",
+      "min_version": "12.0.0",
+      "app_version": ">=12.0.0",
+      "sdk_version": "Unknown",
+      "suspicious": "false",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/ios_like_selection_7.4.plugin",
+      "size": "38.09 KB",
+      "description": "Recreates the effect of selecting a message by tapping like on **IOS**",
+      "hash": "41824f25817b387381154891593012e7ae50f74b25d0595cf2a6acc5e2eb49a4",
+      "bithash": "faa3aca3f6671075",
+      "changelog": [
+        "None"
+      ],
+      "team": [
+        [
+          "6914257655",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "01.08.26",
+      "closed_source": "checked",
+      "sources": {
+        "clients": [
+          "exteraGram",
+          "AyuGram"
+        ]
+      }
+    },
+    {
+      "id": "folders_below",
+      "name": "Folders Below",
+      "author": "@PESSDES_Plugins",
+      "version": "3.0",
+      "state": "release",
+      "icon": "VoiceToText7/15",
+      "min_version": "12.8.1",
+      "app_version": ">=12.8.1",
+      "sdk_version": "Unknown",
+      "suspicious": "false",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/folders_below_3.0.plugin",
+      "size": "17.42 KB",
+      "description": "Moves folders bar to the bottom of the chat list",
+      "hash": "57c16bcf3c4b64d6e732ca517a8ca6b7f1e287827b20af6edba8921c00c4c59d",
+      "bithash": "380de9f89ed147e2",
+      "changelog": [
+        "None"
+      ],
+      "team": [
+        [
+          "6914257655",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "01.08.26",
+      "sources": {
+        "clients": [
+          "exteraGram",
+          "AyuGram"
+        ],
+        "langs": [
+          "Python",
+          "Java"
+        ]
+      }
+    },
+    {
+      "id": "forwards",
+      "name": "Forwards",
+      "author": "@PESSDES_Plugins",
+      "version": "1.2",
+      "state": "release",
+      "icon": "HalloDuck/64",
+      "min_version": "11.12.0",
+      "app_version": ">=11.12.0",
+      "sdk_version": "Unknown",
+      "suspicious": "false",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/forwards_1.2.plugin",
+      "size": "19.53 KB",
+      "description": "Shows how many times messages were forwarded",
+      "hash": "aba031eb0a9703aa3ffd280c3558e2771481a732ab736b61aee01e2de3b1154a",
+      "bithash": "4020877e373c1dab",
+      "changelog": [
+        "None"
+      ],
+      "team": [
+        [
+          "6914257655",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "01.08.26",
+      "sources": {
+        "clients": [
+          "exteraGram",
+          "AyuGram"
+        ],
+        "langs": [
+          "Python",
+          "Java"
+        ]
+      }
+    },
+    {
+      "id": "lyrics",
+      "name": "Reach Text",
+      "author": "@PESSDES_Plugins",
+      "version": "2.2",
+      "state": "release",
+      "icon": "VoiceToText7/12",
+      "min_version": "11.12.1",
+      "app_version": ">=11.12.1",
+      "sdk_version": "Unknown",
+      "suspicious": "false",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/lyrics_2.2.plugin",
+      "size": "79.20 KB",
+      "description": "Displays lyrics for your music directly in Telegram.\nAdds a \"Show Lyrics\" button to the audio player, with support for synchronized (karaoke-style) lyrics.\nPowered by LRCLib.net",
+      "hash": "853075156936001a2c326a0d1d0e32590c52dfb654447a378b6e2996772fb326",
+      "bithash": "ef89a2e90133a389",
+      "changelog": [
+        "None"
+      ],
+      "team": [
+        [
+          "6914257655",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "01.08.26",
+      "sources": {
+        "clients": [
+          "exteraGram",
+          "AyuGram"
+        ],
+        "langs": [
+          "Python",
+          "Java"
+        ]
+      }
+    },
+    {
+      "id": "rounder",
+      "name": "Rounder",
+      "author": "@PESSDES_Plugins",
+      "version": "4.0",
+      "state": "release",
+      "icon": "VoiceToText7/7",
+      "min_version": "11.12.1",
+      "app_version": ">=11.12.1",
+      "sdk_version": "Unknown",
+      "suspicious": "false",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/rounder_4.0.plugin",
+      "size": "21.19 KB",
+      "description": "Allows you to send videos as round videos",
+      "hash": "93b2f4c203c7c3a9b7ce3315d2b343b39d4d546549646692be010eae1ef6d78e",
+      "bithash": "ea98966e5cbdc7cf",
+      "changelog": [
+        "None"
+      ],
+      "team": [
+        [
+          "6914257655",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "01.08.26",
+      "closed_source": "checked",
+      "sources": {
+        "clients": [
+          "exteraGram",
+          "AyuGram"
+        ]
+      }
+    },
+    {
+      "id": "gift_id",
+      "name": "Gift ID",
+      "author": "@PESSDES_Plugins",
+      "version": "1.1",
+      "state": "release",
+      "icon": "VoiceToText7/4",
+      "min_version": "11.12.0",
+      "app_version": ">=11.12.0",
+      "sdk_version": "Unknown",
+      "suspicious": "false",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/gift_id_1.1.plugin",
+      "size": "3.25 KB",
+      "description": "Shows the gift ID in its info",
+      "hash": "f87d409fcf3325ce428ebc3d6eb26276772fa5c221e6a7e701f4bbb076373239",
+      "bithash": "1ad8112c5721d97c",
+      "changelog": [
+        "None"
+      ],
+      "team": [
+        [
+          "6914257655",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "01.08.26",
+      "closed_source": "checked",
+      "sources": {
+        "clients": [
+          "exteraGram",
+          "AyuGram"
+        ]
+      }
+    },
+    {
+      "id": "feel_rich",
+      "name": "Feel Rich",
+      "author": "@PESSDES_Plugins",
+      "version": "3.2",
+      "state": "release",
+      "icon": "VoiceToText7/1",
+      "min_version": "11.12.0",
+      "app_version": ">=11.12.0",
+      "sdk_version": "Unknown",
+      "suspicious": "false",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/feel_rich_3.2.plugin",
+      "size": "4.36 KB",
+      "description": "*Locally* modify stars balance in your profile",
+      "hash": "4da76a489295d45e4b70440633e6d2b421cd2410644a054b2cca0aee89c3c2a5",
+      "bithash": "878a910e3d1514d2",
+      "changelog": [
+        "None"
+      ],
+      "team": [
+        [
+          "6914257655",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "01.08.26",
+      "closed_source": "checked",
+      "sources": {
+        "clients": [
+          "exteraGram",
+          "AyuGram"
+        ]
+      }
+    },
+    {
+      "id": "emoji_downloader",
+      "name": "Emoji Downloader",
+      "author": "@PESSDES_Plugins",
+      "version": "1.1",
+      "state": "release",
+      "icon": "VoiceToText7/9",
+      "min_version": "11.12.1",
+      "app_version": ">=11.12.1",
+      "sdk_version": "Unknown",
+      "suspicious": "false",
+      "link": "https://raw.githubusercontent.com/shareui/packit/refs/heads/main/plugins/emoji_downloader_1.1.plugin",
+      "size": "5.75 KB",
+      "description": "Easily download emojis and stickers by long-pressing on them in the context menu.",
+      "hash": "4eea189e42874f26f5333c1ac3b61c657ebb3829c7ba0f0349d9fb64c1c35d75",
+      "bithash": "d53cfacd1c621366",
+      "changelog": [
+        "None"
+      ],
+      "team": [
+        [
+          "6914257655",
+          "Maintainer"
+        ]
+      ],
+      "release_date": "01.08.26",
+      "closed_source": "checked",
+      "sources": {
+        "clients": [
+          "exteraGram",
+          "AyuGram"
+        ]
+      }
     }
   ]
 }
