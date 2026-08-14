@@ -8,7 +8,7 @@
     "rm_reports": "123",
     "rm_source": "https://github.com/shareui/packit",
     "rm_telegram": "https://t.me/packitGround",
-    "rm_icon": "https://avatars.githubusercontent.com/u/244288900?s=400&u=688299b515df091f08553a0636f5d8039a893bcb&v=4",
+    "rm_icon": "https://avatars.githubusercontent.com/u/244288900?s=400&u=688299b515df091f08553a0636f5d8039a893bcb&v=4"
   },
   "repomap": {
     "plugins": "https://raw.githubusercontent.com/shareui/packit/main/configs/plugins.json",
